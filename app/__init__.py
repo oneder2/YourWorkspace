@@ -53,7 +53,7 @@ def create_app(config_name='development'):
 
         # Create database tables for our data models if they don't exist
         # Note: Flask-Migrate is the preferred way to manage schema changes long-term.
-        # db.create_all() # Uncomment this line if you want Flask to create tables directly
+        db.create_all() # Uncomment this line if you want Flask to create tables directly
                           # Often commented out when using Flask-Migrate exclusively for schema management.
 
     # --- Simple Root Route ---
