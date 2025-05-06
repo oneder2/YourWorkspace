@@ -51,21 +51,20 @@ class Config:
     def init_app(app):
         """Perform application-specific initialization based on config."""
         # Example: Configure logging
-        # import logging
-        # from logging.handlers import RotatingFileHandler
-        # if not app.debug and not app.testing:
-        #     # Configure file logging for production
-        #     if not os.path.exists('logs'):
-        #         os.mkdir('logs')
-        #     file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
-        #     file_handler.setFormatter(logging.Formatter(
-        #         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-        #     file_handler.setLevel(logging.INFO)
-        #     app.logger.addHandler(file_handler)
-        #
-        #     app.logger.setLevel(logging.INFO)
-        #     app.logger.info('Application startup')
-        pass
+        import logging
+        from logging.handlers import RotatingFileHandler
+        if not app.debug and not app.testing:
+            # Configure file logging for production
+            if not os.path.exists('logs'):
+                os.mkdir('logs')
+            file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+            file_handler.setFormatter(logging.Formatter(
+                '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+            file_handler.setLevel(logging.INFO)
+            app.logger.addHandler(file_handler)
+        
+            app.logger.setLevel(logging.INFO)
+            app.logger.info('Application startup')
 
 
 class DevelopmentConfig(Config):
@@ -73,11 +72,11 @@ class DevelopmentConfig(Config):
     DEBUG = True
     # Example using SQLite for simple development setup
     # Ensure the 'instance' folder exists at the project root
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'instance', 'dev.db')
-    # Or use PostgreSQL:
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-    #     'postgresql://your_dev_user:your_dev_password@localhost:5432/your_dev_db'
+    #     'sqlite:///' + os.path.join(basedir, 'instance', 'dev.db')
+    # Or use PostgreSQL:
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
+        'postgresql://your_dev_user:your_dev_password@localhost:5432/your_dev_db'
 
 
 class TestingConfig(Config):
