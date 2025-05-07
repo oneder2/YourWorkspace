@@ -6,8 +6,10 @@ from ..extensions import db
 # Import models to ensure they are registered with SQLAlchemy
 # This helps Flask-Migrate detect the models.
 from .user import User
-from .token_blocklist import TokenBlocklist # Add this line
+from .token_blocklist import TokenBlocklist
+from .todo_item import TodoItem # Add this line to import the new TodoItem model
 
 # Add other models here as they are created
 # from .post import Post
-# from .todo import Todo
+# from . (anchor related models will go here later)
+

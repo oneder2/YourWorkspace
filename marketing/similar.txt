@@ -1,0 +1,7 @@
+# Potential Features
+
+## Profile:
+1. page DIY
+2. More templates
+    - alter: color theme
+

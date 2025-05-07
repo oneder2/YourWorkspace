@@ -1,193 +1,236 @@
 # /your_project_root/app/api/todo_bp.py
-# Blueprint for todo list related API endpoints (user-specific CRUD).
+# Blueprint for To-Do list related API endpoints.
 
 from flask import Blueprint, jsonify, request
-# Import necessary components later (e.g., Todo model, schemas, db session, JWT decorator)
-# from ...models.todo import Todo
-# from ...schemas.todo_schema import TodoSchema
-# from ...extensions import db
-# from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import datetime # For handling date conversions if needed
+
+# Import the TodoItem model and the db instance
+from ..models.todo_item import TodoItem
+from ..extensions import db
 
 # Create a Blueprint instance named 'todo'
 todo_bp = Blueprint('todo', __name__)
 
-# --- Placeholder Data (Remove when using database) ---
-# Structure: { user_id: { task_id: { ...task_data... } } }
-_todos = {
-    1: { # User 1's todos
-        101: {"id": 101, "text": "Learn Flask Blueprints", "completed": True, "user_id": 1},
-        102: {"id": 102, "text": "Learn Svelte", "completed": False, "user_id": 1},
-    },
-    2: { # User 2's todos
-        201: {"id": 201, "text": "Buy groceries", "completed": False, "user_id": 2},
-    }
-}
-_next_todo_id = 301 # Global counter for simplicity, real app needs better ID generation
-
-# --- Todo List Routes ---
+# Allowed values for status and priority - for validation
+ALLOWED_STATUSES = ['pending', 'in_progress', 'completed', 'deferred']
+ALLOWED_PRIORITIES = ['low', 'medium', 'high']
 
 @todo_bp.route('/ping', methods=['GET'])
 def ping_todo():
-    """Simple test route."""
+    """Simple test route to check if the todo blueprint is registered."""
     return jsonify({"message": "Todo API is alive!"}), 200
 
-
-@todo_bp.route('/tasks', methods=['GET'])
-#@jwt_required() # Protect this route
-def get_tasks():
+@todo_bp.route('/todos', methods=['GET'])
+@jwt_required()
+def get_all_todos():
     """
-    Endpoint to retrieve all todo tasks for the currently logged-in user.
+    Retrieves all to-do items for the currently authenticated user.
     """
-    # --- Add logic to fetch tasks for the current user from database ---
-    # Example:
-    # current_user_id = get_jwt_identity()
-    # user_tasks = Todo.query.filter_by(user_id=current_user_id).order_by(Todo.created_at).all()
-    # todo_schema = TodoSchema(many=True)
-    # return jsonify(todo_schema.dump(user_tasks)), 200
+    current_user_id_str = get_jwt_identity()
+    try:
+        current_user_id = int(current_user_id_str)
+    except ValueError:
+        return jsonify({"error": "Invalid user identity in token"}), 400
 
-    # Placeholder response:
-    # current_user_id = get_jwt_identity() # Would fail without @jwt_required
-    current_user_id = 1 # Placeholder user ID
-    user_tasks_dict = _todos.get(current_user_id, {})
-    return jsonify(list(user_tasks_dict.values())), 200
+    user_todos = TodoItem.query.filter_by(user_id=current_user_id).order_by(TodoItem.created_at.desc()).all()
+    todos_list = [todo.to_dict() for todo in user_todos]
+    return jsonify(todos_list), 200
 
-
-@todo_bp.route('/tasks/<int:task_id>', methods=['GET'])
-#@jwt_required()
-def get_task(task_id):
+@todo_bp.route('/todos', methods=['POST'])
+@jwt_required()
+def create_todo():
     """
-    Endpoint to retrieve a single todo task by its ID.
-    Ensures the task belongs to the currently logged-in user.
+    Creates a new to-do item for the currently authenticated user.
     """
-    # --- Add logic to fetch a single task ensuring ownership ---
-    # Example:
-    # current_user_id = get_jwt_identity()
-    # task = Todo.query.filter_by(id=task_id, user_id=current_user_id).first_or_404()
-    # todo_schema = TodoSchema()
-    # return jsonify(todo_schema.dump(task)), 200
+    current_user_id_str = get_jwt_identity()
+    try:
+        current_user_id = int(current_user_id_str)
+    except ValueError:
+        return jsonify({"error": "Invalid user identity in token"}), 400
 
-    # Placeholder response:
-    # current_user_id = get_jwt_identity() # Would fail without @jwt_required
-    current_user_id = 1 # Placeholder user ID
-    user_tasks_dict = _todos.get(current_user_id, {})
-    task = user_tasks_dict.get(task_id)
-
-    if task:
-        return jsonify(task), 200
-    else:
-        # Return 404 even if task exists but belongs to another user for security
-        return jsonify({"error": "Task not found"}), 404
-
-
-@todo_bp.route('/tasks', methods=['POST'])
-#@jwt_required()
-def create_task():
-    """
-    Endpoint to create a new todo task for the currently logged-in user.
-    Expects JSON data: {'text': '...'}
-    """
     data = request.get_json()
-    if not data or not data.get('text'):
-        return jsonify({"error": "Missing required field (text)"}), 400
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
 
-    # --- Add logic to create a task in the database ---
-    # Example:
-    # current_user_id = get_jwt_identity()
-    # new_task = Todo(text=data['text'], user_id=current_user_id)
-    # db.session.add(new_task)
-    # db.session.commit()
-    # todo_schema = TodoSchema()
-    # return jsonify(todo_schema.dump(new_task)), 201
+    title = data.get('title')
+    if not title or not isinstance(title, str) or not title.strip():
+        return jsonify({"error": "Title is required and must be a non-empty string"}), 400
 
-    # Placeholder response:
-    global _next_todo_id
-    # current_user_id = get_jwt_identity() # Would fail without @jwt_required
-    current_user_id = 1 # Placeholder user ID
+    description = data.get('description')
+    if description is not None and not isinstance(description, str):
+        return jsonify({"error": "Description must be a string if provided"}), 400
+        
+    due_date_str = data.get('due_date')
+    due_date_obj = None
+    if due_date_str:
+        try:
+            due_date_obj = datetime.datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({"error": "Invalid due_date format. Please use YYYY-MM-DD."}), 400
 
-    new_task_data = {
-        "id": _next_todo_id,
-        "text": data['text'],
-        "completed": False,
-        "user_id": current_user_id
-    }
+    status = data.get('status', 'pending').lower()
+    if status not in ALLOWED_STATUSES:
+        return jsonify({"error": f"Invalid status. Allowed values are: {', '.join(ALLOWED_STATUSES)}"}), 400
 
-    if current_user_id not in _todos:
-        _todos[current_user_id] = {}
-    _todos[current_user_id][_next_todo_id] = new_task_data
-    _next_todo_id += 1
+    priority = data.get('priority', 'medium').lower()
+    if priority not in ALLOWED_PRIORITIES:
+        return jsonify({"error": f"Invalid priority. Allowed values are: {', '.join(ALLOWED_PRIORITIES)}"}), 400
 
-    return jsonify(new_task_data), 201
+    try:
+        new_todo = TodoItem(
+            user_id=current_user_id,
+            title=title.strip(),
+            description=description.strip() if description else None,
+            due_date=due_date_obj,
+            status=status,
+            priority=priority
+        )
+        db.session.add(new_todo)
+        db.session.commit()
+        return jsonify(new_todo.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating todo item: {e}")
+        return jsonify({"error": "An unexpected error occurred while creating the to-do item."}), 500
 
-
-@todo_bp.route('/tasks/<int:task_id>', methods=['PUT'])
-#@jwt_required()
-def update_task(task_id):
+@todo_bp.route('/todos/<int:todo_id>', methods=['GET'])
+@jwt_required()
+def get_todo_by_id(todo_id):
     """
-    Endpoint to update an existing todo task (e.g., mark as completed, change text).
-    Expects JSON data: {'text': '...', 'completed': ...} (at least one)
-    Ensures the task belongs to the currently logged-in user.
+    Retrieves a specific to-do item by its ID for the currently authenticated user.
     """
+    current_user_id_str = get_jwt_identity()
+    try:
+        current_user_id = int(current_user_id_str)
+    except ValueError:
+        return jsonify({"error": "Invalid user identity in token"}), 400
+
+    # Query for the specific to-do item by its ID and ensuring it belongs to the current user
+    todo_item = db.session.get(TodoItem, todo_id) # Using db.session.get for SQLAlchemy 2.0+
+
+    if not todo_item:
+        return jsonify({"error": "To-do item not found"}), 404
+    
+    if todo_item.user_id != current_user_id:
+        # User is trying to access a to-do item that doesn't belong to them
+        return jsonify({"error": "Forbidden: You do not have permission to access this item"}), 403
+
+    return jsonify(todo_item.to_dict()), 200
+
+
+@todo_bp.route('/todos/<int:todo_id>', methods=['PUT'])
+@jwt_required()
+def update_todo(todo_id):
+    """
+    Updates an existing to-do item for the currently authenticated user.
+    """
+    current_user_id_str = get_jwt_identity()
+    try:
+        current_user_id = int(current_user_id_str)
+    except ValueError:
+        return jsonify({"error": "Invalid user identity in token"}), 400
+
+    # Fetch the existing to-do item
+    todo_item = db.session.get(TodoItem, todo_id) # Using db.session.get for SQLAlchemy 2.0+
+
+    if not todo_item:
+        return jsonify({"error": "To-do item not found"}), 404
+
+    # Check if the to-do item belongs to the current user
+    if todo_item.user_id != current_user_id:
+        return jsonify({"error": "Forbidden: You do not have permission to update this item"}), 403
+
     data = request.get_json()
-    if not data or ('text' not in data and 'completed' not in data):
-        return jsonify({"error": "Missing fields to update (text or completed)"}), 400
+    if not data:
+        return jsonify({"error": "Request body must be JSON and cannot be empty"}), 400
 
-    # --- Add logic to update a task in the database ---
-    # Example:
-    # current_user_id = get_jwt_identity()
-    # task = Todo.query.filter_by(id=task_id, user_id=current_user_id).first_or_404()
-    #
-    # if 'text' in data:
-    #     task.text = data['text']
-    # if 'completed' in data:
-    #     task.completed = data['completed']
-    #
-    # db.session.commit()
-    # todo_schema = TodoSchema()
-    # return jsonify(todo_schema.dump(task)), 200
+    # Update fields if they are provided in the request body
+    if 'title' in data:
+        title = data['title']
+        if not title or not isinstance(title, str) or not title.strip():
+            return jsonify({"error": "Title must be a non-empty string if provided"}), 400
+        todo_item.title = title.strip()
 
-    # Placeholder response:
-    # current_user_id = get_jwt_identity() # Would fail without @jwt_required
-    current_user_id = 1 # Placeholder user ID
-    user_tasks_dict = _todos.get(current_user_id, {})
-    task = user_tasks_dict.get(task_id)
-
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
-
-    if 'text' in data:
-        task['text'] = data['text']
-    if 'completed' in data:
-        task['completed'] = data['completed']
-
-    return jsonify(task), 200
+    if 'description' in data:
+        description = data['description']
+        if description is not None and not isinstance(description, str):
+             return jsonify({"error": "Description must be a string if provided"}), 400
+        todo_item.description = description.strip() if description else None
 
 
-@todo_bp.route('/tasks/<int:task_id>', methods=['DELETE'])
-#@jwt_required()
-def delete_task(task_id):
+    if 'due_date' in data:
+        due_date_str = data['due_date']
+        if due_date_str is None: # Allow setting due_date to null
+            todo_item.due_date = None
+        elif isinstance(due_date_str, str):
+            try:
+                todo_item.due_date = datetime.datetime.strptime(due_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({"error": "Invalid due_date format. Please use YYYY-MM-DD or null."}), 400
+        else:
+            return jsonify({"error": "due_date must be a string in YYYY-MM-DD format or null."}), 400
+
+
+    if 'status' in data:
+        status = data['status'].lower()
+        if status not in ALLOWED_STATUSES:
+            return jsonify({"error": f"Invalid status. Allowed values are: {', '.join(ALLOWED_STATUSES)}"}), 400
+        todo_item.status = status
+        # If status is 'completed', set completed_at timestamp
+        if status == 'completed' and todo_item.completed_at is None:
+            todo_item.completed_at = datetime.datetime.now(datetime.timezone.utc)
+        elif status != 'completed': # If status changes from completed, clear completed_at
+            todo_item.completed_at = None
+
+
+    if 'priority' in data:
+        priority = data['priority'].lower()
+        if priority not in ALLOWED_PRIORITIES:
+            return jsonify({"error": f"Invalid priority. Allowed values are: {', '.join(ALLOWED_PRIORITIES)}"}), 400
+        todo_item.priority = priority
+    
+    # The updated_at field will be automatically updated by the model's onupdate
+
+    try:
+        db.session.commit()
+        return jsonify(todo_item.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating todo item: {e}")
+        return jsonify({"error": "An unexpected error occurred while updating the to-do item."}), 500
+
+
+@todo_bp.route('/todos/<int:todo_id>', methods=['DELETE'])
+@jwt_required()
+def delete_todo(todo_id):
     """
-    Endpoint to delete a todo task.
-    Ensures the task belongs to the currently logged-in user.
+    Deletes a specific to-do item for the currently authenticated user.
     """
-    # --- Add logic to delete a task from the database ---
-    # Example:
-    # current_user_id = get_jwt_identity()
-    # task = Todo.query.filter_by(id=task_id, user_id=current_user_id).first_or_404()
-    #
-    # db.session.delete(task)
-    # db.session.commit()
-    # return '', 204 # No Content response
+    current_user_id_str = get_jwt_identity()
+    try:
+        current_user_id = int(current_user_id_str)
+    except ValueError:
+        return jsonify({"error": "Invalid user identity in token"}), 400
 
-    # Placeholder response:
-    # current_user_id = get_jwt_identity() # Would fail without @jwt_required
-    current_user_id = 1 # Placeholder user ID
-    user_tasks_dict = _todos.get(current_user_id, {})
+    # Fetch the to-do item
+    todo_item = db.session.get(TodoItem, todo_id) # Using db.session.get for SQLAlchemy 2.0+
 
-    if task_id in user_tasks_dict:
-        del user_tasks_dict[task_id]
-        # If the user has no more tasks, remove the user entry (optional)
-        # if not user_tasks_dict:
-        #     del _todos[current_user_id]
-        return '', 204 # No Content
-    else:
-        return jsonify({"error": "Task not found"}), 404
+    if not todo_item:
+        return jsonify({"error": "To-do item not found"}), 404
+
+    # Check if the to-do item belongs to the current user
+    if todo_item.user_id != current_user_id:
+        return jsonify({"error": "Forbidden: You do not have permission to delete this item"}), 403
+
+    try:
+        db.session.delete(todo_item)
+        db.session.commit()
+        # Return a 204 No Content response, which is standard for successful DELETE operations
+        # Alternatively, you can return a success message:
+        # return jsonify({"message": "To-do item deleted successfully"}), 200
+        return '', 204
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting todo item: {e}")
+        return jsonify({"error": "An unexpected error occurred while deleting the to-do item."}), 500
