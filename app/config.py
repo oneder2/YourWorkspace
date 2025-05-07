@@ -1,127 +1,99 @@
 # /your_project_root/app/config.py
-# Defines configuration classes for different environments.
+# Defines configuration classes for different environments (development, testing, production).
 
 import os
-from datetime import timedelta
 from dotenv import load_dotenv
+from datetime import timedelta # Import timedelta for token expiration
 
-# Determine the base directory of the project (where run.py is)
-# __file__ points to the location of config.py (app/config.py)
-# os.path.dirname(__file__) gives the 'app' directory
-# os.path.dirname(os.path.dirname(__file__)) gives the project root directory
+# Calculate the base directory of the project (i.e., 'your_project_root')
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
-# Load environment variables from .env file located at the project root
+# Load environment variables from the .env file located at the project root
 dotenv_path = os.path.join(basedir, '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 else:
-    print("Warning: .env file not found at project root.") # Optional warning
+    print("Warning: .env file not found at project root.")
+
 
 class Config:
     """Base configuration class. Contains default settings."""
-    # Secret key for session management, CSRF protection, etc.
-    # CRITICAL: Load from environment variable in production!
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'a-default-fallback-secret-key-replace-me'
-
-    # Database configuration (set in subclasses)
-    SQLALCHEMY_DATABASE_URI = None
-    # Disable SQLAlchemy event system if not needed, saves resources
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'a-default-fallback-secret-key'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = False # Usually False, can be True in DevelopmentConfig for debugging SQL
 
-    # JWT Configuration (using Flask-JWT-Extended)
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'a-default-jwt-secret-key-replace-me'
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1) # Access token lifetime
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30) # Refresh token lifetime
-    # Consider storing tokens in cookies for web SPAs (set JWT_TOKEN_LOCATION = ['cookies'])
-    # JWT_TOKEN_LOCATION = ['headers'] # Default: Expect tokens in Authorization header
-    # JWT_COOKIE_SECURE = False # Set True in production if using HTTPS
-    # JWT_COOKIE_CSRF_PROTECT = True # Recommended if using cookies
+    # --- Flask-JWT-Extended Configuration ---
+    JWT_TOKEN_LOCATION = ['headers']
+    JWT_ALGORITHM = 'HS256'
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'another-fallback-jwt-secret'
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
-    # Add other base configurations common to all environments
-    # Example: Mail server settings, logging configuration, etc.
-    # MAIL_SERVER = os.environ.get('MAIL_SERVER')
-    # MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
-    # MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
-    # MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    # MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    # ADMINS = ['your-email@example.com']
+    # --- JWT Blocklist Configuration (for logout) ---
+    JWT_BLOCKLIST_ENABLED = True
+    JWT_BLOCKLIST_TOKEN_CHECKS = ['access', 'refresh']
+
 
     @staticmethod
     def init_app(app):
-        """Perform application-specific initialization based on config."""
-        # Example: Configure logging
-        import logging
-        from logging.handlers import RotatingFileHandler
-        if not app.debug and not app.testing:
-            # Configure file logging for production
-            if not os.path.exists('logs'):
-                os.mkdir('logs')
-            file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
-            file_handler.setFormatter(logging.Formatter(
-                '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-            file_handler.setLevel(logging.INFO)
-            app.logger.addHandler(file_handler)
-        
-            app.logger.setLevel(logging.INFO)
-            app.logger.info('Application startup')
+        pass
 
 
 class DevelopmentConfig(Config):
     """Development-specific configuration."""
     DEBUG = True
-    # Example using SQLite for simple development setup
-    # Ensure the 'instance' folder exists at the project root
-    # SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-    #     'sqlite:///' + os.path.join(basedir, 'instance', 'dev.db')
-    # Or use PostgreSQL:
+    SQLALCHEMY_ECHO = True # Echo SQL statements for debugging
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'postgresql://your_dev_user:your_dev_password@localhost:5432/your_dev_db'
+        'sqlite:///' + os.path.join(basedir, 'instance', 'dev.sqlite')
 
 
 class TestingConfig(Config):
     """Testing-specific configuration."""
     TESTING = True
-    DEBUG = True # Often helpful during tests to get more detailed errors
-    # Use a predictable secret key for testing purposes
-    SECRET_KEY = 'test-secret-key'
-    JWT_SECRET_KEY = 'test-jwt-secret-key'
-    # Use a separate database for testing (e.g., in-memory SQLite or a dedicated test DB)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'sqlite:///:memory:' # In-memory SQLite is fast for tests
-    # Disable CSRF protection in tests if using cookies for tokens
-    # WTF_CSRF_ENABLED = False
-    # JWT_COOKIE_CSRF_PROTECT = False
+    DEBUG = True # Often helpful during tests
+    SECRET_KEY = 'test-secret-key' # Predictable key for testing
+    JWT_SECRET_KEY = 'test-jwt-secret-key' # Use a predictable key for tests
+    SQLALCHEMY_ECHO = False # Usually disable SQL echo during tests unless debugging specific SQL
+    
+    # Determine if TEST_DATABASE_URL is set, otherwise fallback to SQLite in-memory
+    # This ensures that if TEST_DATABASE_URL is not set, we use SQLite for tests
+    _test_db_url = os.environ.get('TEST_DATABASE_URL')
+    if not _test_db_url:
+        print("INFO: TEST_DATABASE_URL not set, using in-memory SQLite for testing.")
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    else:
+        print(f"INFO: Using TEST_DATABASE_URL for testing: {_test_db_url}")
+        SQLALCHEMY_DATABASE_URI = _test_db_url
+    
+    # Increased token expiry times for testing
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=30)  # Increased from 5
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(minutes=1) # Increased from 10 seconds
 
 
 class ProductionConfig(Config):
     """Production-specific configuration."""
     DEBUG = False
     TESTING = False
-    # Ensure SECRET_KEY and JWT_SECRET_KEY are set via environment variables in production!
-    SECRET_KEY = os.environ.get('SECRET_KEY') # Must be set
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') # Must be set
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if not SECRET_KEY:
+        raise ValueError("No SECRET_KEY set for production configuration")
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    if not JWT_SECRET_KEY:
+        raise ValueError("No JWT_SECRET_KEY set for production configuration")
 
-    # Database URL must be provided via environment variable in production
-    # TODO the database url shoule be replaced to production url in formal condition, reference .env
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     if not SQLALCHEMY_DATABASE_URI:
-        raise ValueError("No DATABASE_URL set for production environment")
+        raise ValueError("No DATABASE_URL set for production configuration")
 
-    # Security enhancements for production
-    # SESSION_COOKIE_SECURE = True # Ensure cookies only sent over HTTPS
-    # REMEMBER_COOKIE_SECURE = True
-    # SESSION_COOKIE_HTTPONLY = True # Prevent client-side JS access to session cookie
-    # REMEMBER_COOKIE_HTTPONLY = True
-    # SESSION_COOKIE_SAMESITE = 'Lax' # Mitigate CSRF
-    # JWT_COOKIE_SECURE = True # Ensure JWT cookies only sent over HTTPS
-    # Add other production settings: logging level, trusted proxies (if behind one)
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+        pass
 
 
-# Dictionary to map configuration names to their classes
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig # Default configuration to use if none specified
+    'default': DevelopmentConfig
 }
