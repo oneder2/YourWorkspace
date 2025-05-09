@@ -1,0 +1,744 @@
+Flask Backend API Manual - Phase 1
+This document outlines the available API endpoints for the "Personal Workspace & Anchor Point" application, Phase 1.
+
+Base URL: All API endpoints are prefixed with /api/v1. Assuming the development server runs on http://localhost:5000, the full base URL would be http://localhost:5000/api/v1.
+
+Authentication:
+
+Most endpoints require authentication using JSON Web Tokens (JWT).
+
+Clients must first obtain an access_token and refresh_token from the /auth/login endpoint.
+
+For protected endpoints, the client must send the access_token in the Authorization header using the Bearer scheme: Authorization: Bearer <YOUR_ACCESS_TOKEN>.
+
+Some endpoints may require a refresh_token instead (specified below).
+
+1. Authentication (/auth)
+Endpoints related to user registration, login, and token management.
+
+1.1. Register User
+Endpoint: POST /auth/register
+
+Description: Creates a new user account.
+
+Auth Required: No
+
+Request Body (JSON):
+
+{
+  "username": "string (required, unique)",
+  "email": "string (required, unique, valid email format)",
+  "password": "string (required, min length recommended)"
+}
+
+Success Response (201 Created):
+
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": integer,
+    "username": "string",
+    "email": "string",
+    "created_at": "string (ISO 8601 format, e.g., YYYY-MM-DDTHH:MM:SS.ffffffZ)"
+  }
+}
+
+Error Responses:
+
+400 Bad Request: Missing fields, invalid data types.
+
+409 Conflict: Username or email already exists.
+
+500 Internal Server Error: Database error during creation.
+
+1.2. Login User
+Endpoint: POST /auth/login
+
+Description: Authenticates a user and returns JWT access and refresh tokens.
+
+Auth Required: No
+
+Request Body (JSON):
+
+{
+  "email": "string (required)",
+  "password": "string (required)"
+}
+
+Success Response (200 OK):
+
+{
+  "access_token": "string (JWT)",
+  "refresh_token": "string (JWT)"
+}
+
+Error Responses:
+
+400 Bad Request: Missing fields.
+
+401 Unauthorized: Invalid email or password.
+
+1.3. Get User Profile (Me)
+Endpoint: GET /auth/me
+
+Description: Retrieves basic profile information for the currently authenticated user.
+
+Auth Required: Yes (Access Token)
+
+Request Body: None
+
+Success Response (200 OK):
+
+{
+  "id": integer,
+  "username": "string",
+  "email": "string",
+  "created_at": "string (ISO 8601)",
+  "updated_at": "string (ISO 8601)"
+}
+
+Error Responses:
+
+401 Unauthorized: Missing, invalid, or expired token.
+
+404 Not Found: User associated with token not found (rare).
+
+1.4. Refresh Access Token
+Endpoint: POST /auth/refresh
+
+Description: Issues a new, non-fresh access token using a valid refresh token.
+
+Auth Required: Yes (Refresh Token - use refresh token in Authorization: Bearer <refresh_token>)
+
+Request Body: None
+
+Success Response (200 OK):
+
+{
+  "access_token": "string (JWT - non-fresh)"
+}
+
+Error Responses:
+
+401 Unauthorized: Missing, invalid, expired, or revoked refresh token.
+
+422 Unprocessable Entity: If an access token is used instead of a refresh token.
+
+1.5. Logout (Revoke Access Token)
+Endpoint: POST /auth/logout
+
+Description: Revokes the access token used to make the request by adding its JTI to the blocklist. The client should also discard the token.
+
+Auth Required: Yes (Access Token)
+
+Request Body: None
+
+Success Response (200 OK):
+
+{
+  "message": "Access token revoked. User logged out."
+}
+
+Error Responses:
+
+401 Unauthorized: Missing, invalid, expired, or already revoked token.
+
+500 Internal Server Error: Error adding token to blocklist.
+
+1.6. Logout Refresh (Revoke Refresh Token)
+Endpoint: POST /auth/logout-refresh
+
+Description: Revokes the refresh token used to make the request by adding its JTI to the blocklist. Use this if you want explicit refresh token revocation.
+
+Auth Required: Yes (Refresh Token)
+
+Request Body: None
+
+Success Response (200 OK):
+
+{
+  "message": "Refresh token revoked."
+}
+
+Error Responses:
+
+401 Unauthorized: Missing, invalid, expired, or already revoked refresh token.
+
+422 Unprocessable Entity: If an access token is used.
+
+500 Internal Server Error: Error adding token to blocklist.
+
+1.7. Change Password
+Endpoint: POST /auth/change-password
+
+Description: Allows the user to change their password. Requires a "fresh" access token (obtained directly from login).
+
+Auth Required: Yes (Fresh Access Token)
+
+Request Body (JSON):
+
+{
+  "new_password": "string (required)"
+}
+
+Success Response (200 OK):
+
+{
+  "message": "Password updated successfully."
+}
+
+Error Responses:
+
+400 Bad Request: Missing new_password.
+
+401 Unauthorized: Missing, invalid, expired, or non-fresh token.
+
+404 Not Found: User not found.
+
+500 Internal Server Error: Error saving password.
+
+2. To-Do List (/todo)
+Endpoints for managing user-specific to-do items. All endpoints require authentication (Access Token).
+
+2.1. Get All To-Do Items
+Endpoint: GET /todo/todos
+
+Description: Retrieves a list of all to-do items for the authenticated user, ordered by creation date descending.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): An array of to-do item objects.
+
+[
+  {
+    "id": integer,
+    "user_id": integer,
+    "title": "string",
+    "description": "string | null",
+    "due_date": "string (YYYY-MM-DD) | null",
+    "status": "string ('pending', 'in_progress', 'completed', 'deferred')",
+    "priority": "string ('low', 'medium', 'high')",
+    "created_at": "string (ISO 8601)",
+    "updated_at": "string (ISO 8601)",
+    "completed_at": "string (ISO 8601) | null"
+  },
+  // ... more items
+]
+
+Error Responses:
+
+401 Unauthorized.
+
+2.2. Create To-Do Item
+Endpoint: POST /todo/todos
+
+Description: Creates a new to-do item for the authenticated user.
+
+Auth Required: Yes
+
+Request Body (JSON):
+
+{
+  "title": "string (required)",
+  "description": "string (optional)",
+  "due_date": "string (YYYY-MM-DD, optional)",
+  "status": "string (optional, default: 'pending', allowed: 'pending', 'in_progress', 'completed', 'deferred')",
+  "priority": "string (optional, default: 'medium', allowed: 'low', 'medium', 'high')"
+}
+
+Success Response (201 Created): The newly created to-do item object (see format in 2.1).
+
+Error Responses:
+
+400 Bad Request: Missing title, invalid data types or formats (date, status, priority).
+
+401 Unauthorized.
+
+500 Internal Server Error.
+
+2.3. Get Specific To-Do Item
+Endpoint: GET /todo/todos/<int:todo_id>
+
+Description: Retrieves a single to-do item by its ID.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): The requested to-do item object (see format in 2.1).
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: To-do item with the given ID does not exist.
+
+2.4. Update To-Do Item
+Endpoint: PUT /todo/todos/<int:todo_id>
+
+Description: Updates an existing to-do item. Only fields provided in the body are updated.
+
+Auth Required: Yes
+
+Request Body (JSON): Include any fields to update (same fields as POST, all optional here).
+
+{
+  "title": "string",
+  "description": "string | null",
+  "due_date": "string (YYYY-MM-DD) | null",
+  "status": "string ('pending', 'in_progress', 'completed', 'deferred')",
+  "priority": "string ('low', 'medium', 'high')"
+}
+
+Success Response (200 OK): The updated to-do item object (see format in 2.1).
+
+Error Responses:
+
+400 Bad Request: Invalid data types or formats.
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: To-do item not found.
+
+500 Internal Server Error.
+
+2.5. Delete To-Do Item
+Endpoint: DELETE /todo/todos/<int:todo_id>
+
+Description: Deletes a specific to-do item.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (204 No Content): Empty body.
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: To-do item not found.
+
+500 Internal Server Error.
+
+3. Personal Anchor Overview (/anchor)
+Endpoints for managing the user's profile, achievements, current focus, and future plans. All endpoints require authentication (Access Token).
+
+3.1. Profile (/anchor/profile)
+3.1.1. Get User Profile
+Endpoint: GET /anchor/profile
+
+Description: Retrieves the user's professional profile information. Creates an empty profile if one doesn't exist for the user.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK):
+
+{
+  "user_id": integer,
+  "professional_title": "string | null",
+  "one_liner_bio": "string | null",
+  "created_at": "string (ISO 8601)",
+  "updated_at": "string (ISO 8601)"
+}
+
+Error Responses:
+
+401 Unauthorized.
+
+404 Not Found: User not found.
+
+500 Internal Server Error: Failed to create missing profile.
+
+3.1.2. Update User Profile
+Endpoint: PUT /anchor/profile
+
+Description: Updates the user's professional profile information. Only fields provided are updated.
+
+Auth Required: Yes
+
+Request Body (JSON):
+
+{
+  "professional_title": "string | null",
+  "one_liner_bio": "string | null"
+}
+
+Success Response (200 OK): The updated profile object (see format in 3.1.1). Can also return {"message": "No relevant profile fields provided..."} if the body contains no updatable fields.
+
+Error Responses:
+
+400 Bad Request: Invalid data types, empty JSON body.
+
+401 Unauthorized.
+
+404 Not Found: User not found.
+
+500 Internal Server Error.
+
+3.2. Achievements (/anchor/achievements)
+3.2.1. Get All Achievements
+Endpoint: GET /anchor/achievements
+
+Description: Retrieves all achievements for the user, ordered by date_achieved desc (nulls last), then created_at desc.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): An array of achievement objects.
+
+[
+  {
+    "id": integer,
+    "user_id": integer,
+    "title": "string",
+    "description": "string | null",
+    "quantifiable_results": "string | null",
+    "core_skills_json": ["string", ...], // list of strings, defaults to []
+    "date_achieved": "string (YYYY-MM-DD) | null",
+    "created_at": "string (ISO 8601)",
+    "updated_at": "string (ISO 8601)"
+  },
+  // ... more items
+]
+
+Error Responses: 401 Unauthorized.
+
+3.2.2. Create Achievement
+Endpoint: POST /anchor/achievements
+
+Description: Creates a new achievement.
+
+Auth Required: Yes
+
+Request Body (JSON):
+
+{
+  "title": "string (required)",
+  "description": "string (optional)",
+  "quantifiable_results": "string (optional)",
+  "core_skills_json": ["string", ...] (optional, must be list of strings if provided),
+  "date_achieved": "string (YYYY-MM-DD, optional)"
+}
+
+Success Response (201 Created): The newly created achievement object (see format in 3.2.1).
+
+Error Responses:
+
+400 Bad Request: Missing title, invalid data types/formats (skills list, date).
+
+401 Unauthorized.
+
+500 Internal Server Error.
+
+3.2.3. Get Specific Achievement
+Endpoint: GET /anchor/achievements/<int:achievement_id>
+
+Description: Retrieves a single achievement by ID.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): The requested achievement object (see format in 3.2.1).
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Achievement not found.
+
+3.2.4. Update Achievement
+Endpoint: PUT /anchor/achievements/<int:achievement_id>
+
+Description: Updates an existing achievement.
+
+Auth Required: Yes
+
+Request Body (JSON): Include any fields to update (same fields as POST, all optional here).
+
+Success Response (200 OK): The updated achievement object (see format in 3.2.1).
+
+Error Responses:
+
+400 Bad Request: Invalid data types/formats.
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Achievement not found.
+
+500 Internal Server Error.
+
+3.2.5. Delete Achievement
+Endpoint: DELETE /anchor/achievements/<int:achievement_id>
+
+Description: Deletes a specific achievement.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (204 No Content): Empty body.
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Achievement not found.
+
+500 Internal Server Error.
+
+3.3. Current Focus (/anchor/current_focus)
+3.3.1. Get All Current Focus Items
+Endpoint: GET /anchor/current_focus
+
+Description: Retrieves all current focus items for the user, ordered by created_at desc.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): An array of current focus item objects.
+
+[
+  {
+    "id": integer,
+    "user_id": integer,
+    "item_type": "string | null",
+    "title": "string",
+    "description": "string | null",
+    "start_date": "string (YYYY-MM-DD) | null",
+    "status": "string | null",
+    "created_at": "string (ISO 8601)",
+    "updated_at": "string (ISO 8601)"
+  },
+  // ... more items
+]
+
+Error Responses: 401 Unauthorized.
+
+3.3.2. Create Current Focus Item
+Endpoint: POST /anchor/current_focus
+
+Description: Creates a new current focus item.
+
+Auth Required: Yes
+
+Request Body (JSON):
+
+{
+  "title": "string (required)",
+  "item_type": "string (optional, max 50 chars)",
+  "description": "string (optional)",
+  "start_date": "string (YYYY-MM-DD, optional)",
+  "status": "string (optional, max 50 chars)"
+}
+
+Success Response (201 Created): The newly created focus item object (see format in 3.3.1).
+
+Error Responses:
+
+400 Bad Request: Missing title, invalid data types/formats (date).
+
+401 Unauthorized.
+
+500 Internal Server Error.
+
+3.3.3. Get Specific Current Focus Item
+Endpoint: GET /anchor/current_focus/<int:focus_id>
+
+Description: Retrieves a single current focus item by ID.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): The requested focus item object (see format in 3.3.1).
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Focus item not found.
+
+3.3.4. Update Current Focus Item
+Endpoint: PUT /anchor/current_focus/<int:focus_id>
+
+Description: Updates an existing current focus item.
+
+Auth Required: Yes
+
+Request Body (JSON): Include any fields to update (same fields as POST, all optional here).
+
+Success Response (200 OK): The updated focus item object (see format in 3.3.1).
+
+Error Responses:
+
+400 Bad Request: Invalid data types/formats.
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Focus item not found.
+
+500 Internal Server Error.
+
+3.3.5. Delete Current Focus Item
+Endpoint: DELETE /anchor/current_focus/<int:focus_id>
+
+Description: Deletes a specific current focus item.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (204 No Content): Empty body.
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Focus item not found.
+
+500 Internal Server Error.
+
+3.4. Future Plans (/anchor/future_plans)
+3.4.1. Get All Future Plans
+Endpoint: GET /anchor/future_plans
+
+Description: Retrieves all future plans for the user, ordered by target_date asc (nulls last), then created_at desc.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): An array of future plan objects.
+
+[
+  {
+    "id": integer,
+    "user_id": integer,
+    "goal_type": "string | null",
+    "description": "string",
+    "target_date": "string (YYYY-MM-DD) | null",
+    "status": "string ('active', 'achieved', 'deferred', 'abandoned')",
+    "created_at": "string (ISO 8601)",
+    "updated_at": "string (ISO 8601)"
+  },
+  // ... more items
+]
+
+Error Responses: 401 Unauthorized.
+
+3.4.2. Create Future Plan
+Endpoint: POST /anchor/future_plans
+
+Description: Creates a new future plan.
+
+Auth Required: Yes
+
+Request Body (JSON):
+
+{
+  "description": "string (required)",
+  "goal_type": "string (optional, max 50 chars)",
+  "target_date": "string (YYYY-MM-DD, optional)",
+  "status": "string (optional, default: 'active', allowed: 'active', 'achieved', 'deferred', 'abandoned')"
+}
+
+Success Response (201 Created): The newly created plan object (see format in 3.4.1).
+
+Error Responses:
+
+400 Bad Request: Missing description, invalid data types/formats (date, status).
+
+401 Unauthorized.
+
+500 Internal Server Error.
+
+3.4.3. Get Specific Future Plan
+Endpoint: GET /anchor/future_plans/<int:plan_id>
+
+Description: Retrieves a single future plan by ID.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (200 OK): The requested plan object (see format in 3.4.1).
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Plan not found.
+
+3.4.4. Update Future Plan
+Endpoint: PUT /anchor/future_plans/<int:plan_id>
+
+Description: Updates an existing future plan.
+
+Auth Required: Yes
+
+Request Body (JSON): Include any fields to update (same fields as POST, all optional here).
+
+Success Response (200 OK): The updated plan object (see format in 3.4.1).
+
+Error Responses:
+
+400 Bad Request: Invalid data types/formats.
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Plan not found.
+
+500 Internal Server Error.
+
+3.4.5. Delete Future Plan
+Endpoint: DELETE /anchor/future_plans/<int:plan_id>
+
+Description: Deletes a specific future plan.
+
+Auth Required: Yes
+
+Request Body: None
+
+Success Response (204 No Content): Empty body.
+
+Error Responses:
+
+401 Unauthorized.
+
+403 Forbidden: User does not own this item.
+
+404 Not Found: Plan not found.
+
+500 Internal Server Error.
+
+This manual covers all the backend API endpoints implemented for Phase 1. Let me know if anything is unclear or needs further explanation as you proceed with the Svelte frontend development!
