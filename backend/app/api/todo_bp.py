@@ -17,6 +17,7 @@ ALLOWED_STATUSES = ['pending', 'in_progress', 'completed', 'deferred']
 ALLOWED_PRIORITIES = ['low', 'medium', 'high']
 
 @todo_bp.route('/ping', methods=['GET'])
+# This is a simple test route for the blueprint, not JWT protected for basic check
 def ping_todo():
     """Simple test route to check if the todo blueprint is registered."""
     return jsonify({"message": "Todo API is alive!"}), 200
@@ -33,15 +34,19 @@ def get_all_todos():
     except ValueError:
         return jsonify({"error": "Invalid user identity in token"}), 400
 
-    user_todos = TodoItem.query.filter_by(user_id=current_user_id).order_by(TodoItem.created_at.desc()).all()
+    # is_current_focus = True items will be listed first, then by created_at desc.
+    user_todos = TodoItem.query.filter_by(user_id=current_user_id)\
+        .order_by(TodoItem.is_current_focus.desc(), TodoItem.created_at.desc())\
+        .all()
     todos_list = [todo.to_dict() for todo in user_todos]
     return jsonify(todos_list), 200
 
 @todo_bp.route('/todos', methods=['POST'])
-@jwt_required()
+@jwt_required() # Protect this route
 def create_todo():
     """
     Creates a new to-do item for the currently authenticated user.
+    The 'is_current_focus' field defaults to False in the model and is not typically set on creation.
     """
     current_user_id_str = get_jwt_identity()
     try:
@@ -76,6 +81,13 @@ def create_todo():
     priority = data.get('priority', 'medium').lower()
     if priority not in ALLOWED_PRIORITIES:
         return jsonify({"error": f"Invalid priority. Allowed values are: {', '.join(ALLOWED_PRIORITIES)}"}), 400
+    
+    # is_current_focus will use the model's default (False)
+    # If frontend explicitly sends it on creation (though not typical per requirements),
+    # it could be handled, but current plan implies it's managed via PUT.
+    # is_current_focus_val = data.get('is_current_focus', False) # Example if handling on create
+    # if not isinstance(is_current_focus_val, bool):
+    #    return jsonify({"error": "is_current_focus must be a boolean if provided"}), 400
 
     try:
         new_todo = TodoItem(
@@ -85,6 +97,7 @@ def create_todo():
             due_date=due_date_obj,
             status=status,
             priority=priority
+            # is_current_focus uses default=False from the model
         )
         db.session.add(new_todo)
         db.session.commit()
@@ -106,14 +119,12 @@ def get_todo_by_id(todo_id):
     except ValueError:
         return jsonify({"error": "Invalid user identity in token"}), 400
 
-    # Query for the specific to-do item by its ID and ensuring it belongs to the current user
-    todo_item = db.session.get(TodoItem, todo_id) # Using db.session.get for SQLAlchemy 2.0+
+    todo_item = db.session.get(TodoItem, todo_id)
 
     if not todo_item:
         return jsonify({"error": "To-do item not found"}), 404
     
     if todo_item.user_id != current_user_id:
-        # User is trying to access a to-do item that doesn't belong to them
         return jsonify({"error": "Forbidden: You do not have permission to access this item"}), 403
 
     return jsonify(todo_item.to_dict()), 200
@@ -124,6 +135,7 @@ def get_todo_by_id(todo_id):
 def update_todo(todo_id):
     """
     Updates an existing to-do item for the currently authenticated user.
+    Can update standard fields and the 'is_current_focus' flag.
     """
     current_user_id_str = get_jwt_identity()
     try:
@@ -131,13 +143,11 @@ def update_todo(todo_id):
     except ValueError:
         return jsonify({"error": "Invalid user identity in token"}), 400
 
-    # Fetch the existing to-do item
-    todo_item = db.session.get(TodoItem, todo_id) # Using db.session.get for SQLAlchemy 2.0+
+    todo_item = db.session.get(TodoItem, todo_id)
 
     if not todo_item:
         return jsonify({"error": "To-do item not found"}), 404
 
-    # Check if the to-do item belongs to the current user
     if todo_item.user_id != current_user_id:
         return jsonify({"error": "Forbidden: You do not have permission to update this item"}), 403
 
@@ -145,23 +155,25 @@ def update_todo(todo_id):
     if not data:
         return jsonify({"error": "Request body must be JSON and cannot be empty"}), 400
 
-    # Update fields if they are provided in the request body
+    updated_fields = False # Flag to track if any updatable field was actually sent
+
     if 'title' in data:
         title = data['title']
         if not title or not isinstance(title, str) or not title.strip():
             return jsonify({"error": "Title must be a non-empty string if provided"}), 400
         todo_item.title = title.strip()
+        updated_fields = True
 
     if 'description' in data:
         description = data['description']
         if description is not None and not isinstance(description, str):
              return jsonify({"error": "Description must be a string if provided"}), 400
         todo_item.description = description.strip() if description else None
-
+        updated_fields = True
 
     if 'due_date' in data:
         due_date_str = data['due_date']
-        if due_date_str is None: # Allow setting due_date to null
+        if due_date_str is None:
             todo_item.due_date = None
         elif isinstance(due_date_str, str):
             try:
@@ -170,27 +182,36 @@ def update_todo(todo_id):
                 return jsonify({"error": "Invalid due_date format. Please use YYYY-MM-DD or null."}), 400
         else:
             return jsonify({"error": "due_date must be a string in YYYY-MM-DD format or null."}), 400
-
+        updated_fields = True
 
     if 'status' in data:
         status = data['status'].lower()
         if status not in ALLOWED_STATUSES:
             return jsonify({"error": f"Invalid status. Allowed values are: {', '.join(ALLOWED_STATUSES)}"}), 400
         todo_item.status = status
-        # If status is 'completed', set completed_at timestamp
         if status == 'completed' and todo_item.completed_at is None:
             todo_item.completed_at = datetime.datetime.now(datetime.timezone.utc)
-        elif status != 'completed': # If status changes from completed, clear completed_at
+        elif status != 'completed':
             todo_item.completed_at = None
-
+        updated_fields = True
 
     if 'priority' in data:
         priority = data['priority'].lower()
         if priority not in ALLOWED_PRIORITIES:
             return jsonify({"error": f"Invalid priority. Allowed values are: {', '.join(ALLOWED_PRIORITIES)}"}), 400
         todo_item.priority = priority
+        updated_fields = True
+
+    # Handle 'is_current_focus' update
+    if 'is_current_focus' in data:
+        is_focus = data['is_current_focus']
+        if not isinstance(is_focus, bool):
+            return jsonify({"error": "is_current_focus must be a boolean"}), 400
+        todo_item.is_current_focus = is_focus
+        updated_fields = True
     
-    # The updated_at field will be automatically updated by the model's onupdate
+    if not updated_fields and data: # Data was sent, but no recognized fields for update
+         return jsonify({"message": "No relevant to-do fields provided for update."}), 200
 
     try:
         db.session.commit()
@@ -213,22 +234,17 @@ def delete_todo(todo_id):
     except ValueError:
         return jsonify({"error": "Invalid user identity in token"}), 400
 
-    # Fetch the to-do item
-    todo_item = db.session.get(TodoItem, todo_id) # Using db.session.get for SQLAlchemy 2.0+
+    todo_item = db.session.get(TodoItem, todo_id)
 
     if not todo_item:
         return jsonify({"error": "To-do item not found"}), 404
 
-    # Check if the to-do item belongs to the current user
     if todo_item.user_id != current_user_id:
         return jsonify({"error": "Forbidden: You do not have permission to delete this item"}), 403
 
     try:
         db.session.delete(todo_item)
         db.session.commit()
-        # Return a 204 No Content response, which is standard for successful DELETE operations
-        # Alternatively, you can return a success message:
-        # return jsonify({"message": "To-do item deleted successfully"}), 200
         return '', 204
     except Exception as e:
         db.session.rollback()
