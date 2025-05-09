@@ -1,0 +1,69 @@
+“个人工作间与职业锚点”项目全局规划与技术方案1. 产品核心目标与愿景：该产品旨在为每位用户提供一个私人的、动态的在线空间。这个空间不仅用于对外专业展示，更核心的是作为用户个人的“职业锚点”——一个帮助他们清晰认知**“我做过什么，做得怎么样 (What I've done & how well I did it)”，“我正在做什么 (What I'm doing currently)”，以及“我打算做什么 (What I plan to do in the future)”**的工具。它帮助用户进行结构化反思，追踪职业发展，并保持前进的动力。2. 核心用户群体：主要面向希望有效管理个人职业发展、进行自我反思、展示专业价值的知识工作者、自由职业者、学生以及任何希望提升个人组织和规划能力的人。A. 技术架构规划建议 (High-Level)这是一个典型的高阶技术架构图：graph LR
+    subgraph "用户端 (User)"
+        Browser[Web Browser / Client Application]
+    end
+
+    subgraph "应用服务器 (Backend - Flask)"
+        API[Flask API Endpoints]
+        Auth[用户认证模块 JWT/OAuth]
+        BusinessLogic[核心业务逻辑]
+        LLM_Connector[LLM服务连接器]
+        Scheduler[定时任务调度器 - for insights/reminders]
+    end
+
+    subgraph "数据存储 (Data Persistence)"
+        DB[(PostgreSQL Database)]
+    end
+
+    subgraph "外部服务 (External Services)"
+        LLM_Service[LLM API (e.g., OpenAI)]
+    end
+
+    Browser -- HTTP/S Requests --> API
+    API -- CRUD, Queries --> DB
+    API -- User Credentials --> Auth
+    Auth -- Validation --> DB
+    API -- Tasks/Data --> BusinessLogic
+    BusinessLogic -- Processed Data --> API
+    BusinessLogic -- Data for LLM --> LLM_Connector
+    LLM_Connector -- API Calls --> LLM_Service
+    LLM_Service -- Responses --> LLM_Connector
+    LLM_Connector -- LLM Output --> BusinessLogic
+    Scheduler -- Triggers Actions (e.g., insights) --> BusinessLogic
+    BusinessLogic -- Updates/Notifications --> API
+    API -- HTTP/S Responses --> Browser
+组件划分说明：用户端 (Frontend - Svelte):负责用户界面展示、用户输入、与后端API的交互。响应式设计，适配不同设备。应用服务器 (Backend - Flask):API Endpoints: 提供RESTful API供前端调用，处理所有业务逻辑请求。用户认证模块: 处理注册、登录、会话管理，生成和验证JWT或处理OAuth流程。核心业务逻辑:个人锚点管理（概览页数据处理）智能待办事项管理（CRUD、关联目标）周期性报告生成逻辑（数据收集、与LLM交互）"活性更新"逻辑处理LLM服务连接器: 封装与外部LLM API的通信，处理请求构建、响应解析、错误处理、API Key管理等。定时任务调度器 (Optional, for future insights): 例如APScheduler (Python库)，用于定期触发如个性化洞察分析、提醒等。数据存储 (PostgreSQL):存储用户信息、锚点概览内容、技能、项目、成就、目标、待办事项、报告、LLM生成的建议等。利用PostgreSQL的JSONB类型可以灵活存储一些半结构化数据。数据库加密是非常重要的一环。外部服务 (LLM API):提供自然语言处理能力，如内容生成、摘要、建议等。B. 技术选型建议 (针对LLM集成和补充)您已确定Svelte, Flask, PostgreSQL，这些都是优秀的选择。前端 (Svelte): 轻量、高效，编译型框架带来的性能优势很适合构建流畅的用户体验。后端 (Flask): 简洁、灵活，Python生态丰富，尤其在数据处理和AI集成方面有优势。数据库 (PostgreSQL): 功能强大、可靠的关系型数据库，支持复杂查询和事务，JSONB类型也很实用。LLM集成建议：LLM服务选择：OpenAI API (GPT-3.5-turbo, GPT-4, etc.): 功能强大，应用广泛，文档和社区支持良好。需要关注其定价模型、使用限制和数据隐私政策。Anthropic Claude: 强于长文本处理和对话，安全性设计较好。Google Gemini API: Google出品，能力优秀，值得考虑。开源/自托管模型 (如 Llama 3, Mistral): 如果对数据隐私有极高要求且具备相应运维能力，可以考虑。但初期可能增加复杂性。建议： 初期可以从OpenAI或Google Gemini开始。设计LLM_Connector时，务必考虑接口的通用性，以便未来可以相对容易地切换或增加其他LLM服务。LLM交互设计：成本控制：Prompt优化： 精炼Prompt，减少token消耗。模型选择： 对不同任务选用不同成本和能力的模型。缓存： 对一些固定输入或不常变动的请求结果进行缓存。限流： 控制用户调用LLM功能的频率。延迟处理：对于耗时较长的LLM任务，后端应采用异步任务队列（如Celery with Redis/RabbitMQ for Flask）。前端发起请求后，后端将任务放入队列，API立即返回一个任务ID，前端可以轮询任务状态或通过WebSocket接收完成通知。数据隐私：明确告知用户： 清晰说明哪些数据会发送给LLM服务进行处理。数据最小化： 只发送必要的信息给LLM。关注服务商政策： 了解LLM服务商对输入数据的处理和存储策略。文本进文本出的思路很好，避免直接传递敏感内部结构。C. 核心功能实现思路“个人锚点概览页”的动态数据绑定与更新逻辑:数据模型 (PostgreSQL): (参考 phase1_updated_prompt_v2 文档中定义的表结构)users, anchor_overview (或直接在users表扩展), achievements, current_focus_items, future_plans, llm_suggestions。动态数据绑定 (Svelte): 页面加载时请求用户最新的锚点数据，通过Svelte的响应式特性渲染。“活性更新”逻辑 (LLM辅助):触发点： 用户完成重要待办、提交报告、手动添加项目等。后端处理流程:收集相关信息（如完成的任务描述、用户总结）。LLM Prompt构建 (伪代码):# In Flask backend
+def suggest_anchor_update_from_activity(user_id, activity_details, activity_type):
+    user_overview = db_get_user_anchor_overview(user_id) # 获取当前概览作为上下文
+    prompt = f"""
+    User {user_id} has just {activity_type}: {activity_details}.
+    Their current 'Personal Anchor Overview' includes:
+    Achievements: {user_overview['achievements']}
+    Current Focus: {user_overview['current_focus']}
+
+    Based on this, suggest a concise update or a new item for their 'Achievements' or 'Current Focus' section.
+    Format the suggestion as a JSON object:
+    {{
+        "target_section": "achievements" | "current_focus",
+        "suggested_title": "...",
+        "suggested_description": "...",
+        "quantifiable_results": "(optional)",
+        "core_skills_extracted": ["skill1", "skill2"] (optional)
+    }}
+    """
+    llm_response_json = call_llm_api(prompt) # LLM_Connector处理API调用
+    if llm_response_json:
+        db_save_llm_suggestion(user_id, llm_response_json['target_section'], llm_response_json)
+前端展示与用户交互: 通过通知或建议中心展示，用户可接受、编辑或拒绝。“待办事项”与“周期性报告”模块的数据流设计:数据模型 (PostgreSQL): (参考 phase1_updated_prompt_v2 文档中定义的表结构)todo_items, reports。数据流：创建/完成待办事项： 用户创建任务，可选关联future_plans。完成后，用户可撰写总结。生成周期性报告 (用户发起):后端收集周期内完成的todo_items（标题、描述、用户总结）。LLM Prompt构建 (伪代码):# In Flask backend
+def generate_report_draft_for_period(user_id, report_type, period_start, period_end):
+    completed_tasks_data = db_get_completed_tasks_in_period(user_id, period_start, period_end)
+    # 将 completed_tasks_data 格式化为可读字符串
+    prompt = f"""
+    Generate a {report_type} report draft for User {user_id} for {period_start} to {period_end}.
+    Key activities: {formatted_completed_tasks_string}
+    Structure with sections: Accomplishments, Challenges, Learnings, Next Period Focus.
+    Tone: reflective and professional.
+    """
+    llm_draft_text = call_llm_api(prompt)
+    return llm_draft_text
+前端展示初稿，用户编辑后最终存入reports表。D. 开发任务拆解 (MVP优先)Phase 1: 核心基础与独立模块 (MVP Core)项目初始化、用户认证 (已完成部分)。智能待办事项 (Smart To-Do List - MVP): 后端CRUD API, 前端组件，数据库模型。个人锚点概览页 (Personal Anchor Overview - MVP): 后端CRUD API (分块管理：Profile, Achievements, Current Focus, Future Plans), 前端组件，数据库模型。重点：此阶段所有内容均为用户手动输入和管理。Phase 2: 模块联动与基础报告待办事项与未来规划关联: 实现todo_items与future_plans的外键关联和前端交互。周期性报告 (手动版MVP): 用户手动创建报告，手动填写内容。后端提供API存储报告。数据流初探: 报告编辑时，可拉取本周期已完成任务列表辅助填写。Phase 3: LLM集成初步 (核心AI辅助)LLM服务连接器 (LLM_Connector): 后端封装调用LLM API。报告自动化辅助 (LLM): 实现基于已完成待办自动生成报告初稿。“活性更新”建议 (LLM - 基础版): 基于用户活动（如完成任务）为“个人锚点概览页”提供内容更新建议，存入llm_suggestions，前端简单展示。Phase 4: 体验优化与功能深化“活性更新”用户体验: 更友好的建议展示与一键采纳/编辑功能。LLM能力增强: 优化Prompt，提升建议和报告质量。探索个性化洞察与提醒。UI/UX打磨: 视觉风格、交互流畅性优化。高级功能: 标签系统、搜索、数据可视化等。E. 关键技术难点与解决方案探讨LLM Prompt工程:难点： 设计稳定输出期望格式和高质量内容的Prompt。解决方案： 结构化输入、Few-shot Learning、Chain-of-Thought、迭代优化、用户反馈。“活性更新”的平衡与用户接受度:难点： 避免AI建议过多或不准确。解决方案： 用户可控性（开关/频率）、透明度、非侵入式提醒、高质量优先、用户编辑权。LLM输出的结构化与解析:难点： LLM输出可能不完全符合JSON等结构化格式。解决方案： Prompt中强指令、重试机制、健壮的解析逻辑、Function Calling (如OpenAI提供)。异步任务处理 (针对LLM长耗时操作):难点： Flask同步框架处理耗时API影响体验。解决方案： Celery + Message Broker (Redis/RabbitMQ)；前端轮询/WebSocket。数据隐私与安全 (LLM交互):难点： 用户数据发送给第三方LLM服务。解决方案： 最小权限原则、用户协议透明、选择可信赖服务商、关注其数据政策、端到端加密（HTTPS、DB加密）。成本控制 (LLM API):难点： API按量付费可能导致高成本。解决方案： 优化Prompt减少Token、为不同任务选性价比模型、用户配额/限流、监控与告警、缓存LLM响应。这份全局规划文档希望能帮助您更清晰地把握项目方向和技术细节。

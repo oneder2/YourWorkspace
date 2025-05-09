@@ -1,0 +1,31 @@
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+	  "allowJs": true,
+	  "checkJs": true,
+	  "esModuleInterop": true,
+	  "forceConsistentCasingInFileNames": true,
+	  "resolveJsonModule": true,
+	  "skipLibCheck": true,
+	  "sourceMap": true,
+	  "strict": true,
+	  // Svelte-specific options
+	  "isolatedModules": true,          // Required by Svelte/Vite
+	  // Path aliases (should match svelte.config.js if you use them there)
+	  // Example:
+	  // "baseUrl": ".",
+	  // "paths": {
+	  //   "$lib": ["src/lib"],
+	  //   "$lib/*": ["src/lib/*"]
+	  // }
+	  // Lib option: Ensure 'dom' is included for browser APIs
+	  "lib": ["es2020", "DOM", "DOM.Iterable"],
+	  "moduleResolution": "bundler", // Or "node" depending on your setup, "bundler" is often preferred with Vite
+	  "module": "esnext", // Or another suitable module system
+	  "target": "esnext"  // Target modern JavaScript features
+	}
+	// "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"],
+	// "exclude": ["node_modules/**", ".svelte-kit/**"]
+	// `include` and `exclude` are often handled by the extended tsconfig.json from .svelte-kit
+}
+  
