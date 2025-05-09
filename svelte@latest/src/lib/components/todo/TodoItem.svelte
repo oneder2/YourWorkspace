@@ -1,0 +1,406 @@
+<script lang="ts">
+  import { todoStore } from '$lib/store/todoStore';
+  import type { TodoItem, TodoStatus, TodoPriority } from '$lib/services/todoService';
+  import { createEventDispatcher } from 'svelte';
+
+  // Import Modal and Edit Form components
+  import Modal from '$lib/components/common/Modal.svelte';
+  import TodoEditForm from './TodoEditForm.svelte';
+
+  export let todo: TodoItem;
+
+  const dispatch = createEventDispatcher();
+
+  let isLoadingToggle = false;
+  let isLoadingDelete = false;
+  let showDetails = false;
+  let isEditModalOpen = false; // State to control edit modal visibility
+
+  // Reference to the TodoEditForm component instance to call its submit method
+  let todoEditFormComponent: TodoEditForm;
+
+
+  async function handleToggleStatus() {
+    if (!todo) return;
+    isLoadingToggle = true;
+    try {
+      await todoStore.toggleTodoStatus(todo.id, todo.status);
+    } catch (error) {
+      console.error(`Failed to toggle status for todo ${todo.id}:`, error);
+      dispatch('actionError', { message: 'Failed to update status.' });
+    } finally {
+      isLoadingToggle = false;
+    }
+  }
+
+  async function handleDelete() {
+    if (!todo) return;
+    // Example: Simple confirm, can be replaced with a nicer confirmation modal
+    if (!confirm(`Are you sure you want to delete "${todo.title}"?`)) {
+      return;
+    }
+    isLoadingDelete = true;
+    try {
+      await todoStore.removeTodo(todo.id);
+      dispatch('deleted', { id: todo.id });
+    } catch (error) {
+      console.error(`Failed to delete todo ${todo.id}:`, error);
+      dispatch('actionError', { message: 'Failed to delete item.' });
+    } finally {
+      isLoadingDelete = false;
+    }
+  }
+
+  function openEditModal() {
+    isEditModalOpen = true;
+  }
+
+  function closeEditModal() {
+    isEditModalOpen = false;
+  }
+
+  // This function will be called by the "Save Changes" button in the modal's footer
+  async function triggerEditFormSubmit() {
+    if (todoEditFormComponent) {
+      // Programmatically call the handleSubmit method of TodoEditForm
+      // We need to ensure TodoEditForm exposes handleSubmit or a similar method,
+      // or we trigger its form submission.
+      // For simplicity, we'll assume TodoEditForm's internal submit button is sufficient
+      // if we make the "Save" button in the modal footer of type="submit" and associate it with the form.
+      // A more direct way is to export a submit function from TodoEditForm.
+      // Let's try to trigger the form's submit logic by getting a reference to its form element.
+      // However, direct DOM manipulation like this is less Svelte-like.
+      // The best way is for TodoEditForm to have an exported submit function or for the modal
+      // footer button to be of type submit and linked to the form via the `form` attribute.
+
+      // Simpler: TodoEditForm dispatches 'saveSuccess'. We just need to close.
+      // The actual submit logic is within TodoEditForm.
+      // The 'saveSuccess' event from TodoEditForm will indicate success.
+    }
+  }
+
+
+  function formatDate(dateString?: string | null): string {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString + 'T00:00:00');
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }).format(date);
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  $: itemClasses = `
+    todo-item-card
+    status-${todo.status.replace('_', '-')}
+    priority-${todo.priority}
+    ${showDetails ? 'details-visible' : ''}
+  `;
+
+  const priorityText: Record<TodoPriority, string> = { low: 'Low', medium: 'Medium', high: 'High' };
+  const statusText: Record<TodoStatus, string> = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed', deferred: 'Deferred' };
+
+</script>
+
+<div class={itemClasses}>
+  <div class="todo-main-info">
+    <div class="todo-checkbox-area">
+      <input
+        type="checkbox"
+        id="status-{todo.id}"
+        class="status-checkbox"
+        checked={todo.status === 'completed'}
+        on:change={handleToggleStatus}
+        disabled={isLoadingToggle || isLoadingDelete}
+        aria-labelledby="title-{todo.id}"
+      />
+      <label for="status-{todo.id}" class="checkbox-label" aria-hidden="true"></label>
+    </div>
+
+    <div class="todo-title-and-meta" on:click={() => showDetails = !showDetails} role="button" tabindex="0" on:keypress={(e) => e.key === 'Enter' && (showDetails = !showDetails)}>
+      <h4 class="todo-title" id="title-{todo.id}" class:completed={todo.status === 'completed'}>
+        {todo.title}
+      </h4>
+      <div class="todo-meta">
+        {#if todo.due_date}
+          <span class="meta-item due-date" title="Due Date">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            {formatDate(todo.due_date)}
+          </span>
+        {/if}
+        <span class="meta-item priority priority-{todo.priority}" title="Priority">
+           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          {priorityText[todo.priority]}
+        </span>
+         <span class="meta-item status status-badge-{todo.status.replace('_', '-')}" title="Status">
+          {statusText[todo.status]}
+        </span>
+      </div>
+    </div>
+
+    <div class="todo-actions">
+      <button
+        class="action-button edit-button"
+        on:click|stopPropagation={openEditModal} title="Edit To-Do"
+        aria-label="Edit To-Do item: {todo.title}"
+        disabled={isLoadingToggle || isLoadingDelete}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      </button>
+      <button
+        class="action-button delete-button"
+        on:click|stopPropagation={handleDelete}
+        title="Delete To-Do"
+        aria-label="Delete To-Do item: {todo.title}"
+        disabled={isLoadingToggle || isLoadingDelete}
+      >
+        {#if isLoadingDelete}
+          <span class="spinner"></span>
+        {:else}
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        {/if}
+      </button>
+    </div>
+  </div>
+
+  {#if showDetails && todo.description}
+    <div class="todo-details-content">
+      <p class="description-text">{todo.description}</p>
+    </div>
+  {/if}
+</div>
+
+{#if isEditModalOpen}
+  <Modal
+    isOpen={isEditModalOpen}
+    title="Edit To-Do: {todo.title}"
+    on:close={closeEditModal}
+    modalWidth="max-w-xl" 
+  >
+    <div slot="body">
+      <TodoEditForm
+        bind:this={todoEditFormComponent}
+        todo={todo}
+        on:saveSuccess={closeEditModal} 
+        on:closeModalRequest={closeEditModal}
+      />
+    </div>
+    <div slot="footer" class="modal-form-actions">
+      <button 
+        type="button" 
+        class="button secondary-button" 
+        on:click={() => todoEditFormComponent.handleCancel()} 
+        disabled={todoEditFormComponent?.isLoading}
+      >
+        Cancel
+      </button>
+      <button 
+        type="submit" 
+        class="button primary-button" 
+        on:click={() => todoEditFormComponent.handleSubmit()}
+        disabled={todoEditFormComponent?.isLoading}
+        form="todo-edit-form-{todo.id}"  
+      >
+        {#if todoEditFormComponent?.isLoading}
+          Saving...
+        {:else}
+          Save Changes
+        {/if}
+      </button>
+    </div>
+  </Modal>
+{/if}
+
+<style>
+  /* Existing styles from TodoItem.svelte ... */
+  .todo-item-card {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: var(--border-radius-md, 0.375rem);
+    padding: 1rem 1.25rem;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .todo-item-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: var(--border-color-hover, #cccccc);
+  }
+
+  .todo-main-info {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .todo-checkbox-area {
+    margin-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .status-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary-color, #007bff);
+  }
+  .status-checkbox:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .checkbox-label {
+    display: none;
+  }
+
+  .todo-title-and-meta {
+    flex-grow: 1;
+    cursor: pointer;
+    min-width: 0;
+  }
+
+  .todo-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary, #333);
+    margin: 0 0 0.25rem 0;
+    word-break: break-word;
+  }
+
+  .todo-title.completed {
+    text-decoration: line-through;
+    color: var(--text-secondary, #6c757d);
+    opacity: 0.8;
+  }
+
+  .todo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-muted, #6c757d);
+  }
+
+  .meta-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--border-radius-sm, 0.25rem);
+    background-color: var(--meta-item-bg, #f0f0f0);
+  }
+  .meta-item svg {
+    margin-right: 0.3em;
+    opacity: 0.7;
+  }
+
+  .priority-low { background-color: var(--priority-low-bg, #e6f4ea); color: var(--priority-low-text, #28a745); }
+  .priority-medium { background-color: var(--priority-medium-bg, #fff3cd); color: var(--priority-medium-text, #ffc107); }
+  .priority-high { background-color: var(--priority-high-bg, #f8d7da); color: var(--priority-high-text, #dc3545); }
+
+  .status-badge-pending { background-color: var(--status-pending-bg, #cfe2ff); color: var(--status-pending-text, #0d6efd); }
+  .status-badge-in-progress { background-color: var(--status-inprogress-bg, #fff3cd); color: var(--status-inprogress-text, #ffc107); }
+  .status-badge-completed { background-color: var(--status-completed-bg, #d1e7dd); color: var(--status-completed-text, #198754); }
+  .status-badge-deferred { background-color: var(--status-deferred-bg, #e2e3e5); color: var(--status-deferred-text, #6c757d); }
+
+  .todo-actions {
+    display: flex;
+    align-items: center;
+    margin-left: 1rem;
+  }
+
+  .action-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary, #6c757d);
+    padding: 0.4rem;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    margin-left: 0.5rem;
+  }
+
+  .action-button:hover:not(:disabled) {
+    background-color: var(--button-hover-bg, #f0f0f0);
+  }
+  .action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .edit-button:hover:not(:disabled) {
+    color: var(--info-color, #0dcaf0);
+  }
+  .delete-button:hover:not(:disabled) {
+    color: var(--danger-color, #dc3545);
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .todo-details-content {
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    border-top: 1px dashed var(--border-color-light, #e9ecef);
+    font-size: 0.9rem;
+    color: var(--text-secondary, #555);
+  }
+  .description-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Styles for modal action buttons in the footer slot */
+  .modal-form-actions .button {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: var(--border-radius, 0.375rem);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .modal-form-actions .primary-button {
+    background-color: var(--primary-color, #007bff);
+    color: white;
+    border: 1px solid var(--primary-color, #007bff);
+  }
+  .modal-form-actions .primary-button:hover:not(:disabled) {
+    background-color: #0056b3;
+    border-color: #0056b3;
+  }
+  .modal-form-actions .primary-button:disabled {
+     background-color: var(--secondary-color, #6c757d);
+     border-color: var(--secondary-color, #6c757d);
+     opacity: 0.65;
+  }
+
+  .modal-form-actions .secondary-button {
+    background-color: var(--button-secondary-bg, #6c757d);
+    color: white;
+    border: 1px solid var(--button-secondary-bg, #6c757d);
+  }
+  .modal-form-actions .secondary-button:hover:not(:disabled) {
+    background-color: #5a6268;
+    border-color: #545b62;
+  }
+   .modal-form-actions .secondary-button:disabled {
+     opacity: 0.65;
+  }
+</style>
