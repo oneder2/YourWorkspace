@@ -1,4 +1,5 @@
 <script lang="ts">
+  import '../../app.css'; // 假设 app.css 在 src 目录下
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';

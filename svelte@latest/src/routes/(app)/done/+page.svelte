@@ -1,0 +1,104 @@
+<script lang="ts">
+    // Import necessary Svelte components and types
+    import AchievementList from '$lib/components/anchor/achievements/AchievementList.svelte';
+    import AchievementForm from '$lib/components/anchor/achievements/AchievementForm.svelte';
+    import Modal from '$lib/components/common/Modal.svelte'; // Assuming Modal component path is correct
+    import type { Achievement } from '$lib/services/achievementService';
+    // achievementStore might be used here for specific actions if needed, but list updates are reactive
+    // import { achievementStore } from '$lib/store/achievementStore'; 
+    // import { onMount, get } from 'svelte'; // get is from svelte/store if you need to read store value once
+  
+    // State variable to control the visibility of the modal
+    let isModalOpen = false;
+    // State variable to hold the achievement being edited. Null for creating a new one.
+    let currentEditingAchievement: Achievement | null = null;
+  
+    /*
+    // onMount(() => {
+    //   // Initial data loading can be triggered here or within AchievementList.
+    //   // AchievementList currently handles its own initial loading in its onMount.
+    //   // If achievements are not loaded and not currently loading, trigger load:
+    //   // if (get(achievementStore.achievements).length === 0 && !get(achievementStore.isLoading)) {
+    //   //   achievementStore.loadAchievements();
+    //   // }
+    // });
+    */
+  
+    /**
+     * Opens the modal in 'create' mode for adding a new achievement.
+     * This function is called when AchievementList dispatches 'addNewAchievement'.
+     */
+    function openCreateModal() {
+      currentEditingAchievement = null; // Ensure form is in create mode
+      isModalOpen = true; // Open the modal
+    }
+  
+    /**
+     * Opens the modal in 'edit' mode for an existing achievement.
+     * This function is called when AchievementList dispatches 'editAchievement'.
+     * @param {CustomEvent<Achievement>} event - The event containing the achievement to edit.
+     */
+    function openEditModal(event: CustomEvent<Achievement>) {
+      currentEditingAchievement = event.detail; // Set the achievement to be edited
+      isModalOpen = true; // Open the modal
+    }
+  
+    /**
+     * Closes the modal and resets the editing state.
+     * This function is called by the Modal component (on:close event) or after form actions.
+     */
+    function closeModal() {
+      isModalOpen = false; // Close the modal
+      currentEditingAchievement = null; // Clear any achievement being edited
+    }
+  
+    /**
+     * Handles the 'save' event dispatched by AchievementForm.
+     * Closes the modal after a successful save. The list will update reactively.
+     * @param {CustomEvent<Achievement>} event - The event containing the saved achievement.
+     */
+    function handleFormSave(event: CustomEvent<Achievement>) {
+      closeModal();
+      // Optional: Display a success notification (e.g., using a toast message system)
+      // console.log('Achievement saved successfully:', event.detail);
+    }
+  
+    /**
+     * Handles the 'cancel' event dispatched by AchievementForm.
+     * Closes the modal without saving.
+     */
+    function handleFormCancel() {
+      closeModal();
+    }
+  </script>
+  
+  <div class="page-container p-4 md:p-8">
+    <AchievementList
+      on:addNewAchievement={openCreateModal}
+      on:editAchievement={openEditModal}
+    />
+  
+    {#if isModalOpen}
+      <Modal 
+        isOpen={isModalOpen} 
+        on:close={closeModal} 
+        title={currentEditingAchievement ? 'Edit Achievement' : 'Add New Achievement'}
+        modalWidth="max-w-xl" >
+        <AchievementForm
+          achievement={currentEditingAchievement}
+          on:save={handleFormSave}
+          on:cancel={handleFormCancel}
+        />
+      </Modal>
+    {/if}
+  </div>
+  
+  <style>
+    /* Page-specific styles can be added here if necessary */
+    .page-container {
+      max-width: 1200px; /* Example: Limit the maximum width of the page content */
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+  
