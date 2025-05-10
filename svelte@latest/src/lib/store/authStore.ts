@@ -167,23 +167,23 @@ export const authStore: AuthStore = {
 // <script lang="ts">
 //   import { authStore, isAuthenticated } from '$lib/store/authStore';
 //   import type { UserProfile } from '$lib/store/authStore'; // For type checking
-//
+
 //   let currentUser: UserProfile | null = null;
 //   let isUserAuthenticated: boolean = false;
-//
+
 //   authStore.subscribe(value => {
 //     currentUser = value.user;
 //   });
-//
+
 //   isAuthenticated.subscribe(value => {
 //     isUserAuthenticated = value;
 //   });
-//
+
 //   function handleLogout() {
 //     authStore.logout();
 //   }
 // </script>
-//
+
 // {#if isUserAuthenticated && currentUser}
 //   <p>Welcome, {currentUser.username}!</p>
 //   <button on:click={handleLogout}>Logout</button>

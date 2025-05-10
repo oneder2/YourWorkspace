@@ -1,183 +1,219 @@
-// src/lib/services/anchorService.ts
+// src/lib/services/authService.ts
 
 /**
- * @file anchorService.ts
- * @description Service layer for handling "Personal Anchor" related API interactions.
- * Includes Profile, Achievements, Current Focus, and Future Plans.
+ * @file authService.ts
+ * @description Service layer for handling all authentication-related API interactions.
+ * It uses the generic `api` service for making HTTP requests and updates the
+ * `authStore` with the authentication state and user profile.
  */
 
 import { api, type ApiError } from './api';
+import { authStore, type UserProfile, type AuthState } from '$lib/store/authStore';
+import { get } from 'svelte/store'; // Import get for synchronously reading store values
 
-// --- Interfaces for Profile (already defined) ---
-export interface UserProfileData {
-  user_id: number;
-  professional_title: string | null;
-  one_liner_bio: string | null;
-  created_at: string; // ISO 8601
-  updated_at: string; // ISO 8601
+// Define interfaces for request payloads based on your API documentation
+// (prompts/frontend/phase1.txt)
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
-export interface UpdateUserProfilePayload {
-  professional_title?: string | null;
-  one_liner_bio?: string | null;
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
 }
 
-// --- Interfaces for Current Focus (based on API documentation Section 3.3) ---
-export interface CurrentFocusItem {
-  id: number;
-  user_id: number;
-  item_type: string | null; // e.g., "Project", "Learning Goal", "Skill Development"
-  title: string;
-  description: string | null;
-  start_date: string | null; // YYYY-MM-DD
-  status: string | null; // e.g., "Active", "On Hold", "Nearing Completion"
-  created_at: string; // ISO 8601
-  updated_at: string; // ISO 8601
+export interface RegisterPayload {
+  username: string;
+  email: string;
+  password: string;
 }
 
-export interface CreateCurrentFocusPayload {
-  title: string; // Required
-  item_type?: string;
-  description?: string;
-  start_date?: string; // YYYY-MM-DD
-  status?: string;
+export interface RegisterResponse {
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    created_at: string;
+  };
 }
 
-export interface UpdateCurrentFocusPayload {
-  title?: string;
-  item_type?: string;
-  description?: string | null;
-  start_date?: string | null; // YYYY-MM-DD
-  status?: string | null;
-}
-
-
-// --- Profile Service Methods (already defined) ---
-async function getIdentityProfile(): Promise<UserProfileData> {
-  try {
-    const profileData = await api.get<UserProfileData>('/anchor/profile');
-    if (!profileData) {
-      throw new Error('Profile data not found or API returned an unexpected empty response.');
-    }
-    return profileData;
-  } catch (error) {
-    console.error('AnchorService: Failed to fetch identity profile', error);
-    throw error;
-  }
-}
-
-async function updateIdentityProfile(payload: UpdateUserProfilePayload): Promise<UserProfileData> {
-  try {
-    const updatedProfile = await api.put<UserProfileData>('/anchor/profile', payload);
-    return updatedProfile;
-  } catch (error) {
-    console.error('AnchorService: Failed to update identity profile', error);
-    throw error;
-  }
-}
-
-// --- Current Focus Service Methods ---
-
-/**
- * Fetches all Current Focus items for the authenticated user.
- * API: GET /anchor/current_focus
- * @returns {Promise<CurrentFocusItem[]>} A list of current focus items.
- * @throws {ApiError} If the request fails.
- */
-async function getAllCurrentFocusItems(): Promise<CurrentFocusItem[]> {
-  try {
-    const items = await api.get<CurrentFocusItem[]>('/anchor/current_focus');
-    return items || [];
-  } catch (error) {
-    console.error('AnchorService: Failed to fetch all current focus items', error);
-    throw error;
-  }
+export interface ChangePasswordPayload {
+  new_password: string;
 }
 
 /**
- * Creates a new Current Focus item.
- * API: POST /anchor/current_focus
- * @param payload - The data for the new current focus item.
- * @returns {Promise<CurrentFocusItem>} The newly created current focus item.
- * @throws {ApiError} If the request fails.
- */
-async function createCurrentFocusItem(payload: CreateCurrentFocusPayload): Promise<CurrentFocusItem> {
-  try {
-    const newItem = await api.post<CurrentFocusItem>('/anchor/current_focus', payload);
-    return newItem;
-  } catch (error) {
-    console.error('AnchorService: Failed to create current focus item', error);
-    throw error;
-  }
-}
-
-/**
- * Fetches a specific Current Focus item by its ID.
- * API: GET /anchor/current_focus/<int:focus_id>
- * @param focusId - The ID of the item to fetch.
- * @returns {Promise<CurrentFocusItem | null>} The item, or null if not found.
- * @throws {ApiError} If the request fails (other than 404).
- */
-async function getCurrentFocusItemById(focusId: number): Promise<CurrentFocusItem | null> {
-  try {
-    const item = await api.get<CurrentFocusItem>(`/anchor/current_focus/${focusId}`);
-    return item;
-  } catch (error: any) {
-    if (error.status === 404) {
-      console.warn(`AnchorService: Current focus item with ID ${focusId} not found.`);
-      return null;
-    }
-    console.error(`AnchorService: Failed to fetch current focus item with ID ${focusId}`, error);
-    throw error;
-  }
-}
-
-/**
- * Updates an existing Current Focus item.
- * API: PUT /anchor/current_focus/<int:focus_id>
- * @param focusId - The ID of the item to update.
- * @param payload - The data to update.
- * @returns {Promise<CurrentFocusItem>} The updated item.
- * @throws {ApiError} If the request fails.
- */
-async function updateCurrentFocusItem(focusId: number, payload: UpdateCurrentFocusPayload): Promise<CurrentFocusItem> {
-  try {
-    const updatedItem = await api.put<CurrentFocusItem>(`/anchor/current_focus/${focusId}`, payload);
-    return updatedItem;
-  } catch (error) {
-    console.error(`AnchorService: Failed to update current focus item with ID ${focusId}`, error);
-    throw error;
-  }
-}
-
-/**
- * Deletes a specific Current Focus item.
- * API: DELETE /anchor/current_focus/<int:focus_id>
- * @param focusId - The ID of the item to delete.
+ * Logs in a user with the provided credentials.
+ * On success, updates the authStore with tokens and fetches user profile.
+ * @param credentials - The user's login credentials (email and password).
  * @returns {Promise<void>}
- * @throws {ApiError} If the request fails.
+ * @throws {ApiError} If login fails.
  */
-async function deleteCurrentFocusItem(focusId: number): Promise<void> {
+async function loginUser(credentials: LoginCredentials): Promise<void> {
   try {
-    await api.delete(`/anchor/current_focus/${focusId}`);
+    const response = await api.post<LoginResponse>('/auth/login', credentials, false); // Login doesn't require auth initially
+    if (response.access_token && response.refresh_token) {
+      // Store tokens and then fetch user profile
+      authStore.login({ access_token: response.access_token, refresh_token: response.refresh_token });
+      await fetchUserProfile(); // Fetch and store user profile after successful login
+    } else {
+      throw new Error('Login response did not include tokens.');
+    }
   } catch (error) {
-    console.error(`AnchorService: Failed to delete current focus item with ID ${focusId}`, error);
+    console.error('AuthService: Login failed', error);
+    authStore.logout(); // Ensure state is cleared on failed login
+    throw error; // Re-throw the error for the UI to handle
+  }
+}
+
+/**
+ * Registers a new user.
+ * @param userData - The data for the new user (username, email, password).
+ * @returns {Promise<RegisterResponse>} The registration success response.
+ * @throws {ApiError} If registration fails.
+ */
+async function registerUser(userData: RegisterPayload): Promise<RegisterResponse> {
+  try {
+    // Registration does not require auth
+    const response = await api.post<RegisterResponse>('/auth/register', userData, false);
+    return response;
+  } catch (error) {
+    console.error('AuthService: Registration failed', error);
     throw error;
   }
 }
 
+/**
+ * Fetches the profile of the currently authenticated user.
+ * Updates the authStore with the user's profile information.
+ * @returns {Promise<UserProfile | null>} The user profile or null if fetch fails.
+ * @throws {ApiError} If fetching profile fails (e.g., due to invalid token).
+ */
+async function fetchUserProfile(): Promise<UserProfile | null> {
+  try {
+    // Requires auth (access token will be automatically attached by api.ts)
+    const userProfile = await api.get<UserProfile>('/auth/me');
+    if (userProfile) {
+      authStore.setUserProfile(userProfile);
+      return userProfile;
+    }
+    return null;
+  } catch (error: any) {
+    console.error('AuthService: Failed to fetch user profile', error);
+    if (error.status === 401 || error.status === 422) {
+        authStore.logout();
+    }
+    throw error;
+  }
+}
 
-export const anchorService = {
-  // Profile methods
-  getIdentityProfile,
-  updateIdentityProfile,
+/**
+ * Logs out the currently authenticated user.
+ * This involves revoking the access token on the server and clearing local auth state.
+ * @returns {Promise<void>}
+ * @throws {ApiError} If logout fails on the server side.
+ */
+async function logoutUser(): Promise<void> {
+  try {
+    const currentAuthState = get(authStore); // Use get() for synchronous access
 
-  // Current Focus methods
-  getAllCurrentFocusItems,
-  createCurrentFocusItem,
-  getCurrentFocusItemById,
-  updateCurrentFocusItem,
-  deleteCurrentFocusItem,
+    if (currentAuthState.accessToken) {
+        await api.post('/auth/logout', {}, true); // Revoke access token
+    }
 
-  // Methods for Achievements and Future Plans will be added here later
+    // Optional: Revoke refresh token if API and api.ts support it easily.
+    // As discussed, /auth/logout-refresh needs the refresh token in the Bearer header.
+    // if (currentAuthState.refreshToken) {
+    //   // Special call needed here, similar to refreshAccessToken logic
+    // }
+
+  } catch (error) {
+    console.error('AuthService: Server logout failed (access token revocation)', error);
+    // Do not re-throw, client-side logout should still proceed.
+  } finally {
+    authStore.logout(); // Always clear local authentication state
+  }
+}
+
+/**
+ * Changes the password for the currently authenticated user.
+ * Requires a "fresh" access token (obtained directly from login).
+ * @param payload - Object containing the new_password.
+ * @returns {Promise<{ message: string }>} Success message.
+ * @throws {ApiError} If password change fails.
+ */
+async function changePassword(payload: ChangePasswordPayload): Promise<{ message: string }> {
+  try {
+    const response = await api.post<{ message: string }>('/auth/change-password', payload, true);
+    return response;
+  } catch (error) {
+    console.error('AuthService: Change password failed', error);
+    throw error;
+  }
+}
+
+/**
+ * Refreshes the access token using the refresh token.
+ * @returns {Promise<string | null>} The new access token or null if refresh fails.
+ * @throws {ApiError} If token refresh fails.
+ */
+async function refreshAccessToken(): Promise<string | null> {
+  const currentAuthState = get(authStore); // Use get() for synchronous access
+
+  if (!currentAuthState.refreshToken) {
+      console.warn('AuthService: No refresh token available to refresh access token.');
+      authStore.logout(); // No way to recover session if refresh token is missing
+      return null;
+  }
+
+  try {
+    // The /auth/refresh endpoint expects the Refresh Token in the Bearer header.
+    // We make a direct fetch call here, bypassing api.ts's default behavior of sending Access Token.
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const response = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${currentAuthState.refreshToken}`,
+            'Content-Type': 'application/json', // Though body is empty, Content-Type might be expected
+        }
+        // No body is sent for this specific endpoint as per API spec
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        const error: ApiError = new Error(errorData.message || 'Token refresh failed');
+        error.status = response.status;
+        error.data = errorData;
+        throw error;
+    }
+
+    const tokenResponse = await response.json();
+    const newAccessToken = tokenResponse.access_token;
+
+    if (newAccessToken) {
+      authStore.setTokens({ accessToken: newAccessToken });
+      return newAccessToken;
+    } else {
+      throw new Error('New access token not found in refresh response.');
+    }
+
+  } catch (error: any) {
+    console.error('AuthService: Failed to refresh access token', error);
+    if (error.status === 401 || error.status === 422) { // Unauthorized or Unprocessable (e.g. token revoked/invalid)
+      authStore.logout(); // Log out if refresh token is invalid
+    }
+    throw error; // Re-throw for UI or global error handler
+  }
+}
+
+
+export const authService = {
+  loginUser,
+  registerUser,
+  logoutUser,
+  fetchUserProfile,
+  changePassword,
+  refreshAccessToken,
 };

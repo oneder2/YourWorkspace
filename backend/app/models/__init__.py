@@ -10,8 +10,8 @@ from .token_blocklist import TokenBlocklist
 from .todo_item import TodoItem
 from .user_profile import UserProfile
 from .achievement import Achievement
-from .current_focus_item import CurrentFocusItem
-from .future_plan import FuturePlan # Add this line
+# from .current_focus_item import CurrentFocusItem # REMOVE THIS LINE
+from .future_plan import FuturePlan
 
 
 # Add other models here as they are created
