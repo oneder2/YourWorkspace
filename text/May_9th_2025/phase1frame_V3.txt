@@ -1,0 +1,202 @@
+SvelteKit 前端开发框架设计方案 (V3 - 整合当前焦点与待办)1. 引言本方案旨在根据您提供的“个人工作间与职业锚点”项目基本方针、Phase 1前端设想、前端工程师建议、核心“身份锚点”页面整合，以及关于优化“当前焦点”与“待办事项”关系的讨论，构建一个清晰、强大且可扩展的SvelteKit前端开发框架。该框架以核心的“身份锚点 (My Anchor)”页面为基础，辅以围绕“已做 (Done)”、“正在做 (Doing)”（其中“当前焦点”作为“待办事项”的精选子集）、和“打算做 (Plan)”三个核心时间维度视图进行组织。2. 核心设计理念用户中心与锚点核心: 以“身份锚点”为中心。专注与简化: 三个时间维度视图聚焦特定阶段。“当前焦点”明确为“待办事项”中最重要的任务，避免功能冗余。模块化与解耦: 组件化设计。MVP优先: 满足核心功能需求。SvelteKit驱动与可扩展性: 利用SvelteKit的强大功能。3. 建议的文件夹结构 (基于SvelteKit)/project-root
+├── src/
+│   ├── app.html
+│   ├── hooks.server.js
+│   │
+│   ├── lib/
+│   │   ├── assets/
+│   │   │   └── icons/
+│   │   │   └── logo.png
+│   │   │
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   ├── layout/
+│   │   │   │   ├── Navbar.svelte
+│   │   │   │   ├── ArrowNav.svelte
+│   │   │   │   └── PageTransition.svelte
+│   │   │   ├── auth/
+│   │   │   ├── todo/             # 待办事项功能组件 (包含处理“当前焦点”的逻辑)
+│   │   │   │   ├── TodoItem.svelte     # 可根据是否为当前焦点调整显示样式
+│   │   │   │   ├── TodoList.svelte     # 可分为“当前焦点”列表和“其他待办”列表
+│   │   │   │   └── TodoForm.svelte
+│   │   │   └── anchor/           # “个人锚点”相关功能组件
+│   │   │       ├── IdentityAnchorEditor.svelte
+│   │   │       ├── achievements/
+│   │   │       │   ├── AchievementCard.svelte
+│   │   │       │   └── AchievementForm.svelte
+│   │   │       ├── current_focus/  # **此目录下的组件现在将主要负责展示“当前焦点”区域的特殊UI和交互**
+│   │   │       │   └── CurrentFocusDisplay.svelte # 例如，一个专门展示置顶待办的组件
+│   │   │       ├── future_plans/
+│   │   │       │   ├── PlanItem.svelte
+│   │   │       │   └── PlanForm.svelte
+│   │   │
+│   │   ├── services/
+│   │   ├── store/
+│   │   │   ├── authStore.js
+│   │   │   ├── uiStore.js
+│   │   │   ├── todoStore.js      # **核心待办数据，包含 isCurrentFocus 标志**
+│   │   │   └── anchorStore.js    # 管理身份锚点核心数据及成就、计划数据 (不再直接管理独立的当前焦点列表)
+│   │   │
+│   │   └── utils/
+│   │
+│   ├── routes/
+│   │   ├── +layout.svelte
+│   │   │
+│   │   ├── (app)/
+│   │   │   ├── +layout.svelte
+│   │   │   │
+│   │   │   ├── anchor/
+│   │   │   │   └── +page.svelte
+│   │   │   │
+│   │   │   ├── doing/            # “正在做” - 页面将包含“当前焦点”区和“待办列表”区
+│   │   │   │   └── +page.svelte
+│   │   │   ├── done/
+│   │   │   │   └── +page.svelte
+│   │   │   ├── plan/
+│   │   │   │   └── +page.svelte
+│   │   │   │
+│   │   │   ├── todos/            # (可选) 独立待办管理页面
+│   │   │   │   └── +page.svelte
+│   │   │
+│   │   ├── login/
+│   │   │   └── +page.svelte
+│   │   ├── register/
+│   │   │   └── +page.svelte
+│   │   │
+│   │   └── +page.svelte
+│   │
+│   └── service-worker.js
+│
+├── static/
+│   └── favicon.png
+│   └── global.css
+│
+├── tests/
+├── .env
+└── ... (其他项目配置文件)
+关键变动：src/lib/components/anchor/current_focus/ 目录下的组件角色调整，主要用于展示“当前焦点”的特殊UI。anchorStore.js 不再管理独立的“当前焦点”列表，此信息现在是 todoStore.js 中待办事项的一个属性。4. 核心组件与页面设计4.2. 布局 (src/routes/)src/routes/(app)/+layout.svelte: 保持不变。4.3. 核心导航组件src/lib/components/layout/Navbar.svelte: 保持不变。src/lib/components/layout/ArrowNav.svelte: 保持不变。4.4. 核心视图/页面 (src/routes/(app)/)src/routes/(app)/anchor/+page.svelte (“身份锚点”页面): 保持不变。src/routes/(app)/doing/+page.svelte (“正在做”)路由: /doing内容：聚焦“我正在做什么”。此页面将重新组织，以清晰区分“当前焦点”和“其他待办事项”。核心功能调整:当前焦点区 (Current Focus Area):使用 src/lib/components/anchor/current_focus/CurrentFocusDisplay.svelte (或类似组件) 醒目地展示标记为 isCurrentFocus 的待办事项 (例如，卡片式，限制1-3条)。这些条目本质上是 TodoItem.svelte 的一种特殊渲染或包装。待办列表区 (Todo List Area):使用 src/lib/components/todo/TodoList.svelte 展示所有其他未标记为 isCurrentFocus 的活动待办事项。包含 src/lib/components/todo/TodoForm.svelte 用于添加新的待办事项。交互:用户可以从“待办列表区”的某个 TodoItem.svelte 将其“设为当前焦点”（更新其 isCurrentFocus 状态）。用户可以从“当前焦点区”将某个任务“取消焦点”（更新其 isCurrentFocus 状态）。src/routes/(app)/done/+page.svelte (“已做”): 保持不变。src/routes/(app)/plan/+page.svelte (“打算做”): 保持不变。4.5. 功能模块组件 (src/lib/components/)src/lib/components/anchor/IdentityAnchorEditor.svelte: 保持不变。src/lib/components/anchor/current_focus/CurrentFocusDisplay.svelte (或类似名称):职责：专门用于在“正在做”页面的“当前焦点区”展示那些被标记为 isCurrentFocus 的待办事项。它会从 todoStore 获取这些特定任务。src/lib/components/todo/TodoItem.svelte:职责：展示单个待办事项。增强：可以根据其 isCurrentFocus 状态应用不同的样式或显示额外的操作（如“取消焦点”）。提供“设为当前焦点”的按钮/操作。src/lib/components/todo/TodoList.svelte:职责：展示待办事项列表。增强：现在主要展示未被设为“当前焦点”的待办事项，或者可以有一个模式切换来显示所有待办（包括焦点项）。5. 状态管理 (Svelte Stores - src/lib/stores/)uiStore.js: 保持不变。authStore.js: 保持不变。anchorStore.js:identityProfile: 保持不变。achievements, futurePlans: 保持不变。移除了 currentFocusItems: “当前焦点”不再作为独立数据列表存储在此，而是 todoStore 中待办事项的一个属性。todoStore.js:todos: writable store，存储待办事项列表。每个待办事项对象现在应包含一个 isCurrentFocus: boolean 属性。提供加载、添加、更新（包括切换 isCurrentFocus 状态）、删除待办的函数。可以提供一个派生 store (derived store) 或 getter 函数，专门用于获取标记为 isCurrentFocus 的待办事项列表，供 CurrentFocusDisplay.svelte 使用。同样，可以有另一个派生 store 或 getter 获取非焦点的活动待办事项。6. API 服务交互 (src/lib/services/)todoService.js:获取待办事项的API应该能返回 isCurrentFocus 字段。更新待办事项的API应该能接受 isCurrentFocus 字段的变更。（后端数据模型也需要对应调整，在 todo_items 表中增加 is_current_focus 字段。）anchorService.js:不再需要单独获取或更新“当前焦点”列表的函数。如果之前有 updateCurrentFocus 这样的方法，现在会通过 todoService.js 的 updateTodo 来实现（通过改变 isCurrentFocus 标志）。9. Phase 1 MVP 重点 (调整)核心“身份锚点”页面 (/anchor)。“正在做”页面 (/doing):用户能够添加、编辑、完成待办事项。用户能够将最多N个（例如3个）待办事项标记为“当前焦点”，并在专属区域醒目显示。用户能够取消待办事项的“当前焦点”标记。“已做” (/done) 和“打算做” (/plan) 页面。11. 关键文件示例 (概念说明 - SvelteKit)src/lib/stores/todoStore.js (部分示例):import { writable, derived } from 'svelte/store';
+// import { todoService } from '$lib/services/todoService'; // 假设的服务
+
+const initialTodos = [
+  // 示例数据
+  // { id: '1', text: '完成项目报告', completed: false, isCurrentFocus: true, createdAt: new Date() },
+  // { id: '2', text: '准备周会演示', completed: false, isCurrentFocus: false, createdAt: new Date() },
+  // { id: '3', text: '回复重要邮件', completed: false, isCurrentFocus: false, createdAt: new Date() },
+];
+
+const todos = writable(initialTodos);
+
+// 函数：切换待办事项的当前焦点状态
+function toggleCurrentFocus(todoId) {
+  todos.update(currentTodos => {
+    // 简单示例：只允许一个当前焦点，或按需调整逻辑（例如限制数量）
+    // const currentlyFocused = currentTodos.find(t => t.isCurrentFocus && t.id !== todoId);
+    // if (currentlyFocused) currentlyFocused.isCurrentFocus = false;
+
+    return currentTodos.map(todo => {
+      if (todo.id === todoId) {
+        // 在实际应用中，这里可能需要调用 todoService.updateTodo(...)
+        return { ...todo, isCurrentFocus: !todo.isCurrentFocus };
+      }
+      // Logic to ensure only a certain number of items can be focus
+      // Or, if setting one to focus, unset others (if only one focus allowed)
+      return todo;
+    });
+  });
+}
+
+// 函数：添加新待办 (默认非焦点)
+function addTodo(text) {
+    const newTodo = {
+        id: Date.now().toString(), // 简单的ID生成
+        text,
+        completed: false,
+        isCurrentFocus: false,
+        createdAt: new Date()
+    };
+    todos.update(currentTodos => [newTodo, ...currentTodos]);
+    // 在实际应用中，这里会调用 todoService.createTodo(...)
+}
+
+
+// 派生 store：获取当前焦点的待办事项
+const currentFocusTodos = derived(todos, $todos =>
+  $todos.filter(todo => todo.isCurrentFocus && !todo.completed).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)) // 示例排序
+);
+
+// 派生 store：获取其他活动的待办事项
+const otherActiveTodos = derived(todos, $todos =>
+  $todos.filter(todo => !todo.isCurrentFocus && !todo.completed).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+);
+
+// 派生 store: 获取已完成的待办事项
+const completedTodos = derived(todos, $todos =>
+  $todos.filter(todo => todo.completed).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+);
+
+
+export const todoStore = {
+  subscribe: todos.subscribe,
+  addTodo,
+  // updateTodo, // (包含完成状态、文本编辑等)
+  // deleteTodo,
+  toggleCurrentFocus,
+  // loadTodos, // 从后端加载
+  currentFocusTodos,  // 导出来供组件使用
+  otherActiveTodos,   // 导出来供组件使用
+  completedTodos,     // 导出来供组件使用
+  set: todos.set // 允许从外部（如API加载后）设置整个列表
+};
+src/routes/(app)/doing/+page.svelte (简化示例):<script>
+  import CurrentFocusDisplay from '$lib/components/anchor/current_focus/CurrentFocusDisplay.svelte';
+  import TodoList from '$lib/components/todo/TodoList.svelte';
+  import TodoForm from '$lib/components/todo/TodoForm.svelte';
+  import { todoStore } from '$lib/store/todoStore.js';
+  import { onMount } from 'svelte';
+
+  // onMount(async () => {
+  //   // 实际应用中会从后端加载
+  //   // await todoStore.loadTodos(); 
+  // });
+</script>
+
+<div class="doing-page-container">
+  <section class="current-focus-section">
+    <h2>当前焦点</h2>
+    {#if $todoStore.currentFocusTodos.length > 0}
+      <CurrentFocusDisplay todos={$todoStore.currentFocusTodos} />
+    {:else}
+      <p>暂无当前焦点任务。从下方待办列表中选择一项来聚焦吧！</p>
+    {/if}
+  </section>
+
+  <hr class="section-divider" />
+
+  <section class="todo-list-section">
+    <h2>待办事项</h2>
+    <TodoForm />
+    <TodoList todos={$todoStore.otherActiveTodos} listTitle="活动中的任务" />
+  </section>
+
+  </div>
+
+<style>
+  .doing-page-container {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .current-focus-section h2, .todo-list-section h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    color: var(--text-primary); /* 假设有CSS变量 */
+  }
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border-color, #eee); /* 假设有CSS变量 */
+    margin: 1rem 0;
+  }
+  /* 其他页面特定样式 */
+</style>
+12. 架构师评估与建议 (V3 更新)通过将“当前焦点”明确为“待办事项”的一个子集或特殊状态，我们显著优化了应用的功能结构：消除冗余: 避免了“当前焦点”和“待办事项”在功能上的重叠和潜在的用户混淆。提升清晰度: “当前焦点”的定位更加明确——它是从众多待办中精选出的最优先任务。简化数据模型: 后端和前端的数据模型都得以简化，不再需要为“当前焦点”维护一个独立的数据结构，只需在待办事项上增加一个标志位。更流畅的用户体验: 用户可以在同一个“待办事项”管理流程中自然地标记和取消标记“当前焦点”，操作路径更短。13. 总结SvelteKit前端框架设计方案 (V3) 在V2的基础上，进一步优化了核心功能模块的内部逻辑，特别是“当前焦点”与“待办事项”的关系，使其更符合用户直觉和高效工作流的需求。这为构建一个既强大又易用的“个人工作间与职业锚点”应用打下了更坚实的基础。
