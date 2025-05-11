@@ -43,14 +43,14 @@
 
 </script>
 
-<nav class="sticky top-0 z-navbar bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+<nav class="sticky top-0 z-navbar bg-indigo-50 dark:bg-indigo-900 border-b border-indigo-200 dark:border-indigo-700 shadow-sm">
   <div class="flex justify-between items-center w-full px-4 py-3">
     {#if isAnchorPage}
       <!-- Anchor page navigation -->
       <div class="flex-shrink-0">
         <a
           href={lastWorkspacePage}
-          class="inline-flex items-center px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          class="inline-flex items-center px-4 py-2 rounded-md border border-indigo-300 dark:border-indigo-600 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-800 transition-colors"
         >
           <span class="mr-2 text-lg" aria-hidden="true">⬅️</span>
           <span class="font-medium text-sm md:inline hidden">Back to Workspace</span>
@@ -59,7 +59,7 @@
       <div class="flex items-center">
         {#if currentUser}
           <button
-            class="p-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="p-2 rounded-md border border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800 transition-colors"
             on:click={handleLogout}
             title="Logout"
             aria-label="Logout"
@@ -71,14 +71,14 @@
     {:else}
       <!-- Main workspace navigation -->
       <div class="flex-shrink-0">
-        <a href="/doing" class="flex items-center text-2xl font-bold text-gray-900 dark:text-white hover:opacity-85 transition-opacity" aria-label="Go to Dashboard">
+        <a href="/doing" class="flex items-center text-2xl font-bold text-indigo-900 dark:text-indigo-100 hover:opacity-85 transition-opacity" aria-label="Go to Dashboard">
           Personal Workspace
         </a>
       </div>
       <div class="flex-grow flex justify-center items-center">
         <a
           href="/anchor"
-          class="inline-flex items-center px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          class="inline-flex items-center px-4 py-2 rounded-md bg-amber-100 dark:bg-amber-800 border border-amber-300 dark:border-amber-600 text-amber-800 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-700 transition-colors"
         >
           <span class="mr-2 text-lg" aria-hidden="true">⚓️</span>
           <span class="font-medium">My Anchor</span>
@@ -87,11 +87,11 @@
       <div class="flex items-center">
         {#if currentUser}
           <div class="flex items-center">
-            <span class="mr-3 text-base font-medium text-gray-700 dark:text-gray-300" title={currentUser.email || ''}>
+            <span class="mr-3 text-base font-medium text-indigo-700 dark:text-indigo-300" title={currentUser.email || ''}>
               Hello, {currentUser.username || currentUser.email?.split('@')[0]}!
             </span>
             <button
-              class="inline-flex items-center px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              class="inline-flex items-center px-3 py-2 rounded-md bg-indigo-100 dark:bg-indigo-800 border border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
               on:click={handleLogout}
               title="Logout"
               aria-label="Logout"
@@ -104,13 +104,13 @@
           <div class="flex items-center space-x-2">
             <a
               href="/login"
-              class="inline-flex items-center px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              class="inline-flex items-center px-3 py-2 rounded-md bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
             >
               Login
             </a>
             <a
               href="/register"
-              class="inline-flex items-center px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              class="inline-flex items-center px-3 py-2 rounded-md bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
             >
               Register
             </a>

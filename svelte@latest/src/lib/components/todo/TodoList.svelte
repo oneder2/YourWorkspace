@@ -57,9 +57,9 @@
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{listTitle}</h3>
+    <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200">{listTitle}</h3>
     <button
-      class="p-1 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
+      class="p-1 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-800 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-300 transition-colors"
       aria-label="Add new task"
       on:click={handleAddTask}
     >
@@ -93,28 +93,30 @@
   {:else}
     <ul class="space-y-2">
       {#each todos as todo (todo.id)}
-        <li class="border border-gray-200 dark:border-gray-700 rounded-md p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+        <li class="border border-blue-200 dark:border-blue-700 rounded-md p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors {todo.is_current_focus ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700' : ''}">
           <div class="flex items-center">
             <input
               type="checkbox"
-              class="w-4 h-4 mr-3 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              class="w-4 h-4 mr-3 rounded border-blue-300 text-blue-500 focus:ring-blue-500"
               checked={todo.status === 'completed'}
               on:change={() => handleToggleStatus(todo)}
             />
             <div class="flex-grow">
               <div class="flex items-center">
-                <span class="font-medium text-gray-900 dark:text-gray-100 {todo.status === 'completed' ? 'line-through text-gray-500 dark:text-gray-400' : ''}">{todo.title}</span>
+                <span class="font-medium text-blue-900 dark:text-blue-100 {todo.status === 'completed' ? 'line-through text-blue-500/70 dark:text-blue-400/70' : ''}">{todo.title}</span>
                 {#if todo.priority === 'high'}
-                  <span class="ml-2 text-xs text-red-500">High Priority</span>
+                  <span class="ml-2 text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full">High</span>
+                {:else if todo.priority === 'medium'}
+                  <span class="ml-2 text-xs px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full">Medium</span>
                 {/if}
               </div>
               {#if todo.due_date}
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Due: {new Date(todo.due_date).toLocaleDateString()}</p>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Due: {new Date(todo.due_date).toLocaleDateString()}</p>
               {/if}
             </div>
             <div class="flex space-x-1">
               <button
-                class="p-1 text-gray-400 hover:text-yellow-500 transition-colors"
+                class="p-1 {todo.is_current_focus ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'} transition-colors"
                 title={todo.is_current_focus ? "Remove from Main Focus" : "Set as Main Focus"}
                 aria-label={todo.is_current_focus ? "Remove from Main Focus" : "Set as Main Focus"}
                 on:click={() => handleSetAsFocus(todo)}
@@ -124,7 +126,7 @@
                 </svg>
               </button>
               <button
-                class="p-1 text-gray-400 hover:text-primary-500 transition-colors"
+                class="p-1 text-gray-400 hover:text-blue-500 transition-colors"
                 title="Edit"
                 aria-label="Edit task"
                 on:click={() => handleEdit(todo)}

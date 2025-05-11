@@ -6,11 +6,11 @@
 
 <div class="focus-display-container">
   {#if $todoStore.isLoading && $todoStore.todos.length === 0}
-    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-md text-center">
+    <div class="p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-md text-center">
       <p>Loading focus items...</p>
     </div>
   {:else if $currentFocusTodos.length === 0}
-    <div class="p-6 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-md text-center">
+    <div class="p-6 bg-amber-50/50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-400 border border-dashed border-amber-300 dark:border-amber-700 rounded-md text-center">
       <p>
         No current focus set.
         <br />
@@ -18,15 +18,15 @@
       </p>
     </div>
   {:else}
-    <div class="focus-item-container border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+    <div class="focus-item-container border border-amber-200 dark:border-amber-700 rounded-md overflow-hidden bg-amber-50/50 dark:bg-amber-900/10">
       {#each $currentFocusTodos as focusItem (focusItem.id)}
-        <div class="focus-item p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+        <div class="focus-item p-4 border-b border-amber-200 dark:border-amber-700 last:border-b-0">
           <div class="flex items-start">
             <div class="flex-shrink-0 mr-3">
               <input
                 type="checkbox"
                 id="focus-status-{focusItem.id}"
-                class="w-5 h-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                class="w-5 h-5 rounded border-amber-300 text-amber-500 focus:ring-amber-500"
                 checked={focusItem.status === 'completed'}
                 on:change={() => todoStore.toggleCompleteStatus(focusItem.id, focusItem.status)}
               />
@@ -34,28 +34,28 @@
             <div class="flex-grow">
               <div class="flex items-center">
                 <span class="text-yellow-500 mr-2">⭐</span>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{focusItem.title}</h3>
+                <h3 class="text-lg font-medium text-amber-900 dark:text-amber-100">{focusItem.title}</h3>
               </div>
               {#if focusItem.description}
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{focusItem.description}</p>
+                <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">{focusItem.description}</p>
               {/if}
               <div class="mt-2 flex flex-wrap gap-2">
                 {#if focusItem.due_date}
-                  <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
+                  <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700">
                     Due: {new Date(focusItem.due_date).toLocaleDateString()}
                   </span>
                 {/if}
                 <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium
-                  {focusItem.priority === 'high' ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300' :
-                   focusItem.priority === 'medium' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300' :
-                   'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'}">
+                  {focusItem.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800' :
+                   focusItem.priority === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800' :
+                   'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'}">
                   {focusItem.priority.charAt(0).toUpperCase() + focusItem.priority.slice(1)} Priority
                 </span>
               </div>
             </div>
             <div class="flex-shrink-0 flex space-x-2 ml-4">
               <button
-                class="p-1 text-gray-500 hover:text-primary-500 transition-colors"
+                class="p-1 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
                 title="Edit"
                 aria-label="Edit task"
                 on:click={() => {
@@ -70,7 +70,7 @@
                 </svg>
               </button>
               <button
-                class="p-1 text-gray-500 hover:text-red-500 transition-colors"
+                class="p-1 text-amber-600 hover:text-red-500 dark:text-amber-400 dark:hover:text-red-400 transition-colors"
                 title="Delete"
                 aria-label="Delete task"
                 on:click={() => {

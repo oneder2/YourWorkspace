@@ -76,10 +76,10 @@
   }
 </script>
 
-<div class="py-2 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+<div class="py-2 px-4 bg-teal-50 dark:bg-teal-900 border-b border-teal-200 dark:border-teal-700 shadow-sm">
   <div class="flex justify-between items-center w-full max-w-3xl mx-auto">
     <button
-      class="inline-flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:active:bg-gray-500 text-gray-700 dark:text-gray-200 font-medium text-sm rounded-md border border-gray-300 dark:border-gray-600 transition-colors"
+      class="inline-flex items-center justify-center px-4 py-2 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium text-sm rounded-md border border-teal-300 dark:border-teal-600 transition-colors"
       on:click={() => navigateTo('prev')}
       title="Previous: {currentIndex !== -1 && currentIndex > 0 ? views[(currentIndex - 1 + views.length) % views.length].display : views[views.length - 1].display}"
       aria-label="Go to previous section"
@@ -89,7 +89,7 @@
     </button>
 
     <div
-      class="px-6 py-2 min-w-[120px] text-center text-lg font-bold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800"
+      class="px-6 py-2 min-w-[120px] text-center text-lg font-bold text-teal-900 dark:text-teal-100 bg-white/50 dark:bg-teal-800/50 rounded-md border border-teal-200 dark:border-teal-700"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -97,7 +97,7 @@
     </div>
 
     <button
-      class="inline-flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:active:bg-gray-500 text-gray-700 dark:text-gray-200 font-medium text-sm rounded-md border border-gray-300 dark:border-gray-600 transition-colors"
+      class="inline-flex items-center justify-center px-4 py-2 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium text-sm rounded-md border border-teal-300 dark:border-teal-600 transition-colors"
       on:click={() => navigateTo('next')}
       title="Next: {currentIndex !== -1 ? views[(currentIndex + 1) % views.length].display : views[0].display}"
       aria-label="Go to next section"
