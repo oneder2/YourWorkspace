@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'; // Updated from $app/stores to $app/state
-  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
 
   // Define the order and display names of views for navigation
   const views = [
@@ -9,24 +9,51 @@
     { path: 'plan', display: 'Plan' }
   ];
 
-  let currentViewDisplay = '';
+  let currentViewDisplay = 'N/A';
   let currentIndex = -1;
+  let currentPath = '';
 
-  // Use reactive statement instead of subscribe since page is not a store in Svelte 5
-  $: {
-    // Extract the path from the URL
-    const pathname = page.url.pathname;
-    // Find which view matches the current path
-    currentIndex = views.findIndex(v => pathname.includes(`/${v.path}`));
-    if (currentIndex !== -1) {
-      currentViewDisplay = views[currentIndex].display;
-    } else {
-      currentViewDisplay = 'N/A'; // Fallback if path doesn't match
+  // Update the current view based on the pathname
+  function updateCurrentView(pathname: string) {
+    currentPath = pathname;
+    console.log("Current path:", pathname);
+
+    // Try exact match first
+    for (let i = 0; i < views.length; i++) {
+      if (pathname === `/${views[i].path}`) {
+        currentIndex = i;
+        currentViewDisplay = views[i].display;
+        console.log(`Exact match found: ${views[i].path}, index: ${i}`);
+        return;
+      }
     }
+
+    // Try includes match if exact match fails
+    for (let i = 0; i < views.length; i++) {
+      if (pathname.includes(`/${views[i].path}`)) {
+        currentIndex = i;
+        currentViewDisplay = views[i].display;
+        console.log(`Partial match found: ${views[i].path}, index: ${i}`);
+        return;
+      }
+    }
+
+    // No match found
+    currentIndex = -1;
+    currentViewDisplay = 'N/A';
+    console.log("No match found");
   }
 
+  // Initial update on mount
+  onMount(() => {
+    updateCurrentView(page.url.pathname);
+  });
+
+  // Update when page changes
+  $: updateCurrentView(page.url.pathname);
+
   function navigateTo(direction: 'prev' | 'next') {
-    // Even if currentIndex is -1, we'll default to the first view
+    // Calculate the next view index
     let nextViewIndex;
 
     if (currentIndex === -1) {
@@ -41,8 +68,11 @@
     }
 
     // Navigate to the selected view
-    console.log(`Navigating to: /${views[nextViewIndex].path}`);
-    goto(`/${views[nextViewIndex].path}`);
+    const targetPath = `/${views[nextViewIndex].path}`;
+    console.log(`Navigating to: ${targetPath}`);
+
+    // Use window.location for direct navigation to ensure it works
+    window.location.href = targetPath;
   }
 </script>
 
