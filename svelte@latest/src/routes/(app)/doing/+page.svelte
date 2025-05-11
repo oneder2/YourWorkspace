@@ -27,21 +27,69 @@
   let showCompletedTasks = $state(false);
 
   onMount(async () => {
-    authUnsubscribe = authStore.subscribe(value => {
-      currentUser = value.user;
-    });
-
-    // Access main store state for the condition
-    if ($todoStore.todos.length === 0 && !$todoStore.isLoading && !$todoStore.error) {
+    if ($todoStore.todos.length === 0 && !$todoStore.isLoading) {
       await todoStore.loadAllTodos();
     }
   });
 
-  onDestroy(() => {
-    if (authUnsubscribe) {
-      authUnsubscribe();
+  function handleTodoAdded() {
+    showAddTodoForm = false;
+    console.log("Todo added successfully from page, hiding form.");
+  }
+
+  /**
+   * Handles edit requests. Now receives the item directly.
+   * @param {TodoItemType} item - The todo item to edit.
+   */
+  function handleGlobalEditRequest(item: TodoItemType) { // No longer CustomEvent
+    console.log('Global Edit Request for:', item);
+    if (item && typeof item === 'object' && 'id' in item) {
+        todoToEditGlobal = item;
+        isEditModalOpenGlobal = true;
+    } else {
+        console.error("Invalid item passed to handleGlobalEditRequest:", item);
+        handleActionError({ message: "无法编辑该项目：数据无效。" });
     }
-  });
+  }
+
+  function closeGlobalEditModal() {
+    isEditModalOpenGlobal = false;
+    todoToEditGlobal = null;
+  }
+
+  function handleGlobalEditSaveSuccess(event: CustomEvent<TodoItemType>) {
+    console.log('Global Edit Saved:', event.detail);
+    closeGlobalEditModal();
+  }
+
+  function handleGlobalEditError(event: CustomEvent<{ message: string }>) {
+    console.error('Global Edit Error:', event.detail.message);
+    handleActionError({ message: `编辑失败: ${event.detail.message}` });
+  }
+
+  /**
+   * Handles delete requests. Now receives the id directly.
+   * @param {number} id - The ID of the todo item to delete.
+   */
+  async function handleDeleteRequest(id: number) { // No longer CustomEvent
+    console.log('Request to delete todo in /doing page with id:', id);
+    try {
+      await todoStore.removeTodo(id);
+    } catch (e: unknown) {
+      console.error('Failed to delete todo from page:', e);
+      const message = e instanceof Error ? `删除待办事项失败: ${e.message}` : `删除待办事项失败: 未知错误`;
+      handleActionError({ message });
+    }
+  }
+  
+  /**
+   * Handles generic action errors. Now receives the detail object directly.
+   * @param {{ message: string }} detail - An object containing the error message.
+   */
+  function handleActionError(detail: { message: string }) { // No longer CustomEvent
+    console.error('Action Error on /doing page:', detail.message);
+    alert(`操作错误: ${detail.message}`);
+  }
 </script>
 
 <div class={pageContainer}>

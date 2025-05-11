@@ -37,35 +37,25 @@
     }
   }
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && isOpen) {
-      closeModal();
+  /**
+   * Handles clicks on the backdrop to close the modal.
+   * Closes only if the click is directly on the backdrop (event.target === event.currentTarget).
+   */
+  function handleBackdropClick(event: MouseEvent) {
+    if (closeOnClickOutside && isOpen && event.target === event.currentTarget) {
+      requestCloseModal();
     }
-    // Basic focus trapping (can be made more robust)
-    if (event.key === 'Tab' && isOpen && modalContentElement) {
-      const focusableElements = Array.from(
-        modalContentElement.querySelectorAll(
-          'a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), details:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
-      ).filter(
-        (el): el is HTMLElement => el instanceof HTMLElement && el.offsetParent !== null // Check if visible
-      );
+  }
 
-      if (focusableElements.length === 0) return;
-
-      const firstFocusableElement = focusableElements[0];
-      const lastFocusableElement = focusableElements[focusableElements.length - 1];
-
-      if (event.shiftKey) { // Shift + Tab
-        if (document.activeElement === firstFocusableElement) {
-          lastFocusableElement.focus();
-          event.preventDefault();
-        }
-      } else { // Tab
-        if (document.activeElement === lastFocusableElement) {
-          firstFocusableElement.focus();
-          event.preventDefault();
-        }
+  /**
+   * Handles keydown on the backdrop. If Enter or Space is pressed while backdrop is focused, close modal.
+   */
+  function handleBackdropKeydown(event: KeyboardEvent) {
+    // Check if the event target is the backdrop itself
+    if (closeOnClickOutside && isOpen && event.target === event.currentTarget) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault(); // Prevent scrolling on Space
+        requestCloseModal();
       }
     }
   }
@@ -73,13 +63,15 @@
   let previousActiveElement: HTMLElement | null = null;
 
   onMount(() => {
-    window.addEventListener('keydown', handleKeydown);
+    if (typeof window !== 'undefined') {
+      // Use global keydown for Escape as it should work regardless of focus.
+      window.addEventListener('keydown', handleGlobalKeydown);
+    }
   });
 
   onDestroy(() => {
-    window.removeEventListener('keydown', handleKeydown);
-    if (typeof document !== 'undefined') {
-        document.body.classList.remove('overflow-hidden-modal'); // Ensure cleanup
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('keydown', handleGlobalKeydown);
     }
     if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
         previousActiveElement.focus();
@@ -113,6 +105,8 @@
       }
     }
   });
+
+  const uniqueModalIdPart = Math.random().toString(36).substring(2, 9);
 
 </script>
 
@@ -168,7 +162,5 @@
       {children.footer}
     {/if}
   </div>
-</div>
 {/if}
 
-<!-- No styles needed - using Tailwind classes -->

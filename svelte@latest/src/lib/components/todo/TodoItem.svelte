@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Import necessary Svelte and project modules
+  import type { TodoItem as TodoItemType } from '$lib/services/todoService';
   import { todoStore } from '$lib/store/todoStore';
   import type { TodoItem, TodoStatus, TodoPriority } from '$lib/services/todoService';
   import { onDestroy } from 'svelte';
@@ -47,11 +47,14 @@
   });
 
   /**
-   * Handles toggling the completion status of the to-do item.
-   * It calls the todoStore to update the status and handles loading/error states.
+   * Toggles the completion status of the todo item by calling todoStore.updateTodo.
    */
-  async function handleToggleCompleteStatus() {
-    if (!todo) return;
+  async function toggleStatus() {
+    if (!todo || typeof todo.id === 'undefined') {
+      console.error('Todo item or todo.id is undefined in toggleStatus.');
+      onActionError({ message: '无法更新待办事项状态：项目数据无效。' });
+      return;
+    }
     isLoadingToggleStatus = true;
     try {
       // The toggleCompleteStatus method in the store also handles un-focusing if the item is completed.
@@ -65,19 +68,14 @@
   }
 
   /**
-   * Handles toggling the 'is_current_focus' status of the to-do item.
-   * It checks against the focus limit before attempting to set an item as focus.
+   * Toggles the 'is_current_focus' status of the todo item by calling todoStore.updateTodo.
    */
-  async function handleToggleFocus() {
-    if (!todo || todo.status === 'completed') return; // Cannot focus a completed item
-
-    // Check if attempting to set a new item as focus would exceed the defined limit
-    if (!todo.is_current_focus && numberOfFocusedItems >= currentMaxFocus) {
-      alert(`You can only have up to ${currentMaxFocus} items in current focus. Please remove another item from focus first.`);
-      // dispatch('focusLimitReached', { limit: currentMaxFocus }); // Alternative: dispatch event for custom notification
+  async function toggleFocus() {
+    if (!todo || typeof todo.id === 'undefined') {
+      console.error('Todo item or todo.id is undefined in toggleFocus.');
+      onActionError({ message: '无法切换焦点状态：项目数据无效。' });
       return;
     }
-
     isLoadingToggleFocus = true;
     try {
       await todoStore.toggleCurrentFocus(todo.id);
@@ -90,14 +88,20 @@
       isLoadingToggleFocus = false;
     }
   }
+  
+  function handleEditClick() {
+    if (!todo || typeof todo.id === 'undefined') {
+      console.error('Todo item or todo.id is undefined in handleEditClick.');
+      onActionError({ message: '无法编辑待办事项：项目数据无效。' });
+      return;
+    }
+    onEditRequest(todo);
+  }
 
-  /**
-   * Handles deleting the to-do item after user confirmation.
-   */
-  async function handleDelete() {
-    if (!todo) return;
-    // Optional: Use a more sophisticated confirmation modal instead of window.confirm
-    if (!confirm(`Are you sure you want to delete "${todo.title}"?`)) {
+  async function handleDeleteClick() {
+    if (!todo || typeof todo.id === 'undefined') {
+      console.error('Todo item or todo.id is undefined in handleDeleteClick.');
+      onActionError({ message: '无法删除待办事项：项目数据无效。' });
       return;
     }
     isLoadingDelete = true;
@@ -109,7 +113,7 @@
       console.error(`Failed to delete todo ${todo.id}:`, error);
       onActionError('Failed to delete item.');
     } finally {
-      isLoadingDelete = false;
+        isLoadingDelete = false;
     }
   }
 
@@ -146,14 +150,21 @@
     ${todo.is_current_focus && todo.status !== 'completed' ? 'border-l-4 border-l-warning-500 bg-warning-50 dark:bg-warning-900/20' : 'border-l-4 border-l-transparent'}
   `;
 
-  // Text representations for priority and status enums
-  const priorityText: Record<TodoPriority, string> = { low: 'Low', medium: 'Medium', high: 'High' };
-  const statusText: Record<TodoStatus, string> = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed', deferred: 'Deferred' };
+  $: titleClasses = `
+    font-medium cursor-pointer group-hover:text-brand-primary transition-colors
+    ${isCompleted ? 'line-through text-neutral-text-muted' : 'text-neutral-text-primary'}
+  `;
 
-  // Reactive statement to determine if the "Set as Focus" button should be disabled
-  // It's disabled if the item is completed, or if trying to set focus would exceed the limit.
-  $: disableSetFocusButton = todo.status === 'completed' || (!todo.is_current_focus && numberOfFocusedItems >= currentMaxFocus);
+  $: descriptionClasses = `
+    text-sm mt-1
+    ${isCompleted ? 'text-neutral-text-muted' : 'text-neutral-text-secondary'}
+  `;
 
+  $: dueDateClasses = `
+    text-xs mt-2 px-2 py-0.5 rounded-full
+    ${isCompleted ? 'bg-neutral-border-soft text-neutral-text-muted' : 'bg-neutral-bg-alt text-neutral-text-secondary'}
+    ${todo.due_date && new Date(todo.due_date) < new Date() && !isCompleted ? 'text-red-600 bg-red-100' : ''}
+  `;
 </script>
 
 <div class={itemClasses}>

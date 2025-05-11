@@ -36,7 +36,7 @@
   // 用于表单的唯一ID
   let formId = $state(`todo-edit-form-${todo?.id || Math.random().toString(36).substring(2)}`);
 
-  // 当组件挂载或 'todo' prop 改变时，初始化表单字段
+  // --- Lifecycle ---
   onMount(() => {
     initializeForm();
   });
@@ -63,56 +63,62 @@
 
   // 导出 handleSubmit 以便模态框的页脚按钮可以调用
   export async function handleSubmit() {
-    if (!title.trim()) {
-      errorMessage = '标题为必填项。';
-      successMessage = '';
+    if (!formTitle.trim()) {
+      errorMessage = '标题不能为空。';
+      setTimeout(() => errorMessage = '', 3000);
       return;
     }
 
-    // 检查是否会超出最大焦点数限制 (仅当从非焦点设为焦点时)
-    if (isCurrentFocus && !todo.is_current_focus) {
-        const storeState = $todoStore; // 获取当前 store 状态
-        const currentFocusedCount = storeState.todos.filter(t => t.is_current_focus && t.id !== todo.id && t.status !== 'completed').length;
-        if (currentFocusedCount >= storeState.maxFocusItems) {
-            errorMessage = `最多只能将 ${storeState.maxFocusItems} 个项目设为当前焦点。请先取消其他项目的焦点状态。`;
-            successMessage = '';
-            return;
-        }
-    }
-
-
     isLoading = true;
     errorMessage = '';
-    successMessage = '';
 
-    const payload: UpdateTodoPayload = {
-      title: title.trim(),
-      description: description.trim() || null,
-      due_date: dueDate || null,
-      status,
-      priority,
-      is_current_focus: isCurrentFocus, // 包含 is_current_focus 状态
+    // Construct the payload for updating the todo item
+    // Use UpdateTodoPayload for the base, then add specific fields like completed_at
+    const payload: Partial<UpdateTodoPayload & { completed_at?: string | null, is_current_focus?: boolean }> = {
+      title: formTitle.trim(),
+      description: formDescription.trim() || undefined, // Send undefined for empty to potentially clear
+      due_date: formDueDate || undefined, // Send undefined for empty to potentially clear
+      // is_current_focus is not typically edited here, but can be added if needed.
     };
 
+    // Handle completed_at based on formCompleted state
+    if (formCompleted) {
+      // If marking as complete, and it wasn't already, set new timestamp.
+      // If it was already complete, we can send the existing timestamp or let backend handle it.
+      // For simplicity, if formCompleted is true, ensure completed_at is a timestamp.
+      payload.completed_at = todo.completed_at || new Date().toISOString();
+    } else {
+      // If marking as incomplete, completed_at should be null.
+      payload.completed_at = null;
+    }
+    
+    // Only include fields in the payload if they have changed from the original todo item,
+    // or if the backend API expects all fields or handles partial updates gracefully.
+    // For this example, we are sending fields that might have been edited.
+    // A more sophisticated approach would be to only send changed fields.
+
     try {
-      // 注意：editTodo 现在也负责处理 is_current_focus 的切换
-      const updatedTodo = await todoStore.editTodo(todo.id, payload);
+      const updatedTodo = await todoStore.updateTodo(todo.id, payload as UpdateTodoPayload); // Cast if needed
       if (updatedTodo) {
         successMessage = `待办事项 "${updatedTodo.title}" 更新成功！`;
         onSaveSuccess(updatedTodo);
       } else {
-        errorMessage = $todoStore.error || '更新待办事项失败，请重试。';
+        // This path might be hit if updateTodo returns null on non-exception failure
+        errorMessage = '更新待办事项失败，未收到有效的响应。';
+        onSaveError({ message: errorMessage });
+        setTimeout(() => errorMessage = '', 3000);
       }
-    } catch (error: any) {
-      const apiError = error as ApiError;
-      errorMessage = apiError?.message || '更新时发生意外错误。';
-      console.error('TodoEditForm handleSubmit error:', error);
+    } catch (error: unknown) {
+      console.error('Failed to update todo:', error);
+      const msg = error instanceof Error ? error.message : '更新待办事项时发生未知错误。';
+      errorMessage = `更新失败: ${msg}`;
+      onSaveError({ message: errorMessage });
+      setTimeout(() => errorMessage = '', 3000);
     } finally {
       isLoading = false;
     }
   }
 
-  // 导出 handleCancel
   export function handleCancel() {
     onCloseModalRequest();
   }
@@ -125,8 +131,11 @@
     return `${year}-${month}-${day}`;
   }
 
-  const statusOptions: TodoStatus[] = ['pending', 'in_progress', 'completed', 'deferred'];
-  const priorityOptions: TodoPriority[] = ['low', 'medium', 'high'];
+  let titleInput: HTMLInputElement;
+  onMount(async () => {
+    await tick(); 
+    titleInput?.focus();
+  });
 
 </script>
 

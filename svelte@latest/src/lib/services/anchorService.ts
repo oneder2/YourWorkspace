@@ -27,11 +27,6 @@ export interface UpdateUserProfilePayload {
   summary?: string | null;
 }
 
-// --- Interfaces for Current Focus (REMOVED as Current Focus is part of ToDoItem) ---
-// export interface CurrentFocusItem { ... }
-// export interface CreateCurrentFocusPayload { ... }
-// export interface UpdateCurrentFocusPayload { ... }
-
 
 // --- Profile Service Methods ---
 async function getIdentityProfile(): Promise<UserProfileData> {
@@ -102,21 +97,9 @@ async function updateIdentityProfile(payload: UpdateUserProfilePayload): Promise
   }
 }
 
-// --- Current Focus Service Methods (ALL REMOVED as per V3 architecture) ---
-// async function getAllCurrentFocusItems(): Promise<CurrentFocusItem[]> { ... }
-// async function createCurrentFocusItem(payload: CreateCurrentFocusPayload): Promise<CurrentFocusItem> { ... }
-// async function getCurrentFocusItemById(focusId: number): Promise<CurrentFocusItem | null> { ... }
-// async function updateCurrentFocusItem(focusId: number, payload: UpdateCurrentFocusPayload): Promise<CurrentFocusItem> { ... }
-// async function deleteCurrentFocusItem(focusId: number): Promise<void> { ... }
-
-
 export const anchorService = {
   // Profile methods
   getIdentityProfile,
   updateIdentityProfile,
-
-  // Current Focus methods have been removed.
-  // They are now handled by todoService by updating the 'is_current_focus' flag on a ToDoItem.
-
   // Methods for Achievements and Future Plans will be added here later
 };

@@ -1,6 +1,23 @@
+/*
+ * Import Tailwind CSS's base styles.
+ * This includes Preflight (a CSS reset) and any base styles registered by plugins.
+ */
 @import "tailwindcss/base";
+
+ /*
+  * Import Tailwind CSS's component classes.
+  * This includes styles for pre-designed components that Tailwind might offer or
+  * that are registered by plugins. You can also register your own component
+  * classes here using the @layer components directive.
+  */
 @import "tailwindcss/components";
+ 
+ /*
+  * Import Tailwind CSS's utility classes.
+  * These are the core of Tailwind, like `mt-4`, `text-red-500`, `flex`, etc.
+  */
 @import "tailwindcss/utilities";
+
 
 /* Global styles */
 @layer base {

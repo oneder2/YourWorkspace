@@ -1,20 +1,30 @@
 <script lang="ts">
   import { todoStore } from '$lib/store/todoStore';
-  // Corrected import for CreateTodoPayload from todoService.ts
-  import type { CreateTodoPayload } from '$lib/services/todoService';
-  import type { ApiError } from '$lib/services/api';
+  // Correctly import CreateTodoPayload instead of TodoPayload
+  import type { TodoItem, CreateTodoPayload } from '$lib/services/todoService'; 
+  import Icon from '$lib/components/common/Icon.svelte';
 
+  // --- Callback Props ---
+  export let onAddSuccess: (newTodo: TodoItem) => void = (newTodo) => {
+    console.warn("TodoForm: onAddSuccess prop was not provided.", newTodo);
+  };
+  export let onAddError: (errorDetail: { message: string }) => void = (errorDetail) => {
+    console.warn("TodoForm: onAddError prop was not provided.", errorDetail);
+  };
+
+  // --- Component State ---
   let title: string = '';
   let description: string = '';
-  let dueDate: string = ''; // Format: YYYY-MM-DD
-
+  let dueDate: string = ''; // Store as YYYY-MM-DD string from input
   let isLoading: boolean = false;
   let errorMessage: string = '';
   let successMessage: string = '';
 
+  // --- Event Handlers ---
   async function handleSubmit() {
     if (!title.trim()) {
-      errorMessage = 'Title is required.';
+      errorMessage = '标题不能为空。';
+      setTimeout(() => errorMessage = '', 3000);
       return;
     }
 
@@ -22,49 +32,48 @@
     errorMessage = '';
     successMessage = '';
 
+    // Use CreateTodoPayload for the payload type
     const payload: CreateTodoPayload = {
       title: title.trim(),
+      description: description.trim() || undefined, // Send undefined if empty, service might handle as null
+      due_date: dueDate || undefined, // Send undefined if empty, service might handle as null
+      // completed_at and is_current_focus are typically not set at creation by the client;
+      // backend defaults them (e.g., completed_at=null, is_current_focus=false).
+      // CreateTodoPayload should reflect fields required/allowed at creation.
     };
-
-    if (description.trim()) {
-      payload.description = description.trim();
-    }
-    if (dueDate) {
-      payload.due_date = dueDate;
-    }
 
     try {
       const newTodo = await todoStore.addTodo(payload);
       if (newTodo) {
-        successMessage = `Todo "${newTodo.title}" added successfully!`;
+        successMessage = `待办事项 "${newTodo.title}" 已成功添加!`;
+        onAddSuccess(newTodo);
         title = '';
         description = '';
         dueDate = '';
         setTimeout(() => successMessage = '', 3000);
       } else {
-        if (!$todoStore.error) {
-            errorMessage = 'Failed to add todo. Please try again.';
-        } else {
-            errorMessage = $todoStore.error;
-        }
+        errorMessage = '添加待办事项失败，未收到有效的响应。';
+        onAddError({ message: errorMessage });
+        setTimeout(() => errorMessage = '', 3000);
       }
-    } catch (error: any) {
-      const apiError = error as ApiError;
-      errorMessage = apiError?.message || 'An unexpected error occurred.';
-      console.error('TodoForm handleSubmit error:', error);
+    } catch (error: unknown) {
+      console.error('Failed to add todo:', error);
+      const msg = error instanceof Error ? error.message : '添加待办事项时发生未知错误。';
+      errorMessage = `添加失败: ${msg}`;
+      onAddError({ message: errorMessage });
+      setTimeout(() => errorMessage = '', 3000);
     } finally {
       isLoading = false;
     }
   }
 
-  function getCurrentDateString(): string {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const day = today.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  function handleClearForm() {
+    title = '';
+    description = '';
+    dueDate = '';
+    errorMessage = '';
+    successMessage = '';
   }
-
 </script>
 
 <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-lg shadow-md mb-8 max-w-xl mx-auto">
@@ -86,6 +95,7 @@
         class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
       />
     </div>
+  {/if}
 
     <div class="mb-5">
       <label for="todo-description" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -133,9 +143,11 @@
       disabled={isLoading}
     >
       {#if isLoading}
-        <span>Adding...</span>
+        <Icon name="loader" size="w-4 h-4" extraClass="animate-spin mr-2" />
+        添加中...
       {:else}
-        <span>Add To-Do</span>
+        <Icon name="plus" size="w-4 h-4" extraClass="mr-2" />
+        添加待办
       {/if}
     </button>
   </form>
