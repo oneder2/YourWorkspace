@@ -36,13 +36,14 @@
 
     /**
      * Opens the modal in 'edit' mode for an existing future plan.
+     * This function is kept for potential future use with modal editing.
      * @param {FuturePlan} plan - The future plan to edit.
      */
-    function openEditModal(plan: FuturePlan) {
-      currentEditingFuturePlan = plan;
-      isModalOpen = true;
-      isViewMode = false;
-    }
+    // function openEditModal(plan: FuturePlan) {
+    //   currentEditingFuturePlan = plan;
+    //   isModalOpen = true;
+    //   isViewMode = false;
+    // }
 
     /**
      * Opens the edit form in the main content area for an existing future plan.
@@ -148,7 +149,7 @@
             <div class={combineClasses("pl-3", scrollArea.content)}>
               <FuturePlanList
                 onAddNewFuturePlan={openCreateModal}
-                onEditFuturePlan={(plan: FuturePlan) => openEditModal(plan)}
+                onEditFuturePlan={(plan: FuturePlan) => openEditInline(plan)}
                 onSelectPlan={(plan: FuturePlan) => selectPlan(plan)}
               />
             </div>
