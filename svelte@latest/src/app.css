@@ -1,28 +1,96 @@
+/*
+ * Import Tailwind CSS's base styles.
+ * This includes Preflight (a CSS reset) and any base styles registered by plugins.
+ */
 @import "tailwindcss/base";
+
+ /*
+  * Import Tailwind CSS's component classes.
+  * This includes styles for pre-designed components that Tailwind might offer or
+  * that are registered by plugins. You can also register your own component
+  * classes here using the @layer components directive.
+  */
 @import "tailwindcss/components";
+ 
+ /*
+  * Import Tailwind CSS's utility classes.
+  * These are the core of Tailwind, like `mt-4`, `text-red-500`, `flex`, etc.
+  */
 @import "tailwindcss/utilities";
-
-
-/* You can add other global styles here if needed */
-body {
-  /* Example: Setting a default background color for the entire app */
-  /* Tailwind's base styles might already handle this, or you might prefer a specific color. */
-  /* background-color: #f7fafc; */ /* Light gray example */
-  /* color: #2d3748; */ /* Default text color example */
-  
-  /* Ensure a modern font stack is applied if not fully handled by Tailwind base */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-               Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-/* Example: Ensure links have a consistent style if not overridden by components */
-/* a {
-  color: #3182ce; 
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-} */
-
-/* Add any other global styles your application might need */
-/* For instance, styles for scrollbars, default margins/paddings for certain elements, etc. */
+ 
+ 
+ /*
+  * Custom base styles layer.
+  * Use this to add your own base styles or override Preflight if necessary.
+  * It's generally recommended to keep this section minimal and prefer Tailwind's
+  * utility classes or theme configuration where possible.
+  */
+ @layer base {
+   /*
+    * Apply default font, text color, and background color to the body.
+    * These values are sourced from your tailwind.config.js theme settings
+    * using the theme() function, which is generally more robust in global CSS
+    * files than @apply for this specific purpose.
+    */
+   body {
+     font-family: theme('fontFamily.sans');
+     color: theme('colors.neutral-text-primary');
+     background-color: theme('colors.neutral-bg-main');
+ 
+     /* Improve font rendering for a smoother look. */
+     -webkit-font-smoothing: antialiased;
+     -moz-osx-font-smoothing: grayscale;
+ 
+     /* Ensure the body takes up at least the full viewport height. */
+     /* min-height: 100vh; */ /* Consider if this is needed for your layout */
+ 
+     /* Optional: Add a default line height for better readability. */
+     /* line-height: theme('lineHeight.normal'); */ /* Example if you have 'normal' in your line-height scale */
+   }
+ 
+   /* Example: Basic global styling for links (optional). */
+   /* You might prefer to style links contextually using utility classes. */
+   /*
+   a {
+     color: theme('colors.brand-primary');
+   }
+   a:hover {
+     text-decoration-line: underline; // Standard CSS property
+     color: theme('colors.brand-primary-hover'); // Example if you have a hover color defined
+   }
+   */
+ 
+   /* Ensure HTML element takes full height for certain layout strategies */
+   /*
+   html, body {
+     height: 100%;
+   }
+   */
+ }
+ 
+ /*
+  * Custom component styles layer (optional).
+  * If you have custom reusable component styles that are not utilities,
+  * you can define them here. For example:
+  */
+ /*
+ @layer components {
+   .btn-custom-primary {
+     @apply py-2 px-4 bg-brand-primary text-white font-semibold rounded-lg shadow-md hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-opacity-75;
+   }
+ }
+ */
+ 
+ /*
+  * Custom utility styles layer (optional).
+  * If you need to create new utility classes, you can define them here.
+  * However, try to leverage Tailwind's existing utilities and variants first.
+  */
+ /*
+ @layer utilities {
+   .content-auto {
+     content-visibility: auto;
+   }
+ }
+ */
+ 

@@ -1,156 +1,160 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
-  import { fly, fade } from 'svelte/transition';
+  import { onMount, onDestroy, tick } from 'svelte';
+  import Icon from '$lib/components/common/Icon.svelte';
 
+  // --- Props ---
   export let isOpen: boolean = false;
-  export let closeOnBackdropClick: boolean = true;
-  export let title: string | null = null;
-  export let modalWidth: string = 'max-w-lg';
+  export let title: string = '通知'; // Default title
+  export let modalWidth: string = 'max-w-lg'; // Default width
+  export let showCloseButton: boolean = true;
+  export let closeOnEscape: boolean = true;
+  export let closeOnClickOutside: boolean = true;
 
-  const dispatch = createEventDispatcher();
-  let modalContentElement: HTMLElement; // To help manage focus
+  // --- Callback Props ---
+  /**
+   * Callback function invoked when the modal requests to be closed.
+   */
+  export let onClose: () => void = () => {
+    console.warn("Modal: onClose prop was not provided.");
+  };
 
-  function closeModal() {
-    dispatch('close');
+  // --- Internal Functions ---
+  /**
+   * Closes the modal by calling the onClose prop.
+   * The parent component is responsible for setting isOpen to false.
+   */
+  function requestCloseModal() {
+    onClose(); // Call the callback prop
   }
 
-  // Updated to check if the click was directly on the backdrop
-  function handleBackdropClick(event: MouseEvent | KeyboardEvent) { // Accept KeyboardEvent too
-    if (event.currentTarget && (event.target === event.currentTarget) && closeOnBackdropClick) {
-      closeModal();
+  /**
+   * Handles Escape key press to close the modal.
+   */
+  function handleGlobalKeydown(event: KeyboardEvent) {
+    if (closeOnEscape && event.key === 'Escape' && isOpen) {
+      requestCloseModal();
     }
   }
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && isOpen) {
-      closeModal();
+  /**
+   * Handles clicks on the backdrop to close the modal.
+   * Closes only if the click is directly on the backdrop (event.target === event.currentTarget).
+   */
+  function handleBackdropClick(event: MouseEvent) {
+    if (closeOnClickOutside && isOpen && event.target === event.currentTarget) {
+      requestCloseModal();
     }
-    // Basic focus trapping (can be made more robust)
-    if (event.key === 'Tab' && isOpen && modalContentElement) {
-      const focusableElements = Array.from(
-        modalContentElement.querySelectorAll(
-          'a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), details:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
-      ).filter(
-        (el): el is HTMLElement => el instanceof HTMLElement && el.offsetParent !== null // Check if visible
-      );
+  }
 
-      if (focusableElements.length === 0) return;
-
-      const firstFocusableElement = focusableElements[0];
-      const lastFocusableElement = focusableElements[focusableElements.length - 1];
-
-      if (event.shiftKey) { // Shift + Tab
-        if (document.activeElement === firstFocusableElement) {
-          lastFocusableElement.focus();
-          event.preventDefault();
-        }
-      } else { // Tab
-        if (document.activeElement === lastFocusableElement) {
-          firstFocusableElement.focus();
-          event.preventDefault();
-        }
+  /**
+   * Handles keydown on the backdrop. If Enter or Space is pressed while backdrop is focused, close modal.
+   */
+  function handleBackdropKeydown(event: KeyboardEvent) {
+    // Check if the event target is the backdrop itself
+    if (closeOnClickOutside && isOpen && event.target === event.currentTarget) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault(); // Prevent scrolling on Space
+        requestCloseModal();
       }
     }
   }
   
-  let previousActiveElement: HTMLElement | null = null;
-
   onMount(() => {
-    window.addEventListener('keydown', handleKeydown);
+    if (typeof window !== 'undefined') {
+      // Use global keydown for Escape as it should work regardless of focus.
+      window.addEventListener('keydown', handleGlobalKeydown);
+    }
   });
 
   onDestroy(() => {
-    window.removeEventListener('keydown', handleKeydown);
-    if (typeof document !== 'undefined') {
-        document.body.classList.remove('overflow-hidden-modal'); // Ensure cleanup
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('keydown', handleGlobalKeydown);
     }
-    if (previousActiveElement && typeof previousActiveElement.focus === 'function') { 
-        previousActiveElement.focus(); 
+    // Ensure body overflow is reset if modal is destroyed while open
+    if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
     }
   });
 
+  let previousActiveElement: HTMLElement | null = null;
+  let modalElementRef: HTMLElement | null = null; // For targeting focus and backdrop interaction
+
   $: if (isOpen && typeof document !== 'undefined') {
-    document.body.classList.add('overflow-hidden-modal');
-    if (document.activeElement instanceof HTMLElement) { 
-      previousActiveElement = document.activeElement;
-    }
-    tick().then(() => {
-      if (modalContentElement) {
-        const firstFocusable = modalContentElement.querySelector(
-          'a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), details:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        ) as HTMLElement | null;
-        if (firstFocusable) {
-          firstFocusable.focus();
-        } else {
-          // If no focusable elements, consider focusing modalContentElement itself.
-          // For this to work effectively, modalContentElement should have tabindex="-1".
-          // (modalContentElement as HTMLElement).focus(); // Add tabindex="-1" to modalContentElement for this
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    previousActiveElement = document.activeElement as HTMLElement; // Store previously focused element
+    
+    tick().then(() => { // Ensure elements are rendered
+        if (modalElementRef) {
+            const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+            const modalContent = modalElementRef.querySelector('.modal-content-area');
+            const firstFocusable = modalContent?.querySelector(focusableSelector) as HTMLElement | null;
+            
+            if (firstFocusable) {
+                firstFocusable.focus();
+            } else if (modalElementRef) {
+                modalElementRef.focus();
+            }
         }
-      }
     });
-  } else if (!isOpen && typeof document !== 'undefined') {
-    document.body.classList.remove('overflow-hidden-modal');
-    if (previousActiveElement && typeof previousActiveElement.focus === 'function') { 
-        tick().then(() => previousActiveElement?.focus());
+
+  } else if (!isOpen && typeof document !== 'undefined') { 
+    document.body.style.overflow = ''; 
+    if (previousActiveElement) {
+        previousActiveElement.focus(); 
+        previousActiveElement = null; 
     }
   }
+
+  const uniqueModalIdPart = Math.random().toString(36).substring(2, 9);
 
 </script>
 
 {#if isOpen}
-<div
-  class="modal-backdrop"
-  on:click={handleBackdropClick}
-  on:keydown={(event) => {
-    if (event.key === 'Enter' || event.key === 'Space') {
-      // Ensure the event originated from the backdrop itself if it's focused
-      if (event.target === event.currentTarget) {
-          handleBackdropClick(event);
-          event.preventDefault(); // Prevent default space scroll, etc.
-      }
-    }
-  }}
-  transition:fade={{ duration: 200 }}
-  role="dialog" 
-  tabindex="-1" 
-  aria-modal="true"
-  aria-labelledby={title ? 'modal-title' : undefined}
-  >
   <div
-    bind:this={modalContentElement} class="modal-content-wrapper {modalWidth}"
-    role="document" 
-    tabindex="-1"
-    transition:fly={{ y: -30, duration: 300 }}
-    aria-labelledby={title ? 'modal-title' : undefined} 
+    bind:this={modalElementRef}
+    id="modal-container-{uniqueModalIdPart}"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ease-in-out"
+    on:click={handleBackdropClick}
+    on:keydown={handleBackdropKeydown}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title-{uniqueModalIdPart}"
+    aria-describedby={$$slots.default ? `modal-description-${uniqueModalIdPart}` : undefined}
+    tabindex="-1" 
   >
-    <header class="modal-header">
-      {#if title}
-        <h2 id="modal-title" class="modal-title-text">{title}</h2>
+    <div 
+         class="modal-content-area bg-neutral-bg-card rounded-xl shadow-2xl overflow-hidden flex flex-col {modalWidth} w-full transition-transform duration-300 ease-in-out transform scale-100"
+         role="document" 
+         >
+      <header class="flex items-center justify-between p-4 md:p-5 border-b border-neutral-border-soft">
+        <h3 id="modal-title-{uniqueModalIdPart}" class="text-xl font-semibold text-neutral-text-primary">
+          {title}
+        </h3>
+        {#if showCloseButton}
+          <button
+            type="button"
+            on:click={requestCloseModal} 
+            class="text-neutral-text-muted hover:bg-neutral-bg-hover hover:text-neutral-text-primary rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center transition-colors"
+            aria-label="关闭模态框"
+          >
+            <Icon name="close" size="w-5 h-5" />
+          </button>
+        {/if}
+      </header>
+
+      <div id={$$slots.default ? `modal-description-${uniqueModalIdPart}` : undefined} class="p-4 md:p-5 space-y-4 overflow-y-auto max-h-[70vh]">
+        <slot />
+      </div>
+
+      {#if $$slots.footer}
+        <footer class="border-t border-neutral-border-soft">
+          <slot name="footer" />
+        </footer>
       {/if}
-      <button
-        class="modal-close-button"
-        on:click={closeModal}
-        aria-label="Close modal"
-      >
-        &times; 
-      </button>
-    </header>
-
-    <main class="modal-body">
-      <slot>
-        <p>This is the modal body. Pass content to the default slot to override this.</p>
-      </slot>
-    </main>
-
-    {#if $$slots.footer}
-      <footer class="modal-footer">
-        <slot name="footer"></slot>
-      </footer>
-    {/if}
+    </div>
   </div>
-</div>
 {/if}
+
 
 <style>
 /* Ensure body.overflow-hidden-modal is in global.css or a global style block */
