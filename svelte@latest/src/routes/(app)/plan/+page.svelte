@@ -45,6 +45,16 @@
     }
 
     /**
+     * Opens the edit form in the main content area for an existing future plan.
+     * @param {FuturePlan} plan - The future plan to edit.
+     */
+    function openEditInline(plan: FuturePlan) {
+      currentEditingFuturePlan = plan;
+      isViewMode = false;
+      isModalOpen = false; // Ensure modal is closed
+    }
+
+    /**
      * Selects a plan to view its details
      * @param {FuturePlan} plan - The future plan to view.
      */
@@ -166,7 +176,7 @@
                   </h2>
                   <div class="flex space-x-2">
                     <button
-                      onclick={() => selectedPlan && openEditModal(selectedPlan)}
+                      onclick={() => selectedPlan && openEditInline(selectedPlan)}
                       class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                       aria-label="Edit plan"
                     >
