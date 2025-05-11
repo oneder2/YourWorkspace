@@ -113,6 +113,21 @@ export default {
           DEFAULT: '#ffc107', // Same as warning
           'bg': '#fffbeb',
         },
+
+        // Gray shades for more flexibility
+        'gray': {
+          '50': '#f9fafb',
+          '100': '#f3f4f6',
+          '200': '#e5e7eb',
+          '300': '#d1d5db',
+          '400': '#9ca3af',
+          '500': '#6b7280',
+          '600': '#4b5563',
+          '700': '#374151',
+          '800': '#1f2937',
+          '900': '#111827',
+          '950': '#030712',
+        },
       },
 
       // Border radius
@@ -121,6 +136,8 @@ export default {
         'md': '0.375rem',
         'lg': '0.5rem',
         'xl': '0.75rem',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
       },
 
       // Box shadows
@@ -129,6 +146,8 @@ export default {
         'md': '0 4px 6px rgba(0, 0, 0, 0.07)',
         'lg': '0 8px 16px rgba(0, 0, 0, 0.07)',
         'xl': '0 12px 24px rgba(0, 0, 0, 0.09)',
+        '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        'inner': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
       },
 
       // Z-index
@@ -136,6 +155,26 @@ export default {
         'navbar': 1000,
         'modal': 1050,
         'tooltip': 1070,
+        'dropdown': 1000,
+        'popover': 1060,
+      },
+
+      // Screen sizes for more consistent responsive design
+      screens: {
+        'xs': '475px',
+        // sm: '640px', // Tailwind default
+        // md: '768px', // Tailwind default
+        // lg: '1024px', // Tailwind default
+        // xl: '1280px', // Tailwind default
+        // '2xl': '1536px', // Tailwind default
+      },
+
+      // Spacing for more flexibility
+      spacing: {
+        '72': '18rem',
+        '80': '20rem',
+        '96': '24rem',
+        '128': '32rem',
       },
     },
   },

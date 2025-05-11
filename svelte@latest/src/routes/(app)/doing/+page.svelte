@@ -30,47 +30,30 @@
   });
 </script>
 
-<div class="doing-page-container">
-  <header class="page-header">
-    <h1>当前进行中 (Currently Doing)</h1>
+<div class="max-w-7xl mx-auto px-4 py-6 md:px-6">
+  <header class="mb-10 text-center">
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">当前进行中 (Currently Doing)</h1>
     {#if currentUser}
-      <p class="welcome-message">
+      <p class="text-base text-gray-600 dark:text-gray-400">
         欢迎回来, {currentUser.username || currentUser.email?.split('@')[0]}！在这里管理您当前的任务和焦点。
       </p>
     {/if}
   </header>
 
-  <section id="current-focus-section" class="app-section current-focus-module">
-    <h2 class="section-title">⭐ 当前焦点</h2>
-    <CurrentFocusDisplay /> 
+  <section id="current-focus-section" class="mb-10 p-8 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">⭐ 当前焦点</h2>
+    <CurrentFocusDisplay />
   </section>
 
-  <section id="todo-section" class="app-section todo-module">
-    <h2 class="section-title">活动中的任务 (Active Tasks)</h2>
-    <div class="todo-content">
-      <div class="todo-form-wrapper">
+  <section id="todo-section" class="mb-10 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">活动中的任务 (Active Tasks)</h2>
+    <div>
+      <div class="mb-8">
         <TodoForm />
       </div>
-      <div class="todo-list-wrapper">
+      <div>
         <TodoList todos={$otherActiveTodos} listTitle="其他活动任务" />
       </div>
     </div>
   </section>
-
-  </div>
-
-<style>
-  /* Styles remain the same */
-  .doing-page-container {
-    padding: 1rem 1.5rem;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .page-header { margin-bottom: 2.5rem; text-align: center; }
-  .page-header h1 { font-size: 2.25rem; color: var(--text-primary, #212529); margin-bottom: 0.5rem; }
-  .welcome-message { font-size: 1rem; color: var(--text-secondary, #6c757d); }
-  .app-section { margin-bottom: 2.5rem; padding: 2rem; background-color: var(--section-bg, #fff); border-radius: var(--border-radius-xl, 0.75rem); box-shadow: var(--shadow-lg, 0 8px 16px rgba(0,0,0,0.07)); }
-  .current-focus-module { background-color: var(--focus-section-bg, #fffbeb); border: 1px solid var(--focus-indicator-color, #ffeeba); }
-  .section-title { font-size: 1.6rem; color: var(--text-heading, #1a202c); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color-light, #e0e0e0); text-align: left; }
-  .todo-form-wrapper { margin-bottom: 2rem; }
-</style>
+</div>

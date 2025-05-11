@@ -2,7 +2,7 @@
   import { authService } from '$lib/services/authService';
   import { authStore, type UserProfile, isAuthenticated } from '$lib/store/authStore';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state'; // Updated from $app/stores to $app/state
   import { get } from 'svelte/store';
 
   export let isAnchorPage: boolean = false; // New prop
@@ -11,8 +11,10 @@
   let lastWorkspacePage: string = '/doing';
 
   let previousPageBeforeAnchor: string | null = null;
-  page.subscribe(currentPage => {
-    const path = currentPage.url.pathname;
+
+  // Use reactive statement instead of subscribe since page is not a store in Svelte 5
+  $: {
+    const path = page.url.pathname;
     if (!path.startsWith('/anchor') && (path.startsWith('/done') || path.startsWith('/doing') || path.startsWith('/plan'))) {
       previousPageBeforeAnchor = path;
     }
@@ -21,8 +23,7 @@
     } else if (path.startsWith('/anchor') && !previousPageBeforeAnchor) {
         lastWorkspacePage = '/doing';
     }
-  });
-
+  }
 
   authStore.subscribe(value => {
     currentUser = value.user;
@@ -78,7 +79,7 @@
       <div class="flex-grow flex justify-center items-center">
         <a
           href="/anchor"
-          class={`inline-flex items-center px-4 py-2 rounded-md bg-white/10 dark:bg-white/5 border border-white/30 dark:border-white/20 text-white font-medium text-sm transition-colors ${$page.url.pathname.startsWith('/anchor') ? 'bg-white/20 dark:bg-white/10 border-white' : 'hover:bg-white/20 dark:hover:bg-white/10 hover:border-white'}`}
+          class={`inline-flex items-center px-4 py-2 rounded-md bg-white/10 dark:bg-white/5 border border-white/30 dark:border-white/20 text-white font-medium text-sm transition-colors ${page.url.pathname.startsWith('/anchor') ? 'bg-white/20 dark:bg-white/10 border-white' : 'hover:bg-white/20 dark:hover:bg-white/10 hover:border-white'}`}
         >
           <span class="mr-2 text-lg" aria-hidden="true">⚓️</span>
           <span class="md:inline hidden">My Anchor</span>
@@ -104,13 +105,13 @@
           <div class="flex items-center space-x-2">
             <a
               href="/login"
-              class={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm transition-colors ${$page.url.pathname === '/login' ? 'bg-white/20 dark:bg-white/10' : 'hover:bg-white/10 dark:hover:bg-white/5'}`}
+              class={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm transition-colors ${page.url.pathname === '/login' ? 'bg-white/20 dark:bg-white/10' : 'hover:bg-white/10 dark:hover:bg-white/5'}`}
             >
               Login
             </a>
             <a
               href="/register"
-              class={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm transition-colors ${$page.url.pathname === '/register' ? 'bg-white/20 dark:bg-white/10' : 'hover:bg-white/10 dark:hover:bg-white/5'}`}
+              class={`inline-flex items-center px-3 py-2 rounded-md text-white text-sm transition-colors ${page.url.pathname === '/register' ? 'bg-white/20 dark:bg-white/10' : 'hover:bg-white/10 dark:hover:bg-white/5'}`}
             >
               Register
             </a>

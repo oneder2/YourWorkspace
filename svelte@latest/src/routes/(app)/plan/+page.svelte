@@ -52,12 +52,12 @@
     /**
      * Handles the save callback from FuturePlanForm.
      * Closes the modal after a successful save. The list will update reactively.
-     * @param {FuturePlan} plan - The saved future plan.
+     * @param {FuturePlan} _plan - The saved future plan (unused).
      */
-    function handleFormSave(plan: FuturePlan) {
+    function handleFormSave(_plan: FuturePlan) {
       closeModal();
       // Optional: Display a success notification (e.g., using a toast message system)
-      // console.log('Future Plan saved successfully:', plan);
+      // console.log('Future Plan saved successfully:', _plan);
     }
 
     /**
@@ -69,7 +69,7 @@
     }
   </script>
 
-  <div class="page-container p-4 md:p-8">
+  <div class="max-w-7xl mx-auto p-4 md:p-8">
     <FuturePlanList
       onAddNewFuturePlan={openCreateModal}
       onEditFuturePlan={openEditModal}
@@ -89,16 +89,3 @@
         </Modal>
     {/if}
   </div>
-
-  <style>
-    /* Page-specific styles can be added here if necessary */
-    .page-container {
-      max-width: 1200px; /* Example: Limit the maximum width of the page content */
-      margin-left: auto;
-      margin-right: auto;
-    }
-    /* Example: If you were to use a shared button style from a global CSS or a utility component */
-    /* .button { padding: 0.5rem 1rem; border-radius: 0.25rem; } */
-    /* .primary { background-color: blue; color: white; } */
-    /* .secondary { background-color: gray; color: white; } */
-  </style>

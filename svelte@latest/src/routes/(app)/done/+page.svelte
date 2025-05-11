@@ -72,7 +72,7 @@
     }
   </script>
 
-  <div class="page-container p-4 md:p-8">
+  <div class="max-w-7xl mx-auto p-4 md:p-8">
     <AchievementList
       addNewAchievement={openCreateModal}
       editAchievement={openEditModal}
@@ -95,12 +95,3 @@
       </Modal>
     {/if}
   </div>
-
-  <style>
-    /* Page-specific styles can be added here if necessary */
-    .page-container {
-      max-width: 1200px; /* Example: Limit the maximum width of the page content */
-      margin-left: auto;
-      margin-right: auto;
-    }
-  </style>
