@@ -1,26 +1,29 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
-    import { createEventDispatcher } from 'svelte';
     import type { FuturePlan } from '$lib/services/futurePlanService';
     import { futurePlanStore } from '$lib/store/futurePlanStore'; // To call deleteFuturePlan
-  
-    // Component prop: the future plan object to display
-    export let futurePlan: FuturePlan;
-  
-    const dispatch = createEventDispatcher();
-  
+
+    // Component props
+    let {
+      futurePlan,
+      onEdit = () => {} // Event handler prop for Svelte 5
+    } = $props<{
+      futurePlan: FuturePlan;
+      onEdit?: (plan: FuturePlan) => void;
+    }>();
+
     // Local state for delete operation loading status
-    let isDeleting = false;
-  
+    let isDeleting = $state(false);
+
     /**
-     * Dispatches an 'edit' event with the current futurePlan object.
-     * This event will be handled by the parent component (FuturePlanList)
+     * Calls the onEdit callback with the current futurePlan object.
+     * This will be handled by the parent component (FuturePlanList)
      * to open an editing modal.
      */
     function handleEdit() {
-      dispatch('edit', futurePlan);
+      onEdit(futurePlan);
     }
-  
+
     /**
      * Handles the deletion of the future plan.
      * It shows a confirmation dialog and then calls the store's delete method.
@@ -30,13 +33,13 @@
       if (!confirm(`Are you sure you want to delete the plan: "${futurePlan.description}"? This action cannot be undone.`)) {
         return;
       }
-  
+
       isDeleting = true;
       try {
         await futurePlanStore.deleteFuturePlan(futurePlan.id);
         // The list will reactively update as the store changes.
         // Optionally, dispatch a 'deleted' event if the parent needs to know.
-        // dispatch('deleted', futurePlan.id); 
+        // dispatch('deleted', futurePlan.id);
       } catch (e: any) {
         // Display an alert for error (a more sophisticated notification system could be used)
         alert(`Failed to delete plan: ${e.message || 'Unknown error'}`);
@@ -45,7 +48,7 @@
         isDeleting = false;
       }
     }
-  
+
     /**
      * Utility function to format date strings (e.g., YYYY-MM-DD to a more readable format).
      * @param dateString - The date string to format.
@@ -66,7 +69,7 @@
         return dateString; // Return original string if parsing or formatting fails
       }
     }
-  
+
     /**
      * Provides a user-friendly text representation for the plan status.
      * @param status - The status key.
@@ -76,17 +79,17 @@
       if (!status) return 'N/A';
       return status.charAt(0).toUpperCase() + status.slice(1);
     }
-  
-    // Reactive class for status badge based on its value
-    $: statusClasses = {
+
+    // Status classes for badge styling
+    const statusClasses = {
       active: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
       achieved: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
       deferred: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
       abandoned: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
     };
-  
+
   </script>
-  
+
   <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-4 transition-all hover:shadow-xl">
     <div class="flex justify-between items-start mb-3">
       <h4 class="text-lg font-semibold text-gray-800 dark:text-white flex-grow pr-4 break-words">
@@ -94,7 +97,7 @@
       </h4>
       <div class="flex space-x-2 rtl:space-x-reverse flex-shrink-0">
         <button
-          on:click={handleEdit}
+          onclick={handleEdit}
           aria-label="Edit plan: {futurePlan.description}"
           class="p-2 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
         >
@@ -104,7 +107,7 @@
           </svg>
         </button>
         <button
-          on:click={handleDelete}
+          onclick={handleDelete}
           disabled={isDeleting}
           aria-label="Delete plan: {futurePlan.description}"
           class="p-2 text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md disabled:opacity-50"
@@ -122,7 +125,7 @@
         </button>
       </div>
     </div>
-  
+
     <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
       {#if futurePlan.goal_type}
         <div>
@@ -134,12 +137,12 @@
       </div>
       <div>
         <span class="font-semibold">Status:</span>
-        <span class="px-2 py-0.5 ml-1 text-xs font-medium rounded-full {statusClasses[futurePlan.status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'}">
+        <span class="px-2 py-0.5 ml-1 text-xs font-medium rounded-full {statusClasses[futurePlan.status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'}">
           {formatStatus(futurePlan.status)}
         </span>
       </div>
     </div>
-  
+
     <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500">
       ID: {futurePlan.id}
       {#if futurePlan.created_at}
@@ -150,4 +153,3 @@
       {/if}
     </div>
   </div>
-  

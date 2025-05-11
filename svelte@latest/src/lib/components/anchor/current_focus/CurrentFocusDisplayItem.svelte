@@ -4,20 +4,22 @@
 
   import { todoStore } from '$lib/store/todoStore';
   import type { TodoItem, TodoStatus, TodoPriority } from '$lib/services/todoService';
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
+  import { fade, fly } from 'svelte/transition';
 
-  import Modal from '$lib/components/common/Modal.svelte';
   import TodoEditForm from '$lib/components/todo/TodoEditForm.svelte'; // Reusing the main edit form
 
   export let item: TodoItem; // Prop: The To-Do item to display (assumed to be is_current_focus: true)
 
-  const dispatch = createEventDispatcher();
+  // Event callbacks for parent communication using Svelte 5 approach
+  export let onActionError = (message: string) => {};
+  export let onDeleted = (id: number) => {};
 
   // Local loading states
   let isLoadingToggleStatus = false;
   let isLoadingDelete = false;
   let isLoadingToggleFocus = false; // Specifically for the "Remove from Focus" action
-  
+
   let showDetails = false;
   let isEditModalOpen = false;
 
@@ -33,7 +35,7 @@
       // and will disappear from this CurrentFocusDisplay list.
     } catch (error) {
       console.error(`Failed to toggle complete status for focus item ${item.id}:`, error);
-      dispatch('actionError', { message: 'Failed to update completion status.' });
+      onActionError('Failed to update completion status.');
     } finally {
       isLoadingToggleStatus = false;
     }
@@ -50,7 +52,7 @@
       // and disappear from this display area.
     } catch (error) {
       console.error(`Failed to remove from focus for item ${item.id}:`, error);
-      dispatch('actionError', { message: 'Failed to update focus status.' });
+      onActionError('Failed to update focus status.');
     } finally {
       isLoadingToggleFocus = false;
     }
@@ -65,10 +67,10 @@
     isLoadingDelete = true;
     try {
       await todoStore.removeTodo(item.id);
-      dispatch('deleted', { id: item.id });
+      onDeleted(item.id);
     } catch (error) {
       console.error(`Failed to delete focus item ${item.id}:`, error);
-      dispatch('actionError', { message: 'Failed to delete item.' });
+      onActionError('Failed to delete item.');
     } finally {
       isLoadingDelete = false;
     }
@@ -111,14 +113,14 @@
         id="focus-status-{item.id}"
         class="status-checkbox"
         checked={item.status === 'completed'}
-        on:change={handleToggleCompleteStatus}
+        onchange={handleToggleCompleteStatus}
         disabled={isLoadingToggleStatus || isLoadingDelete || isLoadingToggleFocus}
         aria-labelledby="focus-title-{item.id}"
       />
       <label for="focus-status-{item.id}" class="checkbox-label" aria-hidden="true"></label>
     </div>
 
-    <div class="focus-item-title-and-meta" on:click={() => showDetails = !showDetails} role="button" tabindex="0" on:keypress={(e) => e.key === 'Enter' && (showDetails = !showDetails)}>
+    <div class="focus-item-title-and-meta" onclick={() => showDetails = !showDetails} role="button" tabindex="0" onkeypress={(e) => e.key === 'Enter' && (showDetails = !showDetails)}>
       <span class="focus-indicator-main" title="Current Focus Item">⭐</span>
       <h4 class="focus-item-title" id="focus-title-{item.id}" class:completed={item.status === 'completed'}>
         {item.title}
@@ -144,7 +146,7 @@
       {#if item.status !== 'completed'}
       <button
         class="action-button unfocus-button"
-        on:click|stopPropagation={handleRemoveFromFocus}
+        onclick={(e) => { e.stopPropagation(); handleRemoveFromFocus(); }}
         title="Remove from Current Focus"
         aria-label="Remove {item.title} from Current Focus"
         disabled={isLoadingToggleStatus || isLoadingDelete || isLoadingToggleFocus}
@@ -158,7 +160,7 @@
       {/if}
       <button
         class="action-button edit-button"
-        on:click|stopPropagation={openEditModal}
+        onclick={(e) => { e.stopPropagation(); openEditModal(); }}
         title="Edit Focused Item"
         aria-label="Edit focused item: {item.title}"
         disabled={isLoadingToggleStatus || isLoadingDelete || isLoadingToggleFocus}
@@ -167,7 +169,7 @@
       </button>
       <button
         class="action-button delete-button"
-        on:click|stopPropagation={handleDelete}
+        onclick={(e) => { e.stopPropagation(); handleDelete(); }}
         title="Delete Focused Item"
         aria-label="Delete focused item: {item.title}"
         disabled={isLoadingToggleStatus || isLoadingDelete || isLoadingToggleFocus}
@@ -189,28 +191,74 @@
 </div>
 
 {#if isEditModalOpen}
-  <Modal
-    isOpen={isEditModalOpen}
-    title="Edit Focus Item: {item.title}"
-    on:close={closeEditModal}
-    modalWidth="max-w-xl"
+  <div class="fixed inset-0 bg-black/60 flex justify-center items-center p-4 z-modal"
+    onclick={(e) => {
+      if (e.target === e.currentTarget) {
+        closeEditModal();
+      }
+    }}
+    onkeydown={(e) => {
+      if (e.key === 'Escape') {
+        closeEditModal();
+      }
+    }}
+    transition:fade={{ duration: 200 }}
+    role="dialog"
+    tabindex="0"
+    aria-modal="true"
+    aria-labelledby="modal-title"
   >
-    <div slot="body">
-      <TodoEditForm
-        bind:this={todoEditFormComponent}
-        todo={item} on:saveSuccess={closeEditModal}
-        on:closeModalRequest={closeEditModal}
-      />
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col w-full max-h-[90vh] overflow-hidden max-w-xl"
+      role="document"
+      tabindex="-1"
+      transition:fly={{ y: -30, duration: 300 }}
+    >
+      <header class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <h2 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white m-0">Edit Focus Item: {item.title}</h2>
+        <button
+          class="bg-transparent border-none text-3xl font-light text-gray-500 dark:text-gray-400 cursor-pointer p-1 leading-none opacity-70 hover:opacity-100 transition-opacity"
+          onclick={closeEditModal}
+          aria-label="Close modal"
+        >
+          &times;
+        </button>
+      </header>
+
+      <main class="p-6 overflow-y-auto flex-grow">
+        <div>
+          <TodoEditForm
+            bind:this={todoEditFormComponent}
+            todo={item}
+            onSaveSuccess={closeEditModal}
+            onCloseModalRequest={closeEditModal}
+          />
+        </div>
+      </main>
+
+      <footer class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
+        <div class="flex justify-end gap-3">
+          <button
+            type="button"
+            class="btn btn-outline"
+            onclick={() => todoEditFormComponent.handleCancel()}
+            disabled={false}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            onclick={() => todoEditFormComponent.handleSubmit()}
+            disabled={false}
+            form="todo-edit-form-{item.id}"
+          >
+            Save Changes
+          </button>
+        </div>
+      </footer>
     </div>
-    <div slot="footer" class="modal-form-actions">
-      <button type="button" class="button secondary-button" on:click={() => todoEditFormComponent.handleCancel()} disabled={todoEditFormComponent?.isLoading}>
-        Cancel
-      </button>
-      <button type="submit" class="button primary-button" on:click={() => todoEditFormComponent.handleSubmit()} disabled={todoEditFormComponent?.isLoading} form="todo-edit-form-{item.id}">
-        {#if todoEditFormComponent?.isLoading} Saving... {:else} Save Changes {/if}
-      </button>
-    </div>
-  </Modal>
+  </div>
 {/if}
 
 <style>
@@ -253,12 +301,12 @@
   .status-badge-in-progress { background-color: var(--status-inprogress-bg, #fff3cd); color: var(--status-inprogress-text, #ffc107); }
   .status-badge-completed { background-color: var(--status-completed-bg, #d1e7dd); color: var(--status-completed-text, #198754); }
   .status-badge-deferred { background-color: var(--status-deferred-bg, #e2e3e5); color: var(--status-deferred-text, #6c757d); }
-  
+
   .focus-item-actions { display: flex; align-items: center; margin-left: 1rem; }
   .action-button { background: none; border: none; color: var(--text-secondary, #6c757d); padding: 0.4rem; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.2s ease, color 0.2s ease; margin-left: 0.5rem; }
   .action-button:hover:not(:disabled) { background-color: var(--button-hover-bg-focus, #e9ecef); }
   .action-button:disabled { opacity: 0.5; cursor: not-allowed; }
-  
+
   .unfocus-button svg.unfocus-icon { /* Specific styling for unfocus icon if needed */
     stroke: var(--focus-indicator-color, #ffc107); /* Example: make it yellow */
   }
@@ -271,7 +319,7 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner.small-spinner { width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  
+
   .modal-form-actions .button { padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 500; border-radius: var(--border-radius, 0.375rem); cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease; }
   .modal-form-actions .primary-button { background-color: var(--primary-color, #007bff); color: white; border: 1px solid var(--primary-color, #007bff); }
   .modal-form-actions .primary-button:hover:not(:disabled) { background-color: #0056b3; border-color: #0056b3; }

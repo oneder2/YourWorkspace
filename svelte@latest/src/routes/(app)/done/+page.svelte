@@ -5,14 +5,14 @@
     import Modal from '$lib/components/common/Modal.svelte'; // Assuming Modal component path is correct
     import type { Achievement } from '$lib/services/achievementService';
     // achievementStore might be used here for specific actions if needed, but list updates are reactive
-    // import { achievementStore } from '$lib/store/achievementStore'; 
+    // import { achievementStore } from '$lib/store/achievementStore';
     // import { onMount, get } from 'svelte'; // get is from svelte/store if you need to read store value once
-  
+
     // State variable to control the visibility of the modal
     let isModalOpen = false;
     // State variable to hold the achievement being edited. Null for creating a new one.
     let currentEditingAchievement: Achievement | null = null;
-  
+
     /*
     // onMount(() => {
     //   // Initial data loading can be triggered here or within AchievementList.
@@ -23,7 +23,7 @@
     //   // }
     // });
     */
-  
+
     /**
      * Opens the modal in 'create' mode for adding a new achievement.
      * This function is called when AchievementList dispatches 'addNewAchievement'.
@@ -32,17 +32,17 @@
       currentEditingAchievement = null; // Ensure form is in create mode
       isModalOpen = true; // Open the modal
     }
-  
+
     /**
      * Opens the modal in 'edit' mode for an existing achievement.
-     * This function is called when AchievementList dispatches 'editAchievement'.
-     * @param {CustomEvent<Achievement>} event - The event containing the achievement to edit.
+     * This function is called as a callback prop from AchievementList.
+     * @param {Achievement} achievement - The achievement to edit.
      */
-    function openEditModal(event: CustomEvent<Achievement>) {
-      currentEditingAchievement = event.detail; // Set the achievement to be edited
+    function openEditModal(achievement: Achievement) {
+      currentEditingAchievement = achievement; // Set the achievement to be edited
       isModalOpen = true; // Open the modal
     }
-  
+
     /**
      * Closes the modal and resets the editing state.
      * This function is called by the Modal component (on:close event) or after form actions.
@@ -51,18 +51,18 @@
       isModalOpen = false; // Close the modal
       currentEditingAchievement = null; // Clear any achievement being edited
     }
-  
+
     /**
-     * Handles the 'save' event dispatched by AchievementForm.
+     * Handles the save action from AchievementForm.
      * Closes the modal after a successful save. The list will update reactively.
-     * @param {CustomEvent<Achievement>} event - The event containing the saved achievement.
+     * @param {Achievement} achievement - The saved achievement.
      */
-    function handleFormSave(event: CustomEvent<Achievement>) {
+    function handleFormSave(achievement: Achievement) {
       closeModal();
       // Optional: Display a success notification (e.g., using a toast message system)
-      // console.log('Achievement saved successfully:', event.detail);
+      console.log('Achievement saved successfully:', achievement);
     }
-  
+
     /**
      * Handles the 'cancel' event dispatched by AchievementForm.
      * Closes the modal without saving.
@@ -71,28 +71,31 @@
       closeModal();
     }
   </script>
-  
+
   <div class="page-container p-4 md:p-8">
     <AchievementList
-      on:addNewAchievement={openCreateModal}
-      on:editAchievement={openEditModal}
+      addNewAchievement={openCreateModal}
+      editAchievement={openEditModal}
     />
-  
+
     {#if isModalOpen}
-      <Modal 
-        isOpen={isModalOpen} 
-        on:close={closeModal} 
+      <Modal
+        isOpen={isModalOpen}
+        close={closeModal}
         title={currentEditingAchievement ? 'Edit Achievement' : 'Add New Achievement'}
-        modalWidth="max-w-xl" >
-        <AchievementForm
-          achievement={currentEditingAchievement}
-          on:save={handleFormSave}
-          on:cancel={handleFormCancel}
-        />
+        modalWidth="max-w-xl"
+      >
+        <div>
+          <AchievementForm
+            achievement={currentEditingAchievement}
+            save={handleFormSave}
+            cancel={handleFormCancel}
+          />
+        </div>
       </Modal>
     {/if}
   </div>
-  
+
   <style>
     /* Page-specific styles can be added here if necessary */
     .page-container {
@@ -101,4 +104,3 @@
       margin-right: auto;
     }
   </style>
-  

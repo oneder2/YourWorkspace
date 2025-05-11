@@ -1,31 +1,31 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
-    import { createEventDispatcher } from 'svelte';
     import { get } from 'svelte/store'; // To read store values imperatively
     import type { FuturePlan, FuturePlanCreateDto, FuturePlanUpdateDto } from '$lib/services/futurePlanService';
     import { futurePlanStore } from '$lib/store/futurePlanStore'; // The store for future plans
-  
-    // Component Props
-    /**
-     * If a futurePlan object is passed, the form will be in "edit" mode.
-     * Otherwise, it's in "create" mode.
-     * @type {FuturePlan | null}
-     */
-    export let futurePlan: FuturePlan | null = null;
-  
+
+    // Component Props using $props rune
+    let {
+      futurePlan = null,
+      onSave = (plan: FuturePlan) => {},
+      onCancel = () => {}
+    } = $props<{
+      futurePlan: FuturePlan | null;
+      onSave?: (plan: FuturePlan) => void;
+      onCancel?: () => void;
+    }>();
+
     // Local state for form fields, initialized from `futurePlan` prop if in edit mode
-    let description: string = futurePlan?.description || '';
-    let goal_type: string = futurePlan?.goal_type || '';
-    let target_date: string = futurePlan?.target_date || ''; // Expected format: YYYY-MM-DD
-    let status: 'active' | 'achieved' | 'deferred' | 'abandoned' = futurePlan?.status || 'active';
-  
+    let description = $state(futurePlan?.description || '');
+    let goal_type = $state(futurePlan?.goal_type || '');
+    let target_date = $state(futurePlan?.target_date || ''); // Expected format: YYYY-MM-DD
+    let status = $state<'active' | 'achieved' | 'deferred' | 'abandoned'>(futurePlan?.status || 'active');
+
     // Local state for form feedback and loading status
-    let formError: string | null = null;
-    let formSuccess: string | null = null;
-    let internalIsLoading: boolean = false; // For form-specific loading state
-  
-    const dispatch = createEventDispatcher();
-  
+    let formError = $state<string | null>(null);
+    let formSuccess = $state<string | null>(null);
+    let internalIsLoading = $state(false); // For form-specific loading state
+
     // Available statuses for the select dropdown
     const statuses: Array<'active' | 'achieved' | 'deferred' | 'abandoned'> = [
       'active',
@@ -33,14 +33,14 @@
       'deferred',
       'abandoned',
     ];
-  
-    // MODIFICATION: Explicitly get the isLoading store from futurePlanStore
+
+    // Explicitly get the isLoading store from futurePlanStore
     const isLoadingStore = futurePlanStore.isLoading;
     // Reactive subscription to the store's global loading state for the submit button
-    $: storeIsLoading = $isLoadingStore; 
-  
-    // Reactive statement to update form fields if the `futurePlan` prop changes
-    $: {
+    let storeIsLoading = $derived($isLoadingStore);
+
+    // Update form fields when futurePlan prop changes
+    $effect(() => {
       if (futurePlan) {
         description = futurePlan.description || '';
         goal_type = futurePlan.goal_type || '';
@@ -55,8 +55,8 @@
         target_date = '';
         status = 'active';
       }
-    }
-  
+    });
+
     /**
      * Handles the form submission for creating or updating a future plan.
      */
@@ -64,14 +64,14 @@
       formError = null;
       formSuccess = null;
       internalIsLoading = true;
-  
+
       // Basic validation: description is required
       if (!description.trim()) {
         formError = 'Description cannot be empty.';
         internalIsLoading = false;
         return;
       }
-  
+
       if (futurePlan && futurePlan.id) {
         // Edit mode: Prepare update DTO
         const planData: FuturePlanUpdateDto = {
@@ -84,7 +84,7 @@
           const updated = await futurePlanStore.updateFuturePlan(futurePlan.id, planData);
           if (updated) {
             formSuccess = 'Future plan updated successfully!';
-            dispatch('save', updated); // Dispatch event for parent component (e.g., close modal)
+            onSave(updated); // Call the callback prop instead of dispatching an event
           } else {
             // Read error from store if update failed at store/service level
             formError = get(futurePlanStore.error) || 'Failed to update future plan.';
@@ -104,7 +104,7 @@
           const created = await futurePlanStore.addFuturePlan(planData);
           if (created) {
             formSuccess = 'Future plan added successfully!';
-            dispatch('save', created); // Dispatch event for parent
+            onSave(created); // Call the callback prop instead of dispatching an event
             resetForm(); // Reset form fields after successful creation
           } else {
             // Read error from store if creation failed
@@ -116,7 +116,7 @@
       }
       internalIsLoading = false;
     }
-  
+
     /**
      * Resets the form fields to their initial (empty or default) state.
      * Typically used after successful creation or when explicitly cancelled in create mode.
@@ -129,28 +129,28 @@
       formError = null;
       // formSuccess = null; // Optionally clear success message on reset, or let it persist briefly
     }
-  
+
     /**
      * Handles the cancel action.
-     * If editing, dispatches a 'cancel' event (for a modal to handle).
+     * If editing, calls the onCancel callback (for a modal to handle).
      * If creating, resets the form.
      */
     function handleCancel() {
       if (futurePlan) { // If in edit mode
-        dispatch('cancel');
+        onCancel();
       } else { // If in create mode
         resetForm();
         formSuccess = null; // Clear any success message on cancel
       }
     }
-  
+
   </script>
-  
-  <form on:submit|preventDefault={handleSubmit} class="space-y-6 p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+
+  <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6 p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg">
     <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
       {futurePlan ? 'Edit Future Plan' : 'Add New Future Plan'}
     </h3>
-  
+
     {#if formError}
       <div class="p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
         <span class="font-medium">Error:</span> {formError}
@@ -161,52 +161,52 @@
         <span class="font-medium">Success:</span> {formSuccess}
       </div>
     {/if}
-  
+
     <div>
       <label for="fp-description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         Description <span class="text-red-500">*</span>
       </label>
-      <textarea 
-        id="fp-description" 
-        bind:value={description} 
+      <textarea
+        id="fp-description"
+        bind:value={description}
         rows="4"
         required
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         placeholder="Describe your future plan or goal..."
       ></textarea>
     </div>
-  
+
     <div>
       <label for="fp-goal_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         Goal Type (Optional)
       </label>
-      <input 
-        type="text" 
-        id="fp-goal_type" 
+      <input
+        type="text"
+        id="fp-goal_type"
         bind:value={goal_type}
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         placeholder="e.g., Career Development, Skill Acquisition, Personal Project"
       />
     </div>
-    
+
     <div>
       <label for="fp-target_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         Target Date (Optional)
       </label>
-      <input 
-        type="date" 
-        id="fp-target_date" 
+      <input
+        type="date"
+        id="fp-target_date"
         bind:value={target_date}
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
       />
     </div>
-  
+
     <div>
       <label for="fp-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         Status
       </label>
-      <select 
-        id="fp-status" 
+      <select
+        id="fp-status"
         bind:value={status}
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
       >
@@ -215,17 +215,17 @@
         {/each}
       </select>
     </div>
-  
+
     <div class="flex justify-end space-x-3 pt-4">
-      <button 
-        type="button" 
-        on:click={handleCancel}
+      <button
+        type="button"
+        onclick={handleCancel}
         class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
       >
         {futurePlan ? 'Cancel' : 'Reset'}
       </button>
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         disabled={internalIsLoading || storeIsLoading}
         class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-50"
       >
@@ -241,4 +241,3 @@
       </button>
     </div>
   </form>
-  

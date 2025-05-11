@@ -1,31 +1,32 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
     import { get } from 'svelte/store'; // Import get
     import type { Achievement, AchievementCreateDto, AchievementUpdateDto } from '$lib/services/achievementService';
     import { achievementStore } from '$lib/store/achievementStore'; // achievementStore is an object containing multiple stores
-  
+
     // Props
-    export let achievement: Achievement | null = null;
-    
+    let { achievement = null, save, cancel } = $props<{
+      achievement: Achievement | null;
+      save?: (achievement: Achievement) => void;
+      cancel?: () => void;
+    }>();
+
     // Local state for form fields
-    let title: string = achievement?.title || '';
-    let description: string = achievement?.description || '';
-    let quantifiable_results: string = achievement?.quantifiable_results || '';
-    let core_skills_input: string = achievement?.core_skills_json?.join(', ') || '';
-    let date_achieved: string = achievement?.date_achieved || ''; // YYYY-MM-DD
-  
-    let formError: string | null = null;
-    let formSuccess: string | null = null;
-    let internalIsLoading: boolean = false; // Local loading state for the form operations
-  
-    const dispatch = createEventDispatcher();
-  
+    let title = $state(achievement?.title || '');
+    let description = $state(achievement?.description || '');
+    let quantifiable_results = $state(achievement?.quantifiable_results || '');
+    let core_skills_input = $state(achievement?.core_skills_json?.join(', ') || '');
+    let date_achieved = $state(achievement?.date_achieved || ''); // YYYY-MM-DD
+
+    let formError = $state<string | null>(null);
+    let formSuccess = $state<string | null>(null);
+    let internalIsLoading = $state(false); // Local loading state for the form operations
+
     // Extract the specific store for isLoading
-    const isLoadingStore = achievementStore.isLoading; 
+    const isLoadingStore = achievementStore.isLoading;
     // Now, auto-subscribe to this specific store
-    $: storeIsLoading = $isLoadingStore; 
-  
-    $: {
+    let storeIsLoading = $derived($isLoadingStore);
+
+    $effect(() => {
       if (achievement) {
         title = achievement.title || '';
         description = achievement.description || '';
@@ -42,24 +43,24 @@
         core_skills_input = '';
         date_achieved = '';
       }
-    }
-  
+    });
+
     const handleSubmit = async () => {
       formError = null;
       formSuccess = null;
       internalIsLoading = true;
-  
+
       if (!title.trim()) {
         formError = '标题不能为空。';
         internalIsLoading = false;
         return;
       }
-  
+
       const core_skills_json = core_skills_input
         .split(',')
-        .map(skill => skill.trim())
-        .filter(skill => skill !== '');
-  
+        .map((skill: string) => skill.trim())
+        .filter((skill: string) => skill !== '');
+
       if (achievement && achievement.id) {
         const achievementData: AchievementUpdateDto = {
           title,
@@ -72,7 +73,7 @@
           const updated = await achievementStore.updateAchievement(achievement.id, achievementData);
           if (updated) {
             formSuccess = '成就更新成功！';
-            dispatch('save', updated);
+            save?.(updated);
           } else {
             formError = get(achievementStore.error) || '更新成就失败。';
           }
@@ -91,7 +92,7 @@
           const created = await achievementStore.addAchievement(achievementData);
           if (created) {
             formSuccess = '成就添加成功！';
-            dispatch('save', created);
+            save?.(created);
             resetForm();
           } else {
             formError = get(achievementStore.error) || '添加成就失败。';
@@ -102,7 +103,7 @@
       }
       internalIsLoading = false;
     };
-  
+
     const resetForm = () => {
       title = '';
       description = '';
@@ -112,23 +113,23 @@
       formError = null;
       // formSuccess = null; // Decide if success message should also be cleared on reset
     };
-  
+
     const handleCancel = () => {
       if (achievement) {
-          dispatch('cancel'); // For modal to handle
+          cancel?.(); // For modal to handle
       } else {
           resetForm();
           formSuccess = null;
       }
     }
-  
+
   </script>
-  
-  <form on:submit|preventDefault={handleSubmit} class="space-y-6 p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+
+  <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6 p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg">
     <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
       {achievement ? '编辑成就' : '添加新成就'}
     </h3>
-  
+
     {#if formError}
       <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
         <span class="font-medium">错误：</span> {formError}
@@ -139,43 +140,43 @@
         <span class="font-medium">成功：</span> {formSuccess}
       </div>
     {/if}
-  
+
     <div>
       <label for="title-achv" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">标题 <span class="text-red-500">*</span></label>
       <input type="text" id="title-achv" bind:value={title} required
              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
              placeholder="例如：完成XX项目第一阶段">
     </div>
-  
+
     <div>
       <label for="description-achv" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">描述</label>
       <textarea id="description-achv" rows="3" bind:value={description}
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="详细描述这个成就..."></textarea>
     </div>
-  
+
     <div>
       <label for="quantifiable_results-achv" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">可量化成果</label>
       <input type="text" id="quantifiable_results-achv" bind:value={quantifiable_results}
              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
              placeholder="例如：提高效率20%，节省成本1万元">
     </div>
-  
+
     <div>
       <label for="core_skills_input-achv" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">核心技能 (逗号分隔)</label>
       <input type="text" id="core_skills_input-achv" bind:value={core_skills_input}
              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
              placeholder="例如：沟通, 领导力, Svelte">
     </div>
-    
+
     <div>
       <label for="date_achieved-achv" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">达成日期</label>
       <input type="date" id="date_achieved-achv" bind:value={date_achieved}
              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
     </div>
-  
+
     <div class="flex justify-end space-x-3 pt-4">
-      <button type="button" on:click={handleCancel}
+      <button type="button" onclick={handleCancel}
               class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
         {achievement ? '取消' : '重置'}
       </button>
@@ -193,4 +194,3 @@
       </button>
     </div>
   </form>
-  

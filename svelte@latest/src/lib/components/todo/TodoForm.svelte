@@ -67,12 +67,14 @@
 
 </script>
 
-<div class="todo-form-container">
-  <form on:submit|preventDefault={handleSubmit} class="todo-form">
-    <h3 class="form-title">Add New To-Do</h3>
+<div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-lg shadow-md mb-8 max-w-xl mx-auto">
+  <form on:submit|preventDefault={handleSubmit}>
+    <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6 text-center">Add New To-Do</h3>
 
-    <div class="form-group">
-      <label for="todo-title">Title <span class="required-asterisk">*</span></label>
+    <div class="mb-5">
+      <label for="todo-title" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        Title <span class="text-danger-500 ml-0.5">*</span>
+      </label>
       <input
         type="text"
         id="todo-title"
@@ -81,44 +83,55 @@
         required
         disabled={isLoading}
         aria-describedby="title-error"
+        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
       />
     </div>
 
-    <div class="form-group">
-      <label for="todo-description">Description (Optional)</label>
+    <div class="mb-5">
+      <label for="todo-description" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        Description (Optional)
+      </label>
       <textarea
         id="todo-description"
         bind:value={description}
         placeholder="Add more details..."
         rows="3"
         disabled={isLoading}
+        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
       ></textarea>
     </div>
 
-    <div class="form-group">
-      <label for="todo-due-date">Due Date (Optional)</label>
+    <div class="mb-5">
+      <label for="todo-due-date" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        Due Date (Optional)
+      </label>
       <input
         type="date"
         id="todo-due-date"
         bind:value={dueDate}
         min={getCurrentDateString()}
         disabled={isLoading}
+        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
       />
     </div>
 
     {#if errorMessage}
-      <div class="message error-message" id="title-error" aria-live="assertive">
+      <div class="p-3 mb-5 rounded-md bg-danger-50 dark:bg-danger-900/30 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-800 text-center text-sm" id="title-error" aria-live="assertive">
         <p>{errorMessage}</p>
       </div>
     {/if}
 
     {#if successMessage}
-      <div class="message success-message" aria-live="polite">
+      <div class="p-3 mb-5 rounded-md bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300 border border-success-200 dark:border-success-800 text-center text-sm" aria-live="polite">
         <p>{successMessage}</p>
       </div>
     {/if}
 
-    <button type="submit" class="submit-button" disabled={isLoading}>
+    <button
+      type="submit"
+      class="w-full py-3 px-4 text-base font-semibold text-white bg-primary-500 hover:bg-primary-600 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-70 rounded-md transition-colors shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+      disabled={isLoading}
+    >
       {#if isLoading}
         <span>Adding...</span>
       {:else}
@@ -127,123 +140,3 @@
     </button>
   </form>
 </div>
-
-<style>
-  .todo-form-container {
-    background-color: #ffffff;
-    padding: 1.5rem 2rem;
-    border-radius: var(--border-radius-lg, 0.5rem);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    margin-bottom: 2rem; /* Space below the form */
-    max-width: 600px; /* Max width for the form */
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .form-title {
-    font-size: 1.5rem; /* h3 size */
-    font-weight: 600;
-    color: var(--text-primary, #212529);
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-
-  .todo-form .form-group {
-    margin-bottom: 1.25rem;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-secondary, #495057);
-    font-size: 0.9rem;
-  }
-
-  .required-asterisk {
-    color: var(--danger-color, #dc3545);
-    margin-left: 0.2rem;
-  }
-
-  .form-group input[type="text"],
-  .form-group input[type="date"],
-  .form-group textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-color, #ced4da);
-    border-radius: var(--border-radius, 0.375rem);
-    font-size: 1rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    background-color: var(--input-bg, #f8f9fa);
-    color: var(--text-primary, #212529);
-  }
-  
-  .form-group input::placeholder,
-  .form-group textarea::placeholder {
-    color: var(--text-placeholder, #6c757d);
-    opacity: 0.8;
-  }
-
-
-  .form-group input:focus,
-  .form-group textarea:focus {
-    border-color: var(--primary-color, #007bff);
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    outline: none;
-    background-color: #fff;
-  }
-
-  .form-group input:disabled,
-  .form-group textarea:disabled {
-    background-color: #e9ecef;
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-
-  .message {
-    padding: 0.75rem 1rem;
-    border-radius: var(--border-radius, 0.375rem);
-    margin-bottom: 1.25rem;
-    text-align: center;
-    font-size: 0.9rem;
-  }
-  .message p {
-    margin: 0;
-  }
-
-  .error-message {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: var(--danger-color, #dc3545);
-    border: 1px solid rgba(220, 53, 69, 0.2);
-  }
-
-  .success-message {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: var(--success-color, #28a745);
-    border: 1px solid rgba(40, 167, 69, 0.2);
-  }
-
-  .submit-button {
-    width: 100%;
-    padding: 0.85rem 1rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-    background-color: var(--primary-color, #007bff);
-    border: none;
-    border-radius: var(--border-radius, 0.375rem);
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, box-shadow 0.15s ease-in-out;
-  }
-
-  .submit-button:hover:not(:disabled) {
-    background-color: #0056b3; /* Darker shade of primary */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .submit-button:disabled {
-    background-color: var(--secondary-color, #6c757d);
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-</style>

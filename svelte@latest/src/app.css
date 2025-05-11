@@ -2,27 +2,97 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* Global styles */
+@layer base {
+  /* Apply font family from Tailwind config */
+  html {
+    @apply font-sans;
+  }
 
-/* You can add other global styles here if needed */
-body {
-  /* Example: Setting a default background color for the entire app */
-  /* Tailwind's base styles might already handle this, or you might prefer a specific color. */
-  /* background-color: #f7fafc; */ /* Light gray example */
-  /* color: #2d3748; */ /* Default text color example */
-  
-  /* Ensure a modern font stack is applied if not fully handled by Tailwind base */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-               Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  body {
+    @apply bg-light text-dark;
+  }
+
+  /* Default link styles */
+  a {
+    @apply text-primary-500 no-underline hover:underline;
+  }
+
+  /* Headings */
+  h1 {
+    @apply text-3xl font-bold mb-4;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold mb-3;
+  }
+
+  h3 {
+    @apply text-xl font-semibold mb-2;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-400 ring-offset-2;
+  }
 }
 
-/* Example: Ensure links have a consistent style if not overridden by components */
-/* a {
-  color: #3182ce; 
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-} */
+/* Component styles */
+@layer components {
+  /* Button styles */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium text-sm transition-colors;
+  }
 
-/* Add any other global styles your application might need */
-/* For instance, styles for scrollbars, default margins/paddings for certain elements, etc. */
+  .btn-primary {
+    @apply bg-primary-500 text-white hover:bg-primary-600 focus:bg-primary-600;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary-500 text-white hover:bg-secondary-600 focus:bg-secondary-600;
+  }
+
+  .btn-outline {
+    @apply border border-gray-300 bg-white text-dark hover:bg-gray-50;
+  }
+
+  .btn-danger {
+    @apply bg-danger-500 text-white hover:bg-danger-600 focus:bg-danger-600;
+  }
+
+  /* Form control styles */
+  .form-control {
+    @apply block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden;
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  .card-footer {
+    @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+  }
+}
+
+/* Utility styles */
+@layer utilities {
+  /* Custom utilities that aren't in Tailwind by default */
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Modal-specific global styles */
+body.overflow-hidden-modal {
+  @apply overflow-hidden;
+}

@@ -1,31 +1,32 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
     import type { Achievement } from '$lib/services/achievementService';
     import { achievementStore } from '$lib/store/achievementStore';
-  
-    export let achievement: Achievement;
-  
-    const dispatch = createEventDispatcher();
-  
-    let isDeleting = false; // Local state for delete confirmation or loading
-  
+
+    // Props
+    let { achievement, edit } = $props<{
+      achievement: Achievement;
+      edit?: (achievement: Achievement) => void;
+    }>();
+
+    let isDeleting = $state(false); // Local state for delete confirmation or loading
+
     const handleEdit = () => {
-      dispatch('edit', achievement);
+      edit?.(achievement);
     };
-  
+
     const handleDelete = async () => {
       // Optional: Add a confirmation step here, e.g., using a modal or a simple confirm()
       // For now, directly attempts deletion.
       if (!confirm(`您确定要删除成就 "${achievement.title}" 吗？此操作无法撤销。`)) {
         return;
       }
-  
+
       isDeleting = true;
       try {
         await achievementStore.deleteAchievement(achievement.id);
         // Parent component (AchievementList) will react to store changes and remove this item.
         // Optionally dispatch a 'deleted' event if needed for other UI updates.
-        // dispatch('deleted', achievement.id);
+        // No need to dispatch events anymore, store changes will trigger UI updates
       } catch (e: any) {
         // Handle error display, perhaps through a global notification system or a local message
         alert(`删除失败：${e.message || '未知错误'}`);
@@ -34,7 +35,7 @@
         isDeleting = false;
       }
     };
-  
+
     // Helper to format date, can be moved to a utils file
     function formatDate(dateString: string | null | undefined): string {
       if (!dateString) return '日期未指定';
@@ -66,7 +67,7 @@
         </div>
         <div class="flex space-x-2 rtl:space-x-reverse">
         <button
-            on:click={handleEdit}
+            onclick={handleEdit}
             aria-label="编辑成就 {achievement.title}"
             class="p-2 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
         >
@@ -76,7 +77,7 @@
             </svg>
         </button>
         <button
-            on:click={handleDelete}
+            onclick={handleDelete}
             disabled={isDeleting}
             aria-label="删除成就 {achievement.title}"
             class="p-2 text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md disabled:opacity-50"

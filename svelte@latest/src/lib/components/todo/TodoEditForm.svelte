@@ -1,53 +1,64 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore';
   import type { TodoItem, UpdateTodoPayload, TodoStatus, TodoPriority } from '$lib/services/todoService';
   import type { ApiError } from '$lib/services/api';
 
-  export let todo: TodoItem; // 要编辑的待办事项
-  export let isLoading: boolean = false; // 从父组件（模态框）控制加载状态
+  let {
+    todo,
+    isLoading: externalIsLoading = false,
+    onSaveSuccess = (updatedTodo: TodoItem) => {},
+    onCloseModalRequest = () => {}
+  } = $props<{
+    todo: TodoItem;
+    isLoading?: boolean;
+    onSaveSuccess?: (updatedTodo: TodoItem) => void;
+    onCloseModalRequest?: () => void;
+  }>();
 
-  const dispatch = createEventDispatcher();
+  // Use the external isLoading value
+  let isLoading = $state(externalIsLoading);
 
   // 表单字段的本地状态
-  let title: string = '';
-  let description: string = '';
-  let dueDate: string = '';
-  let status: TodoStatus = 'pending';
-  let priority: TodoPriority = 'medium';
-  let isCurrentFocus: boolean = false; // 新增：用于编辑当前焦点状态
+  let title = $state('');
+  let description = $state('');
+  let dueDate = $state('');
+  let status = $state<TodoStatus>('pending');
+  let priority = $state<TodoPriority>('medium');
+  let isCurrentFocus = $state(false); // 新增：用于编辑当前焦点状态
 
   // 表单反馈的本地状态
-  let errorMessage: string = '';
-  let successMessage: string = '';
+  let errorMessage = $state('');
+  let successMessage = $state('');
+
+  // We're using isLoading for both internal and external state
 
   // 用于表单的唯一ID
-  let formId = `todo-edit-form-${todo?.id || Math.random().toString(36).substring(2)}`;
+  let formId = $state(`todo-edit-form-${todo?.id || Math.random().toString(36).substring(2)}`);
 
   // 当组件挂载或 'todo' prop 改变时，初始化表单字段
   onMount(() => {
+    initializeForm();
+  });
+
+  // 监听 'todo' prop 的变化以重新初始化表单
+  $effect(() => {
+    initializeForm();
+  });
+
+  // 初始化表单字段
+  function initializeForm() {
     if (todo) {
       title = todo.title;
       description = todo.description || '';
       dueDate = todo.due_date || '';
       status = todo.status;
       priority = todo.priority;
-      isCurrentFocus = todo.is_current_focus; // 初始化 isCurrentFocus
+      isCurrentFocus = todo.is_current_focus; // 更新 isCurrentFocus
+      errorMessage = ''; // 清除之前的错误
+      successMessage = '';
       formId = `todo-edit-form-${todo.id}`;
     }
-  });
-
-  // 监听 'todo' prop 的变化以重新初始化表单
-  $: if (todo) {
-    title = todo.title;
-    description = todo.description || '';
-    dueDate = todo.due_date || '';
-    status = todo.status;
-    priority = todo.priority;
-    isCurrentFocus = todo.is_current_focus; // 更新 isCurrentFocus
-    errorMessage = ''; // 清除之前的错误
-    successMessage = '';
-    formId = `todo-edit-form-${todo.id}`;
   }
 
   // 导出 handleSubmit 以便模态框的页脚按钮可以调用
@@ -88,7 +99,7 @@
       const updatedTodo = await todoStore.editTodo(todo.id, payload);
       if (updatedTodo) {
         successMessage = `待办事项 "${updatedTodo.title}" 更新成功！`;
-        dispatch('saveSuccess', updatedTodo);
+        onSaveSuccess(updatedTodo);
       } else {
         errorMessage = $todoStore.error || '更新待办事项失败，请重试。';
       }
@@ -103,7 +114,7 @@
 
   // 导出 handleCancel
   export function handleCancel() {
-    dispatch('closeModalRequest');
+    onCloseModalRequest();
   }
 
   function getCurrentDateString(): string {
@@ -120,7 +131,7 @@
 </script>
 
 <div class="todo-edit-form-container">
-  <form on:submit|preventDefault={handleSubmit} class="todo-edit-form" id={formId}>
+  <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="todo-edit-form" id={formId}>
     <div class="form-group">
       <label for="edit-todo-title-{todo.id}">标题 <span class="required-asterisk">*</span></label>
       <input
@@ -178,7 +189,7 @@
         type="checkbox"
         id="edit-todo-is-focus-{todo.id}"
         bind:checked={isCurrentFocus}
-        disabled={isLoading || (status === 'completed' && isCurrentFocus)} 
+        disabled={isLoading || (status === 'completed' && isCurrentFocus)}
       />
       <label for="edit-todo-is-focus-{todo.id}" class="checkbox-label-inline">
         标记为当前焦点

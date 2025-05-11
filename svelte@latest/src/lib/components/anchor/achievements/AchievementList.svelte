@@ -1,17 +1,18 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from 'svelte';
+    import { onMount } from 'svelte';
     import { achievementStore } from '$lib/store/achievementStore'; // Main store for achievements
     import type { Achievement } from '$lib/services/achievementService';
     import AchievementItem from './AchievementItem.svelte'; // Component to display a single achievement
-  
-    const dispatch = createEventDispatcher();
-  
+
+    // Define callback props to replace event dispatching
+    let { editAchievement, addNewAchievement } = $props();
+
     // Subscribe to reactive stores from achievementStore
     // These will automatically update the component when their values change.
     const achievements = achievementStore.achievements; // Writable<Achievement[]>
     const isLoading = achievementStore.isLoading;     // Writable<boolean>
     const error = achievementStore.error;             // Writable<string | null>
-  
+
     // Lifecycle hook: Called after the component has been mounted to the DOM.
     onMount(() => {
       // Attempt to load achievements if the list is currently empty,
@@ -22,30 +23,30 @@
         achievementStore.loadAchievements();
       }
     });
-  
+
     /**
-     * Handles the 'edit' event bubbled up from an AchievementItem.
-     * It re-dispatches this event as 'editAchievement' for the parent page to handle.
-     * @param {CustomEvent<Achievement>} event - The event containing the achievement to be edited.
+     * Handles the edit request from an AchievementItem.
+     * It calls the editAchievement callback prop with the achievement to be edited.
+     * @param {Achievement} achievement - The achievement to be edited.
      */
-    function handleEditRequest(event: CustomEvent<Achievement>) {
-      dispatch('editAchievement', event.detail);
+    function handleEditRequest(achievement: Achievement) {
+      editAchievement?.(achievement);
     }
-  
+
     /**
      * Handles the click event for the "Add New Achievement" button.
-     * It dispatches an 'addNewAchievement' event for the parent page to handle (e.g., open a modal).
+     * It calls the addNewAchievement callback prop to handle (e.g., open a modal).
      */
     function handleAddNewRequest() {
-      dispatch('addNewAchievement');
+      addNewAchievement?.();
     }
   </script>
-  
+
   <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">我的成就</h2>
       <button
-        on:click={handleAddNewRequest}
+        onclick={handleAddNewRequest}
         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition ease-in-out duration-150"
         aria-label="Add a new achievement"
       >
@@ -55,7 +56,7 @@
         添加新成就
       </button>
     </div>
-  
+
     {#if $isLoading && $achievements.length === 0}
       <div class="text-center py-10">
         <div role="status" class="flex justify-center items-center">
@@ -70,8 +71,8 @@
     {:else if $error}
       <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
         <span class="font-medium">加载错误：</span> {$error}
-        <button 
-          on:click={() => achievementStore.loadAchievements()} 
+        <button
+          onclick={() => achievementStore.loadAchievements()}
           class="ml-4 px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           重试
@@ -89,9 +90,8 @@
     {:else}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {#each $achievements as achievement (achievement.id)}
-          <AchievementItem {achievement} on:edit={handleEditRequest} />
+          <AchievementItem {achievement} edit={handleEditRequest} />
         {/each}
       </div>
     {/if}
   </div>
-  

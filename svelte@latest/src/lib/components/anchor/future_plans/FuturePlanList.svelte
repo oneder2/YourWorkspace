@@ -1,18 +1,24 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
-    import { onMount, createEventDispatcher } from 'svelte';
+    import { onMount } from 'svelte';
     import { futurePlanStore } from '$lib/store/futurePlanStore'; // Main store for future plans
-    import type { FuturePlan } from '$lib/services/futurePlanService';
     import FuturePlanItem from './FuturePlanItem.svelte'; // Component to display a single future plan
-  
-    const dispatch = createEventDispatcher();
-  
+
+    // Component Props using $props rune
+    let {
+      onAddNewFuturePlan = () => {},
+      onEditFuturePlan = (plan: any) => {}
+    } = $props<{
+      onAddNewFuturePlan?: () => void;
+      onEditFuturePlan?: (plan: any) => void;
+    }>();
+
     // Subscribe to reactive stores from futurePlanStore
     // These will automatically update the component when their values change.
     const futurePlans = futurePlanStore.futurePlans; // Writable<FuturePlan[]>
     const isLoading = futurePlanStore.isLoading;     // Writable<boolean>
     const error = futurePlanStore.error;             // Writable<string | null>
-  
+
     // Lifecycle hook: Called after the component has been mounted to the DOM.
     onMount(() => {
       // Attempt to load future plans if the list is currently empty,
@@ -23,30 +29,23 @@
         futurePlanStore.loadFuturePlans();
       }
     });
-  
-    /**
-     * Handles the 'edit' event bubbled up from a FuturePlanItem.
-     * It re-dispatches this event as 'editFuturePlan' for the parent page to handle.
-     * @param {CustomEvent<FuturePlan>} event - The event containing the future plan to be edited.
-     */
-    function handleEditRequest(event: CustomEvent<FuturePlan>) {
-      dispatch('editFuturePlan', event.detail);
-    }
-  
+
+    // Direct dispatch from FuturePlanItem to parent page is now handled inline
+
     /**
      * Handles the click event for the "Add New Future Plan" button.
-     * It dispatches an 'addNewFuturePlan' event for the parent page to handle (e.g., open a modal).
+     * It calls the onAddNewFuturePlan callback for the parent page to handle (e.g., open a modal).
      */
     function handleAddNewRequest() {
-      dispatch('addNewFuturePlan');
+      onAddNewFuturePlan();
     }
   </script>
-  
+
   <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">我的未来计划</h2>
       <button
-        on:click={handleAddNewRequest}
+        onclick={handleAddNewRequest}
         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition ease-in-out duration-150"
         aria-label="Add a new future plan"
       >
@@ -56,7 +55,7 @@
         添加新计划
       </button>
     </div>
-  
+
     {#if $isLoading && $futurePlans.length === 0}
       <div class="text-center py-10">
         <div role="status" class="flex justify-center items-center">
@@ -71,8 +70,8 @@
     {:else if $error}
       <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
         <span class="font-medium">加载错误：</span> {$error}
-        <button 
-          on:click={() => futurePlanStore.loadFuturePlans()} 
+        <button
+          onclick={() => futurePlanStore.loadFuturePlans()}
           class="ml-4 px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           重试
@@ -89,9 +88,8 @@
     {:else}
       <div class="space-y-4">
         {#each $futurePlans as plan (plan.id)}
-          <FuturePlanItem futurePlan={plan} on:edit={handleEditRequest} />
+          <FuturePlanItem futurePlan={plan} onEdit={(plan) => onEditFuturePlan(plan)} />
         {/each}
       </div>
     {/if}
   </div>
-  
