@@ -14,8 +14,10 @@
 
   // Use reactive statement instead of subscribe since page is not a store in Svelte 5
   $: {
-    const currentPathBase = page.url.pathname.split('/').pop() || '';
-    currentIndex = views.findIndex(v => v.path === currentPathBase);
+    // Extract the path from the URL
+    const pathname = page.url.pathname;
+    // Find which view matches the current path
+    currentIndex = views.findIndex(v => pathname.includes(`/${v.path}`));
     if (currentIndex !== -1) {
       currentViewDisplay = views[currentIndex].display;
     } else {
