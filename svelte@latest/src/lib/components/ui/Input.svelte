@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
    * Input component with various styles and states
-   * 
+   *
    * Usage:
    * ```svelte
    * <Input placeholder="Enter your name" />
@@ -14,11 +14,13 @@
 
   // Import types
   import type { HTMLInputAttributes } from 'svelte/elements';
-  import { createEventDispatcher } from 'svelte';
 
-  // Create event dispatcher
-  const dispatch = createEventDispatcher();
-  
+  // Create custom event dispatcher for Svelte 5
+  const dispatch = (event: string, detail?: any) => {
+    const e = new CustomEvent(event, { detail });
+    document.dispatchEvent(e);
+  };
+
   // Define props with TypeScript types
   let {
     type = 'text',
@@ -34,6 +36,8 @@
     hint = '',
     fullWidth = true,
     class: className = '',
+    onfocus,
+    onblur,
     ...rest
   } = $props<{
     type?: HTMLInputAttributes['type'];
@@ -49,22 +53,24 @@
     hint?: string;
     fullWidth?: boolean;
     class?: string;
+    onfocus?: (event: FocusEvent) => void;
+    onblur?: (event: FocusEvent) => void;
     [key: string]: any;
   }>();
 
   // Generate a unique ID if not provided
-  $: inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
-  
+  const inputId = $derived(id || `input-${Math.random().toString(36).substring(2, 9)}`);
+
   // Compute classes based on state
-  $: inputClasses = `
-    block px-3 py-2 bg-white dark:bg-gray-800 
+  const inputClasses = $derived(`
+    block px-3 py-2 bg-white dark:bg-gray-800
     border rounded-md shadow-sm
     focus:outline-none focus:ring-2 focus:ring-offset-0
     disabled:opacity-50 disabled:cursor-not-allowed
     ${error ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-400' : 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-400'}
     ${fullWidth ? 'w-full' : ''}
     ${className}
-  `;
+  `);
 
   // Handle input event
   function handleInput(event: Event) {
@@ -99,10 +105,10 @@
       {readonly}
       {required}
       class={inputClasses}
-      on:input={handleInput}
-      on:change={handleChange}
-      on:focus
-      on:blur
+      oninput={handleInput}
+      onchange={handleChange}
+      onfocus={onfocus}
+      onblur={onblur}
       {...rest}
     />
     {#if error}
@@ -122,10 +128,10 @@
     {readonly}
     {required}
     class={inputClasses}
-    on:input={handleInput}
-    on:change={handleChange}
-    on:focus
-    on:blur
+    oninput={handleInput}
+    onchange={handleChange}
+    onfocus={onfocus}
+    onblur={onblur}
     {...rest}
   />
 {/if}

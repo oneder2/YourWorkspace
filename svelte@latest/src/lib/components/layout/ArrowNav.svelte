@@ -9,13 +9,11 @@
     { path: 'plan', display: 'Plan' }
   ];
 
-  let currentViewDisplay = 'N/A';
-  let currentIndex = -1;
-  let currentPath = '';
+  let currentViewDisplay = $state('N/A');
+  let currentIndex = $state(-1);
 
   // Update the current view based on the pathname
   function updateCurrentView(pathname: string) {
-    currentPath = pathname;
     console.log("Current path:", pathname);
 
     // Try exact match first
@@ -50,29 +48,46 @@
   });
 
   // Update when page changes
-  $: updateCurrentView(page.url.pathname);
+  $effect(() => {
+    updateCurrentView(page.url.pathname);
+  });
 
   function navigateTo(direction: 'prev' | 'next') {
-    // Calculate the next view index
-    let nextViewIndex;
+    try {
+      // Calculate the next view index
+      let nextViewIndex;
 
-    if (currentIndex === -1) {
-      // If current path is not in views array, default to first view for next, last view for prev
-      nextViewIndex = direction === 'next' ? 0 : views.length - 1;
-    } else {
-      if (direction === 'prev') {
-        nextViewIndex = (currentIndex - 1 + views.length) % views.length;
-      } else { // next
-        nextViewIndex = (currentIndex + 1) % views.length;
+      if (currentIndex === -1) {
+        // If current path is not in views array, default to first view for next, last view for prev
+        nextViewIndex = direction === 'next' ? 0 : views.length - 1;
+      } else {
+        if (direction === 'prev') {
+          nextViewIndex = (currentIndex - 1 + views.length) % views.length;
+        } else { // next
+          nextViewIndex = (currentIndex + 1) % views.length;
+        }
       }
+
+      // Navigate to the selected view
+      const targetPath = `/${views[nextViewIndex].path}`;
+      console.log(`Navigating to: ${targetPath}`);
+
+      // 使用 try-catch 包裹导航逻辑，确保即使导航失败也不会阻塞用户界面
+      try {
+        // 使用 window.location 进行直接导航，确保它能正常工作
+        window.location.href = targetPath;
+      } catch (navError) {
+        console.error('Navigation error:', navError);
+        // 如果导航失败，尝试使用 history API
+        window.history.pushState({}, '', targetPath);
+        // 触发一个 popstate 事件，让 SvelteKit 路由器知道 URL 已更改
+        window.dispatchEvent(new Event('popstate'));
+      }
+    } catch (error) {
+      console.error('Error in navigateTo function:', error);
+      // 最后的备用方案：直接设置 location.href
+      window.location.href = direction === 'next' ? '/doing' : '/done';
     }
-
-    // Navigate to the selected view
-    const targetPath = `/${views[nextViewIndex].path}`;
-    console.log(`Navigating to: ${targetPath}`);
-
-    // Use window.location for direct navigation to ensure it works
-    window.location.href = targetPath;
   }
 </script>
 
@@ -80,7 +95,7 @@
   <div class="flex justify-between items-center w-full max-w-3xl mx-auto">
     <button
       class="inline-flex items-center justify-center px-4 py-2 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium text-sm rounded-md border border-teal-300 dark:border-teal-600 transition-colors"
-      on:click={() => navigateTo('prev')}
+      onclick={() => navigateTo('prev')}
       title="Previous: {currentIndex !== -1 && currentIndex > 0 ? views[(currentIndex - 1 + views.length) % views.length].display : views[views.length - 1].display}"
       aria-label="Go to previous section"
     >
@@ -98,7 +113,7 @@
 
     <button
       class="inline-flex items-center justify-center px-4 py-2 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium text-sm rounded-md border border-teal-300 dark:border-teal-600 transition-colors"
-      on:click={() => navigateTo('next')}
+      onclick={() => navigateTo('next')}
       title="Next: {currentIndex !== -1 ? views[(currentIndex + 1) % views.length].display : views[0].display}"
       aria-label="Go to next section"
     >

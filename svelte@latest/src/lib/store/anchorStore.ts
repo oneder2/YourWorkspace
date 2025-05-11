@@ -70,12 +70,15 @@ const { subscribe, set, update }: Writable<AnchorStoreState> = writable<AnchorSt
 
 // --- Store Methods for Identity Profile (already defined) ---
 async function loadIdentityProfile(): Promise<void> {
+  console.log('AnchorStore: Starting loadIdentityProfile');
   update(state => ({
     ...state,
     identityProfile: { ...state.identityProfile, isLoading: true, error: null }
   }));
   try {
+    console.log('AnchorStore: Calling anchorService.getIdentityProfile');
     const profileData = await anchorService.getIdentityProfile();
+    console.log('AnchorStore: Successfully received profile data:', profileData);
     update(state => ({
       ...state,
       identityProfile: { profile: profileData, isLoading: false, error: null }
@@ -83,6 +86,13 @@ async function loadIdentityProfile(): Promise<void> {
   } catch (err) {
     const error = err as ApiError;
     console.error('AnchorStore: Error fetching identity profile', error);
+    if (error instanceof Error) {
+      console.error('AnchorStore: Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     update(state => ({
       ...state,
       identityProfile: {
@@ -91,6 +101,8 @@ async function loadIdentityProfile(): Promise<void> {
         error: error.message || 'Failed to fetch identity profile.'
       }
     }));
+    // Re-throw the error to allow the component to handle it
+    throw error;
   }
 }
 

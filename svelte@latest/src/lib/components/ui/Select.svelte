@@ -1,27 +1,28 @@
 <script lang="ts">
   /**
    * Select component for dropdown selection
-   * 
+   *
    * Usage:
    * ```svelte
-   * <Select 
-   *   label="Choose a country" 
+   * <Select
+   *   label="Choose a country"
    *   options={[
    *     { value: 'us', label: 'United States' },
    *     { value: 'ca', label: 'Canada' },
    *     { value: 'mx', label: 'Mexico' }
-   *   ]} 
+   *   ]}
    * />
    * ```
    */
 
   // Import types
-  import type { HTMLSelectAttributes } from 'svelte/elements';
-  import { createEventDispatcher } from 'svelte';
 
-  // Create event dispatcher
-  const dispatch = createEventDispatcher();
-  
+  // Create custom event dispatcher for Svelte 5
+  const dispatch = (event: string, detail?: any) => {
+    const e = new CustomEvent(event, { detail });
+    document.dispatchEvent(e);
+  };
+
   // Define option type
   type Option = {
     value: string | number;
@@ -35,7 +36,7 @@
     options: Option[];
     disabled?: boolean;
   };
-  
+
   // Define props with TypeScript types
   let {
     value = '',
@@ -50,6 +51,8 @@
     hint = '',
     fullWidth = true,
     class: className = '',
+    onfocus,
+    onblur,
     ...rest
   } = $props<{
     value?: string | number;
@@ -64,22 +67,24 @@
     hint?: string;
     fullWidth?: boolean;
     class?: string;
+    onfocus?: (event: FocusEvent) => void;
+    onblur?: (event: FocusEvent) => void;
     [key: string]: any;
   }>();
 
   // Generate a unique ID if not provided
-  $: selectId = id || `select-${Math.random().toString(36).substring(2, 9)}`;
-  
+  const selectId = $derived(id || `select-${Math.random().toString(36).substring(2, 9)}`);
+
   // Compute classes based on state
-  $: selectClasses = `
-    block px-3 py-2 bg-white dark:bg-gray-800 
+  const selectClasses = $derived(`
+    block px-3 py-2 bg-white dark:bg-gray-800
     border rounded-md shadow-sm
     focus:outline-none focus:ring-2 focus:ring-offset-0
     disabled:opacity-50 disabled:cursor-not-allowed
     ${error ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-400' : 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-400'}
     ${fullWidth ? 'w-full' : ''}
     ${className}
-  `;
+  `);
 
   // Check if an option is a group
   function isOptionGroup(option: Option | OptionGroup): option is OptionGroup {
@@ -110,9 +115,9 @@
         {disabled}
         {required}
         class={selectClasses}
-        on:change={handleChange}
-        on:focus
-        on:blur
+        onchange={handleChange}
+        onfocus={onfocus}
+        onblur={onblur}
         {...rest}
       >
         <option value="" disabled selected={!value}>{placeholder}</option>
@@ -120,8 +125,8 @@
           {#if isOptionGroup(option)}
             <optgroup label={option.label} disabled={option.disabled}>
               {#each option.options as subOption}
-                <option 
-                  value={subOption.value} 
+                <option
+                  value={subOption.value}
                   disabled={subOption.disabled}
                   selected={value === subOption.value}
                 >
@@ -130,8 +135,8 @@
               {/each}
             </optgroup>
           {:else}
-            <option 
-              value={option.value} 
+            <option
+              value={option.value}
               disabled={option.disabled}
               selected={value === option.value}
             >
@@ -161,9 +166,9 @@
       {disabled}
       {required}
       class={selectClasses}
-      on:change={handleChange}
-      on:focus
-      on:blur
+      onchange={handleChange}
+      onfocus={onfocus}
+      onblur={onblur}
       {...rest}
     >
       <option value="" disabled selected={!value}>{placeholder}</option>
@@ -171,8 +176,8 @@
         {#if isOptionGroup(option)}
           <optgroup label={option.label} disabled={option.disabled}>
             {#each option.options as subOption}
-              <option 
-                value={subOption.value} 
+              <option
+                value={subOption.value}
                 disabled={subOption.disabled}
                 selected={value === subOption.value}
               >
@@ -181,8 +186,8 @@
             {/each}
           </optgroup>
         {:else}
-          <option 
-            value={option.value} 
+          <option
+            value={option.value}
             disabled={option.disabled}
             selected={value === option.value}
           >

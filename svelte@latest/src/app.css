@@ -4,6 +4,11 @@
 
 /* Global styles */
 @layer base {
+  /* CSS Variables */
+  :root {
+    --custom-background: none;
+  }
+
   /* Apply font family from Tailwind config */
   html {
     @apply font-sans antialiased;
@@ -11,6 +16,40 @@
 
   body {
     @apply bg-light text-dark min-h-screen;
+    position: relative;
+  }
+
+  /* Apply background to html element to ensure it covers the entire viewport */
+  html {
+    background-image: var(--custom-background);
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+    min-height: 100%;
+  }
+
+  /* Add a subtle overlay to ensure text readability when custom background is used */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: white;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .dark body::before {
+    background-color: #111827; /* dark:bg-gray-900 */
+  }
+
+  /* Fix for background image visibility - 降低不透明度以确保背景图片可见 */
+  html[style*="--custom-background:url("] + body::before,
+  html.has-custom-bg + body::before {
+    opacity: 0.75; /* 降低不透明度，使背景更加可见 */
   }
 
   /* Default link styles */

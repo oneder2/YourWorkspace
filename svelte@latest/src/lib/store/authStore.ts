@@ -14,8 +14,14 @@ export interface UserProfile {
   id: number | null;
   username: string | null;
   email: string | null;
-  // Add any other user-specific fields you expect from the /auth/me endpoint
-  // For example: created_at?: string; updated_at?: string;
+  // User profile fields
+  professional_title?: string | null;
+  one_liner_bio?: string | null;
+  skill?: string | null;
+  summary?: string | null;
+  // Timestamps
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Define the structure for the authentication state

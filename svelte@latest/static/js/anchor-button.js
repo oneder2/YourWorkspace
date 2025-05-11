@@ -30,7 +30,11 @@ document.addEventListener('DOMContentLoaded', function() {
       event.preventDefault();
 
       // Store the current page as the last workspace page
-      sessionStorage.setItem('lastWorkspacePage', currentPath);
+      // Make sure we're storing a valid workspace page path
+      const validWorkspacePages = ['/doing', '/done', '/plan'];
+      const pathToStore = validWorkspacePages.includes(currentPath) ? currentPath : '/doing';
+
+      sessionStorage.setItem('lastWorkspacePage', pathToStore);
 
       // Navigate to the anchor page
       window.location.href = '/anchor';

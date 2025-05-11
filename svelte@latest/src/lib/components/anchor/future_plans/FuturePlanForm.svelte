@@ -146,11 +146,7 @@
 
   </script>
 
-  <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6 p-4 bg-white dark:bg-gray-800 shadow-md rounded-lg">
-    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-      {futurePlan ? 'Edit Future Plan' : 'Add New Future Plan'}
-    </h3>
-
+  <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
     {#if formError}
       <div class="p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
         <span class="font-medium">Error:</span> {formError}
@@ -162,72 +158,83 @@
       </div>
     {/if}
 
-    <div>
-      <label for="fp-description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        Description <span class="text-red-500">*</span>
-      </label>
-      <textarea
-        id="fp-description"
-        bind:value={description}
-        rows="4"
-        required
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        placeholder="Describe your future plan or goal..."
-      ></textarea>
+    <!-- Two-column layout for form fields -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Left column - Description field (spans 2 columns) -->
+      <div class="md:col-span-2">
+        <label for="fp-description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Description <span class="text-red-500">*</span>
+        </label>
+        <textarea
+          id="fp-description"
+          bind:value={description}
+          rows="6"
+          required
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+          placeholder="Describe your future plan or goal..."
+        ></textarea>
+      </div>
+
+      <!-- Right column - Other fields -->
+      <div class="space-y-4">
+        <!-- Status Field -->
+        <div>
+          <label for="fp-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            Status
+          </label>
+          <select
+            id="fp-status"
+            bind:value={status}
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+          >
+            {#each statuses as s}
+              <option value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            {/each}
+          </select>
+        </div>
+
+        <!-- Target Date Field -->
+        <div>
+          <label for="fp-target_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            Target Date (Optional)
+          </label>
+          <input
+            type="date"
+            id="fp-target_date"
+            bind:value={target_date}
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+          />
+        </div>
+
+        <!-- Goal Type Field -->
+        <div>
+          <label for="fp-goal_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            Goal Type (Optional)
+          </label>
+          <input
+            type="text"
+            id="fp-goal_type"
+            bind:value={goal_type}
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+            placeholder="e.g., Career, Personal, Financial"
+          />
+        </div>
+      </div>
     </div>
 
-    <div>
-      <label for="fp-goal_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        Goal Type (Optional)
-      </label>
-      <input
-        type="text"
-        id="fp-goal_type"
-        bind:value={goal_type}
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        placeholder="e.g., Career Development, Skill Acquisition, Personal Project"
-      />
-    </div>
-
-    <div>
-      <label for="fp-target_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        Target Date (Optional)
-      </label>
-      <input
-        type="date"
-        id="fp-target_date"
-        bind:value={target_date}
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-      />
-    </div>
-
-    <div>
-      <label for="fp-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        Status
-      </label>
-      <select
-        id="fp-status"
-        bind:value={status}
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-      >
-        {#each statuses as s}
-          <option value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-        {/each}
-      </select>
-    </div>
-
+    <!-- Form Actions -->
     <div class="flex justify-end space-x-3 pt-4">
       <button
         type="button"
         onclick={handleCancel}
-        class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+        class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-green-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
       >
         {futurePlan ? 'Cancel' : 'Reset'}
       </button>
       <button
         type="submit"
         disabled={internalIsLoading || storeIsLoading}
-        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-50"
+        class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 disabled:opacity-50"
       >
         {#if internalIsLoading || storeIsLoading}
           <svg aria-hidden="true" role="status" class="inline w-4 h-4 me-3 text-white animate-spin" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">

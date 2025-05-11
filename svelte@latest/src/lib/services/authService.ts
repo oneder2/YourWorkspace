@@ -76,11 +76,52 @@ async function loginUser(credentials: LoginCredentials): Promise<void> {
  */
 async function registerUser(userData: RegisterPayload): Promise<RegisterResponse> {
   try {
+    console.log('AuthService: Starting user registration process');
+
+    // 验证输入数据
+    if (!userData.username || !userData.email || !userData.password) {
+      console.error('AuthService: Missing required registration fields');
+      throw new Error('Missing required fields (username, email, password)');
+    }
+
+    // 确保密码长度符合要求
+    if (userData.password.length < 8) {
+      console.error('AuthService: Password too short');
+      throw new Error('Password must be at least 8 characters long');
+    }
+
     // Registration does not require auth
+    console.log('AuthService: Sending registration request to API');
     const response = await api.post<RegisterResponse>('/auth/register', userData, false);
+
+    console.log('AuthService: Registration successful', {
+      userId: response.user?.id,
+      username: response.user?.username,
+      message: response.message
+    });
+
     return response;
   } catch (error) {
     console.error('AuthService: Registration failed', error);
+
+    // 增强错误信息
+    if (error instanceof Error) {
+      console.error('AuthService: Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
+      // 如果是 ApiError，添加更多详细信息
+      const apiError = error as ApiError;
+      if (apiError.status) {
+        console.error('AuthService: API error details:', {
+          status: apiError.status,
+          data: apiError.data
+        });
+      }
+    }
+
     throw error;
   }
 }

@@ -7,6 +7,7 @@
 
   import Navbar from '$lib/components/layout/Navbar.svelte';
   import ArrowNav from '$lib/components/layout/ArrowNav.svelte';
+  import PageLoadingIndicator from '$lib/components/layout/PageLoadingIndicator.svelte';
 
   let showContent = false;
   let isAnchorPage: boolean; // To pass to Navbar
@@ -49,6 +50,9 @@
 
 </script>
 
+<!-- Page loading indicator -->
+<PageLoadingIndicator />
+
 {#if showContent}
   <div class="flex flex-col min-h-screen bg-light dark:bg-gray-900">
     <Navbar {isAnchorPage} />
@@ -58,11 +62,16 @@
         <ArrowNav />
       {/if}
 
-      <slot />
+      <div>
+        <slot />
+      </div>
     </main>
   </div>
 {:else}
   <div class="flex justify-center items-center min-h-screen text-2xl text-secondary-500 dark:text-secondary-400">
-    <p>Loading...</p>
+    <div class="flex flex-col items-center">
+      <div class="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p>Loading...</p>
+    </div>
   </div>
 {/if}

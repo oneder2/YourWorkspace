@@ -8,7 +8,8 @@
     title = null,
     modalWidth = 'max-w-lg',
     close,
-    onClose = () => {} // Event handler prop for Svelte 5
+    onClose = () => {}, // Event handler prop for Svelte 5
+    children
   } = $props<{
     isOpen: boolean;
     closeOnBackdropClick?: boolean;
@@ -16,6 +17,7 @@
     modalWidth?: string;
     close?: () => void;
     onClose?: () => void;
+    children?: any;
   }>();
 
   let modalContentElement = $state<HTMLElement | null>(null); // To help manage focus
@@ -155,14 +157,16 @@
     </header>
 
     <main class="p-6 overflow-y-auto flex-grow">
-      <slot>
+      {#if children?.default}
+        {children.default}
+      {:else}
         <p class="text-gray-700 dark:text-gray-300">This is the modal body. Pass content to override this.</p>
-      </slot>
+      {/if}
     </main>
 
-    <slot name="footer">
-      <!-- Footer content will be rendered here if provided -->
-    </slot>
+    {#if children?.footer}
+      {children.footer}
+    {/if}
   </div>
 </div>
 {/if}
