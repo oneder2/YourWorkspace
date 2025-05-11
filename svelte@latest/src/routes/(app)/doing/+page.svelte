@@ -12,6 +12,9 @@
   let currentUser: UserProfile | null = null;
   let authUnsubscribe: () => void;
 
+  // State to toggle between active and completed tasks
+  let showCompletedTasks = false;
+
   onMount(async () => {
     authUnsubscribe = authStore.subscribe(value => {
       currentUser = value.user;
@@ -49,11 +52,24 @@
             <TodoForm />
           </div>
           <div>
-            <TodoList todos={$otherActiveTodos} listTitle="Active Tasks" />
+            {#if !showCompletedTasks}
+              <TodoList todos={$otherActiveTodos} listTitle="Active Tasks" />
+            {:else}
+              <TodoList todos={$completedTodos} listTitle="Completed Tasks" />
+            {/if}
           </div>
           <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">PAST</h3>
-            <!-- Past tasks could be added here -->
+            <button
+              class="flex items-center justify-between w-full text-left"
+              on:click={() => showCompletedTasks = !showCompletedTasks}
+            >
+              <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">
+                {showCompletedTasks ? "ACTIVE" : "PAST"}
+              </h3>
+              <span class="text-sm text-gray-500">
+                {showCompletedTasks ? "Show active tasks" : "Show completed tasks"}
+              </span>
+            </button>
           </div>
         </div>
       </section>

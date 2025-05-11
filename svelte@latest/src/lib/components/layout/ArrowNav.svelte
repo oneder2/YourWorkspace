@@ -26,15 +26,22 @@
   }
 
   function navigateTo(direction: 'prev' | 'next') {
-    if (currentIndex === -1) return; // Current path not in views array
-
+    // Even if currentIndex is -1, we'll default to the first view
     let nextViewIndex;
-    if (direction === 'prev') {
-      nextViewIndex = (currentIndex - 1 + views.length) % views.length;
-    } else { // next
-      nextViewIndex = (currentIndex + 1) % views.length;
+
+    if (currentIndex === -1) {
+      // If current path is not in views array, default to first view for next, last view for prev
+      nextViewIndex = direction === 'next' ? 0 : views.length - 1;
+    } else {
+      if (direction === 'prev') {
+        nextViewIndex = (currentIndex - 1 + views.length) % views.length;
+      } else { // next
+        nextViewIndex = (currentIndex + 1) % views.length;
+      }
     }
-    // Assumes routes are like /done, /doing, /plan directly under the (app) group
+
+    // Navigate to the selected view
+    console.log(`Navigating to: /${views[nextViewIndex].path}`);
     goto(`/${views[nextViewIndex].path}`);
   }
 </script>
