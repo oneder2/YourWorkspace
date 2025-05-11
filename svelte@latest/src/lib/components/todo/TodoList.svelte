@@ -2,7 +2,16 @@
   import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore'; // Store for loading state and errors
   import type { TodoItem } from '$lib/services/todoService';
-  import { fade, fly } from 'svelte/transition';
+  import { slide } from 'svelte/transition';
+  import TodoForm from './TodoForm.svelte';
+  import TodoEditForm from './TodoEditForm.svelte';
+
+  // State for showing/hiding the add form
+  let showAddForm = false;
+
+  // State for editing
+  let editingTodo: TodoItem | null = null;
+  let isEditFormVisible = false;
 
   // Functions to handle todo actions
   function handleToggleStatus(todo: TodoItem) {
@@ -10,7 +19,19 @@
   }
 
   function handleEdit(todo: TodoItem) {
-    alert(`Edit functionality will be implemented for: ${todo.title}`);
+    editingTodo = { ...todo };
+    isEditFormVisible = true;
+  }
+
+  function handleEditSave(updatedTodo: TodoItem) {
+    // This will be called when the edit is successful
+    isEditFormVisible = false;
+    editingTodo = null;
+  }
+
+  function handleEditCancel() {
+    isEditFormVisible = false;
+    editingTodo = null;
   }
 
   function handleDelete(todo: TodoItem) {
@@ -20,7 +41,7 @@
   }
 
   function handleAddTask() {
-    alert("Add task functionality will be implemented here");
+    showAddForm = !showAddForm;
   }
 
   function handleSetAsFocus(todo: TodoItem) {
@@ -59,15 +80,65 @@
   <div class="flex justify-between items-center mb-4">
     <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200">{listTitle}</h3>
     <button
-      class="p-1 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-800 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-300 transition-colors"
-      aria-label="Add new task"
+      class="p-1 rounded-full {showAddForm ? 'bg-blue-200 dark:bg-blue-700' : 'bg-blue-100 dark:bg-blue-800'} hover:bg-blue-200 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-300 transition-colors"
+      aria-label={showAddForm ? "Hide add form" : "Show add form"}
+      title={showAddForm ? "Hide add form" : "Show add form"}
       on:click={handleAddTask}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-      </svg>
+      {#if showAddForm}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      {/if}
     </button>
   </div>
+
+  {#if showAddForm}
+    <div transition:slide={{ duration: 300 }} class="mb-4">
+      <TodoForm />
+    </div>
+  {/if}
+
+  {#if isEditFormVisible && editingTodo}
+    <div transition:slide={{ duration: 300 }} class="mb-4">
+      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4 border border-blue-200 dark:border-blue-700">
+        <h3 class="text-xl font-semibold text-blue-800 dark:text-blue-200 mb-4">Edit Todo</h3>
+        <TodoEditForm
+          todo={editingTodo}
+          onSaveSuccess={handleEditSave}
+          onCloseModalRequest={handleEditCancel}
+        />
+        <div class="flex justify-end space-x-2 mt-4">
+          <button
+            type="button"
+            class="py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md transition-colors"
+            on:click={handleEditCancel}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="py-2 px-4 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors"
+            on:click={() => {
+              if (editingTodo) {
+                const editForm = document.getElementById(`todo-edit-form-${editingTodo.id}`);
+                if (editForm) {
+                  const event = new Event('submit', { cancelable: true });
+                  editForm.dispatchEvent(event);
+                }
+              }
+            }}
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
 
   {#if $todoStore.isLoading && todos.length === 0 && $todoStore.todos.length === 0}
     <div class="p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 my-2 text-center text-sm">
