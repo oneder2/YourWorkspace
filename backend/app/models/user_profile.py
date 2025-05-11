@@ -18,6 +18,8 @@ class UserProfile(db.Model):
 
     professional_title = db.Column(db.String(255), nullable=True) # VARCHAR(255)
     one_liner_bio = db.Column(db.Text, nullable=True) # TEXT
+    skill = db.Column(db.Text, nullable=True) # TEXT - New field for user skills
+    summary = db.Column(db.Text, nullable=True) # TEXT - New field for user summary
 
     # Timestamps
     # default=lambda: datetime.datetime.now(datetime.timezone.utc) ensures timezone-aware UTC timestamps
@@ -45,6 +47,8 @@ class UserProfile(db.Model):
             'user_id': self.id, # Same as user.id
             'professional_title': self.professional_title,
             'one_liner_bio': self.one_liner_bio,
+            'skill': self.skill,
+            'summary': self.summary,
             'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
             'updated_at': self.updated_at.isoformat() + 'Z' if self.updated_at else None,
         }

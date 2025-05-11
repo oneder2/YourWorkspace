@@ -9,7 +9,7 @@ import datetime
 from ..models.user import User
 from ..models.user_profile import UserProfile
 from ..models.achievement import Achievement
-from ..models.current_focus_item import CurrentFocusItem # This should have been removed based on previous steps. Assuming it's gone.
+# Removed import of CurrentFocusItem as it's no longer needed
 from ..models.future_plan import FuturePlan
 from ..extensions import db
 
@@ -90,9 +90,22 @@ def update_user_anchor_profile():
         user.profile.one_liner_bio = bio_val
         updated_fields_count += 1
 
+    if 'skill' in data:
+        skill_val = data['skill']
+        if skill_val is not None and not isinstance(skill_val, str):
+            return jsonify({"error": "skill must be a string or null"}), 400
+        user.profile.skill = skill_val
+        updated_fields_count += 1
+
+    if 'summary' in data:
+        summary_val = data['summary']
+        if summary_val is not None and not isinstance(summary_val, str):
+            return jsonify({"error": "summary must be a string or null"}), 400
+        user.profile.summary = summary_val
+        updated_fields_count += 1
+
     # Check if any known fields were actually in the payload.
     # This prevents a 200 OK for a payload like {"unknown_field": "value"}
-    # if 'professional_title' not in data and 'one_liner_bio' not in data and data:
     # Or more simply, if data was provided but no valid fields were updated:
     if updated_fields_count == 0 and data: # data is not empty, but no valid fields were processed
          return jsonify({"message": "No relevant profile fields provided for update."}), 200
@@ -141,7 +154,7 @@ def create_achievement():
             if not isinstance(skill_item, str):
                 return jsonify({"error": "All items in core_skills_json must be strings"}), 400
         validated_skills = core_skills_json_input # If all checks pass
-    
+
     date_achieved_str = data.get('date_achieved')
     date_achieved_obj = None
     if date_achieved_str:
@@ -200,7 +213,7 @@ def update_achievement(achievement_id):
     if achievement.user_id != current_user_id: return jsonify({"error": "Forbidden: You do not have permission to update this achievement"}), 403
     data = request.get_json()
     if not data: return jsonify({"error": "Request body must be JSON and cannot be empty"}), 400
-    
+
     updated_fields_count = 0
 
     if 'title' in data:
