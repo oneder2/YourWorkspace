@@ -1,20 +1,30 @@
 <script lang="ts">
   import { todoStore } from '$lib/store/todoStore';
-  // Corrected import for CreateTodoPayload from todoService.ts
-  import type { CreateTodoPayload } from '$lib/services/todoService';
-  import type { ApiError } from '$lib/services/api';
+  // Correctly import CreateTodoPayload instead of TodoPayload
+  import type { TodoItem, CreateTodoPayload } from '$lib/services/todoService'; 
+  import Icon from '$lib/components/common/Icon.svelte';
 
+  // --- Callback Props ---
+  export let onAddSuccess: (newTodo: TodoItem) => void = (newTodo) => {
+    console.warn("TodoForm: onAddSuccess prop was not provided.", newTodo);
+  };
+  export let onAddError: (errorDetail: { message: string }) => void = (errorDetail) => {
+    console.warn("TodoForm: onAddError prop was not provided.", errorDetail);
+  };
+
+  // --- Component State ---
   let title: string = '';
   let description: string = '';
-  let dueDate: string = ''; // Format: YYYY-MM-DD
-
+  let dueDate: string = ''; // Store as YYYY-MM-DD string from input
   let isLoading: boolean = false;
   let errorMessage: string = '';
   let successMessage: string = '';
 
+  // --- Event Handlers ---
   async function handleSubmit() {
     if (!title.trim()) {
-      errorMessage = 'Title is required.';
+      errorMessage = '标题不能为空。';
+      setTimeout(() => errorMessage = '', 3000);
       return;
     }
 
@@ -22,228 +32,126 @@
     errorMessage = '';
     successMessage = '';
 
+    // Use CreateTodoPayload for the payload type
     const payload: CreateTodoPayload = {
       title: title.trim(),
+      description: description.trim() || undefined, // Send undefined if empty, service might handle as null
+      due_date: dueDate || undefined, // Send undefined if empty, service might handle as null
+      // completed_at and is_current_focus are typically not set at creation by the client;
+      // backend defaults them (e.g., completed_at=null, is_current_focus=false).
+      // CreateTodoPayload should reflect fields required/allowed at creation.
     };
-
-    if (description.trim()) {
-      payload.description = description.trim();
-    }
-    if (dueDate) {
-      payload.due_date = dueDate;
-    }
 
     try {
       const newTodo = await todoStore.addTodo(payload);
       if (newTodo) {
-        successMessage = `Todo "${newTodo.title}" added successfully!`;
+        successMessage = `待办事项 "${newTodo.title}" 已成功添加!`;
+        onAddSuccess(newTodo);
         title = '';
         description = '';
         dueDate = '';
         setTimeout(() => successMessage = '', 3000);
       } else {
-        if (!$todoStore.error) {
-            errorMessage = 'Failed to add todo. Please try again.';
-        } else {
-            errorMessage = $todoStore.error;
-        }
+        errorMessage = '添加待办事项失败，未收到有效的响应。';
+        onAddError({ message: errorMessage });
+        setTimeout(() => errorMessage = '', 3000);
       }
-    } catch (error: any) {
-      const apiError = error as ApiError;
-      errorMessage = apiError?.message || 'An unexpected error occurred.';
-      console.error('TodoForm handleSubmit error:', error);
+    } catch (error: unknown) {
+      console.error('Failed to add todo:', error);
+      const msg = error instanceof Error ? error.message : '添加待办事项时发生未知错误。';
+      errorMessage = `添加失败: ${msg}`;
+      onAddError({ message: errorMessage });
+      setTimeout(() => errorMessage = '', 3000);
     } finally {
       isLoading = false;
     }
   }
 
-  function getCurrentDateString(): string {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const day = today.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  function handleClearForm() {
+    title = '';
+    description = '';
+    dueDate = '';
+    errorMessage = '';
+    successMessage = '';
   }
-
 </script>
 
-<div class="todo-form-container">
-  <form on:submit|preventDefault={handleSubmit} class="todo-form">
-    <h3 class="form-title">Add New To-Do</h3>
+<form on:submit|preventDefault={handleSubmit} class="space-y-4">
+  <div>
+    <label for="todo-title" class="block text-sm font-medium text-neutral-text-primary mb-1">
+      标题 <span class="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      id="todo-title"
+      bind:value={title}
+      required
+      placeholder="例如：完成项目报告"
+      class="w-full px-3 py-2 border border-neutral-border-strong rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-colors disabled:bg-neutral-bg-alt"
+      disabled={isLoading}
+    />
+  </div>
 
-    <div class="form-group">
-      <label for="todo-title">Title <span class="required-asterisk">*</span></label>
-      <input
-        type="text"
-        id="todo-title"
-        bind:value={title}
-        placeholder="What needs to be done?"
-        required
-        disabled={isLoading}
-        aria-describedby="title-error"
-      />
+  <div>
+    <label for="todo-description" class="block text-sm font-medium text-neutral-text-primary mb-1">
+      描述 (可选)
+    </label>
+    <textarea
+      id="todo-description"
+      bind:value={description}
+      rows="3"
+      placeholder="例如：包含所有关键发现和建议..."
+      class="w-full px-3 py-2 border border-neutral-border-strong rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-colors disabled:bg-neutral-bg-alt"
+      disabled={isLoading}
+    ></textarea>
+  </div>
+
+  <div>
+    <label for="todo-due-date" class="block text-sm font-medium text-neutral-text-primary mb-1">
+      截止日期 (可选)
+    </label>
+    <input
+      type="date"
+      id="todo-due-date"
+      bind:value={dueDate}
+      class="w-full px-3 py-2 border border-neutral-border-strong rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-colors disabled:bg-neutral-bg-alt"
+      disabled={isLoading}
+    />
+  </div>
+
+  {#if successMessage}
+    <div class="p-3 rounded-md bg-green-50 border border-green-200 text-sm text-green-700 transition-opacity duration-300" role="alert">
+      {successMessage}
     </div>
+  {/if}
 
-    <div class="form-group">
-      <label for="todo-description">Description (Optional)</label>
-      <textarea
-        id="todo-description"
-        bind:value={description}
-        placeholder="Add more details..."
-        rows="3"
-        disabled={isLoading}
-      ></textarea>
+  {#if errorMessage}
+    <div class="p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-700 transition-opacity duration-300" role="alert">
+      {errorMessage}
     </div>
+  {/if}
 
-    <div class="form-group">
-      <label for="todo-due-date">Due Date (Optional)</label>
-      <input
-        type="date"
-        id="todo-due-date"
-        bind:value={dueDate}
-        min={getCurrentDateString()}
-        disabled={isLoading}
-      />
-    </div>
-
-    {#if errorMessage}
-      <div class="message error-message" id="title-error" aria-live="assertive">
-        <p>{errorMessage}</p>
-      </div>
-    {/if}
-
-    {#if successMessage}
-      <div class="message success-message" aria-live="polite">
-        <p>{successMessage}</p>
-      </div>
-    {/if}
-
-    <button type="submit" class="submit-button" disabled={isLoading}>
+  <div class="flex items-center justify-end space-x-3 pt-2">
+    <button
+      type="button"
+      on:click={handleClearForm}
+      disabled={isLoading}
+      class="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-border-strong text-neutral-text-primary hover:bg-neutral-bg-hover focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-neutral-border-strong transition-colors disabled:opacity-60"
+    >
+      清空
+    </button>
+    <button
+      type="submit"
+      disabled={isLoading || !title.trim()}
+      class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-primary transition-colors disabled:opacity-60 disabled:bg-neutral-text-muted flex items-center"
+    >
       {#if isLoading}
-        <span>Adding...</span>
+        <Icon name="loader" size="w-4 h-4" extraClass="animate-spin mr-2" />
+        添加中...
       {:else}
-        <span>Add To-Do</span>
+        <Icon name="plus" size="w-4 h-4" extraClass="mr-2" />
+        添加待办
       {/if}
     </button>
-  </form>
-</div>
-
-<style>
-  .todo-form-container {
-    background-color: #ffffff;
-    padding: 1.5rem 2rem;
-    border-radius: var(--border-radius-lg, 0.5rem);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    margin-bottom: 2rem; /* Space below the form */
-    max-width: 600px; /* Max width for the form */
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .form-title {
-    font-size: 1.5rem; /* h3 size */
-    font-weight: 600;
-    color: var(--text-primary, #212529);
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-
-  .todo-form .form-group {
-    margin-bottom: 1.25rem;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-secondary, #495057);
-    font-size: 0.9rem;
-  }
-
-  .required-asterisk {
-    color: var(--danger-color, #dc3545);
-    margin-left: 0.2rem;
-  }
-
-  .form-group input[type="text"],
-  .form-group input[type="date"],
-  .form-group textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-color, #ced4da);
-    border-radius: var(--border-radius, 0.375rem);
-    font-size: 1rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    background-color: var(--input-bg, #f8f9fa);
-    color: var(--text-primary, #212529);
-  }
-  
-  .form-group input::placeholder,
-  .form-group textarea::placeholder {
-    color: var(--text-placeholder, #6c757d);
-    opacity: 0.8;
-  }
-
-
-  .form-group input:focus,
-  .form-group textarea:focus {
-    border-color: var(--primary-color, #007bff);
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    outline: none;
-    background-color: #fff;
-  }
-
-  .form-group input:disabled,
-  .form-group textarea:disabled {
-    background-color: #e9ecef;
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-
-  .message {
-    padding: 0.75rem 1rem;
-    border-radius: var(--border-radius, 0.375rem);
-    margin-bottom: 1.25rem;
-    text-align: center;
-    font-size: 0.9rem;
-  }
-  .message p {
-    margin: 0;
-  }
-
-  .error-message {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: var(--danger-color, #dc3545);
-    border: 1px solid rgba(220, 53, 69, 0.2);
-  }
-
-  .success-message {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: var(--success-color, #28a745);
-    border: 1px solid rgba(40, 167, 69, 0.2);
-  }
-
-  .submit-button {
-    width: 100%;
-    padding: 0.85rem 1rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-    background-color: var(--primary-color, #007bff);
-    border: none;
-    border-radius: var(--border-radius, 0.375rem);
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, box-shadow 0.15s ease-in-out;
-  }
-
-  .submit-button:hover:not(:disabled) {
-    background-color: #0056b3; /* Darker shade of primary */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .submit-button:disabled {
-    background-color: var(--secondary-color, #6c757d);
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-</style>
+  </div>
+</form>
