@@ -82,7 +82,7 @@
 
     // Status classes for badge styling
     const statusClasses = {
-      active: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+      active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
       achieved: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
       deferred: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
       abandoned: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
@@ -90,16 +90,16 @@
 
   </script>
 
-  <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-4 transition-all hover:shadow-xl">
+  <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-4 transition-all hover:shadow-xl border border-green-200 dark:border-green-800">
     <div class="flex justify-between items-start mb-3">
-      <h4 class="text-lg font-semibold text-gray-800 dark:text-white flex-grow pr-4 break-words">
+      <h4 class="text-lg font-semibold text-green-600 dark:text-green-400 flex-grow pr-4 break-words">
         {futurePlan.description}
       </h4>
       <div class="flex space-x-2 rtl:space-x-reverse flex-shrink-0">
         <button
           onclick={handleEdit}
           aria-label="Edit plan: {futurePlan.description}"
-          class="p-2 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+          class="p-2 text-sm font-medium text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
@@ -143,7 +143,7 @@
       </div>
     </div>
 
-    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500">
+    <div class="mt-4 pt-3 border-t border-green-200 dark:border-green-800 text-xs text-gray-400 dark:text-gray-500">
       ID: {futurePlan.id}
       {#if futurePlan.created_at}
         | Created: {formatDate(futurePlan.created_at)}

@@ -55,21 +55,21 @@
     }
 </script>
 
-<div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-4 transition-all hover:shadow-xl">
+<div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 mb-4 transition-all hover:shadow-xl border border-purple-200 dark:border-purple-800">
     <div class="flex justify-between items-start">
         <div>
-        <h4 class="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-1">{achievement.title}</h4>
+        <h4 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-1">{achievement.title}</h4>
         {#if achievement.date_achieved}
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-            达成于：{formatDate(achievement.date_achieved)}
+            Achieved on: {formatDate(achievement.date_achieved)}
             </p>
         {/if}
         </div>
         <div class="flex space-x-2 rtl:space-x-reverse">
         <button
             onclick={handleEdit}
-            aria-label="编辑成就 {achievement.title}"
-            class="p-2 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+            aria-label="Edit achievement {achievement.title}"
+            class="p-2 text-sm font-medium text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-md"
         >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
@@ -79,7 +79,7 @@
         <button
             onclick={handleDelete}
             disabled={isDeleting}
-            aria-label="删除成就 {achievement.title}"
+            aria-label="Delete achievement {achievement.title}"
             class="p-2 text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md disabled:opacity-50"
         >
             {#if isDeleting}
@@ -109,10 +109,10 @@
 
     {#if achievement.core_skills_json && achievement.core_skills_json.length > 0}
         <div class="mt-3">
-        <h5 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">核心技能:</h5>
+        <h5 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Core Skills:</h5>
         <div class="flex flex-wrap gap-2">
             {#each achievement.core_skills_json as skill}
-            <span class="px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-100 rounded-full dark:bg-indigo-900 dark:text-indigo-300">
+            <span class="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full dark:bg-purple-900 dark:text-purple-300">
                 {skill}
             </span>
             {/each}
@@ -120,10 +120,10 @@
         </div>
     {/if}
 
-    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500">
-        ID: {achievement.id} | 创建于: {formatDate(achievement.created_at)}
+    <div class="mt-4 pt-3 border-t border-purple-200 dark:border-purple-800 text-xs text-gray-400 dark:text-gray-500">
+        ID: {achievement.id} | Created: {formatDate(achievement.created_at)}
         {#if achievement.updated_at && achievement.updated_at !== achievement.created_at}
-        | 更新于: {formatDate(achievement.updated_at)}
+        | Updated: {formatDate(achievement.updated_at)}
         {/if}
     </div>
 </div>

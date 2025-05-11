@@ -72,11 +72,18 @@
     }
   </script>
 
-  <div class="max-w-7xl mx-auto p-4 md:p-8">
-    <AchievementList
-      addNewAchievement={openCreateModal}
-      editAchievement={openEditModal}
-    />
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="p-6 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg shadow mb-6">
+      <h2 class="text-xl font-semibold text-purple-900 dark:text-purple-100 mb-4 flex items-center">
+        <span class="text-purple-500 mr-2">🏆</span>
+        My Achievements
+      </h2>
+
+      <AchievementList
+        addNewAchievement={openCreateModal}
+        editAchievement={openEditModal}
+      />
+    </div>
 
     {#if isModalOpen}
       <Modal

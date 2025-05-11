@@ -69,11 +69,18 @@
     }
   </script>
 
-  <div class="max-w-7xl mx-auto p-4 md:p-8">
-    <FuturePlanList
-      onAddNewFuturePlan={openCreateModal}
-      onEditFuturePlan={openEditModal}
-    />
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="p-6 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg shadow mb-6">
+      <h2 class="text-xl font-semibold text-green-900 dark:text-green-100 mb-4 flex items-center">
+        <span class="text-green-500 mr-2">🚀</span>
+        Future Plans
+      </h2>
+
+      <FuturePlanList
+        onAddNewFuturePlan={openCreateModal}
+        onEditFuturePlan={openEditModal}
+      />
+    </div>
 
     {#if isModalOpen}
       <Modal
@@ -86,6 +93,6 @@
           onSave={handleFormSave}
           onCancel={handleFormCancel}
         />
-        </Modal>
+      </Modal>
     {/if}
   </div>

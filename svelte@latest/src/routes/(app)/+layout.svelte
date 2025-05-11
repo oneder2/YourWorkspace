@@ -14,6 +14,9 @@
   // Determine if the current page is the anchor page or one of its potential sub-routes
   $: isAnchorPage = page.url.pathname.startsWith('/anchor');
 
+  // Force re-render when the URL changes
+  $: page.url.pathname;
+
   onMount(() => {
     const unsubscribe = isAuthenticated.subscribe(authenticated => {
       if (!authenticated) {
