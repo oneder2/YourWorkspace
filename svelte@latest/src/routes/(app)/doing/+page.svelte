@@ -4,7 +4,6 @@
   // Import main store and specific derived stores
   import { todoStore, otherActiveTodos, completedTodos } from '$lib/store/todoStore';
 
-  import TodoForm from '$lib/components/todo/TodoForm.svelte';
   import TodoList from '$lib/components/todo/TodoList.svelte';
 
   import CurrentFocusDisplay from '$lib/components/anchor/current_focus/CurrentFocusDisplay.svelte';
@@ -57,14 +56,12 @@
           Todo
         </h2>
         <div>
-          <div class="mb-4">
-            <TodoForm />
-          </div>
+          <!-- 移除了固定的 TodoForm -->
           <div>
             {#if !showCompletedTasks}
-              <TodoList todos={$otherActiveTodos} listTitle="Active Tasks" />
+              <TodoList todos={$otherActiveTodos} />
             {:else}
-              <TodoList todos={$completedTodos} listTitle="Completed Tasks" />
+              <TodoList todos={$completedTodos} />
             {/if}
           </div>
           <div class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">

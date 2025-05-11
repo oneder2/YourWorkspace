@@ -54,10 +54,10 @@
     }
   }
 
-  // 新增：接收一个待办事项数组作为 prop
+  // 接收一个待办事项数组作为 prop
   export let todos: TodoItem[] = [];
-  // (可选) 接收一个列表标题
-  export let listTitle: string = "待办事项"; // Default title
+  // (可选) 接收一个列表标题，但在界面上不再显示
+  export let listTitle: string = "";
 
   // 仍然可以从 store 获取全局加载和错误状态，特别是初次加载时
   // $: isLoading = $todoStore.isLoading;
@@ -77,10 +77,9 @@
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-  <div class="flex justify-between items-center mb-4">
-    <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200">{listTitle}</h3>
+  <div class="flex justify-center items-center mb-4">
     <button
-      class="p-1 rounded-full {showAddForm ? 'bg-blue-200 dark:bg-blue-700' : 'bg-blue-100 dark:bg-blue-800'} hover:bg-blue-200 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-300 transition-colors"
+      class="p-2 rounded-full {showAddForm ? 'bg-blue-200 dark:bg-blue-700' : 'bg-blue-100 dark:bg-blue-800'} hover:bg-blue-200 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-300 transition-colors shadow-sm"
       aria-label={showAddForm ? "Hide add form" : "Show add form"}
       title={showAddForm ? "Hide add form" : "Show add form"}
       on:click={handleAddTask}
