@@ -30,30 +30,33 @@
   });
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 md:px-6">
-  <header class="mb-10 text-center">
-    <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">当前进行中 (Currently Doing)</h1>
-    {#if currentUser}
-      <p class="text-base text-gray-600 dark:text-gray-400">
-        欢迎回来, {currentUser.username || currentUser.email?.split('@')[0]}！在这里管理您当前的任务和焦点。
-      </p>
-    {/if}
-  </header>
-
-  <section id="current-focus-section" class="mb-10 p-8 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-xl shadow-lg">
-    <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">⭐ 当前焦点</h2>
-    <CurrentFocusDisplay />
-  </section>
-
-  <section id="todo-section" class="mb-10 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-    <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6 pb-3 border-b border-gray-200 dark:border-gray-700">活动中的任务 (Active Tasks)</h2>
-    <div>
-      <div class="mb-8">
-        <TodoForm />
-      </div>
-      <div>
-        <TodoList todos={$otherActiveTodos} listTitle="其他活动任务" />
-      </div>
+<div class="max-w-7xl mx-auto px-4 py-4">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Main Focus Section - Takes up 2/3 of the width on medium screens and up -->
+    <div class="md:col-span-2">
+      <section id="current-focus-section" class="mb-6 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Main Focus:</h2>
+        <CurrentFocusDisplay />
+      </section>
     </div>
-  </section>
+
+    <!-- Todo Section - Takes up 1/3 of the width on medium screens and up -->
+    <div class="md:col-span-1">
+      <section id="todo-section" class="mb-6 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Todo</h2>
+        <div>
+          <div class="mb-4">
+            <TodoForm />
+          </div>
+          <div>
+            <TodoList todos={$otherActiveTodos} listTitle="Active Tasks" />
+          </div>
+          <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">PAST</h3>
+            <!-- Past tasks could be added here -->
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 </div>
