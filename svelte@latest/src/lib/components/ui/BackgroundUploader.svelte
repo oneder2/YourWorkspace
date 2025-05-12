@@ -120,6 +120,18 @@
           // Ensure the overlay opacity is reduced to make background visible
           document.body.classList.add('has-background');
 
+          // 确保背景可见
+          document.body.style.backgroundColor = 'transparent';
+          document.documentElement.style.backgroundColor = 'transparent';
+
+          // 检查是否为暗色模式
+          const isDarkMode = document.documentElement.classList.contains('dark');
+          if (isDarkMode) {
+            document.body.classList.add('dark-with-background');
+          } else {
+            document.body.classList.remove('dark-with-background');
+          }
+
           // Verify the style was applied
           const appliedStyle = document.documentElement.style.getPropertyValue('--custom-background');
           console.log('Applied style value:', appliedStyle);
@@ -162,6 +174,11 @@
       // Remove the custom background marker classes
       document.documentElement.classList.remove('has-custom-bg');
       document.body.classList.remove('has-background');
+      document.body.classList.remove('dark-with-background');
+
+      // 恢复默认背景色
+      document.body.style.backgroundColor = '';
+      document.documentElement.style.backgroundColor = '';
 
       console.log('Background cleared successfully');
 

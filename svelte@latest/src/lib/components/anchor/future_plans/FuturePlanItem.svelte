@@ -127,7 +127,7 @@
     </div>
 
     <div class="flex flex-wrap gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
-      <span class="px-2 py-0.5 text-xs font-medium rounded-full {statusClasses[futurePlan.status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'}">
+      <span class="px-2 py-0.5 text-xs font-medium rounded-full {statusClasses[futurePlan.status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800 dark:bg-gray-800/80 dark:text-gray-300'}">
         {formatStatus(futurePlan.status)}
       </span>
 

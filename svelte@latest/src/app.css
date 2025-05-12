@@ -12,11 +12,19 @@
   /* Apply font family from Tailwind config */
   html {
     @apply font-sans antialiased;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
 
   body {
-    @apply bg-light text-dark min-h-screen;
+    @apply text-dark min-h-screen;
     position: relative;
+    background-color: transparent;
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  /* Add transition to all elements for smooth dark mode switching */
+  *, *::before, *::after {
+    transition: background-color 0.5s ease, border-color 0.5s ease, color 0.3s ease, box-shadow 0.3s ease;
   }
 
   /* Apply background to html element to ensure it covers the entire viewport */
@@ -25,9 +33,7 @@
     background-size: cover;
     background-attachment: fixed;
     background-position: center;
-    background-repeat: no-repeat;
-    min-height: 100vh;
-    width: 100%;
+    min-height: 100%;
   }
 
   /* Add a subtle overlay to ensure text readability when custom background is used */
@@ -39,27 +45,52 @@
     width: 100%;
     height: 100%;
     z-index: -1;
-    background-color: white;
-    opacity: 1;
+    background-color: transparent;
+    opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none; /* Allow clicks to pass through */
   }
 
-  .dark body::before {
-    background-color: #111827; /* dark:bg-gray-900 */
+  /* Light mode overlay */
+  html:not(.dark) body:not(.has-background)::before {
+    background-color: rgba(255, 255, 255, 0.5);
+    opacity: 0.2;
   }
 
-  /* Fix for background image visibility - reduce opacity to ensure background image is visible */
+  /* Dark mode overlay */
+  .dark body:not(.has-background)::before {
+    background-color: rgba(17, 24, 39, 0.7); /* dark:bg-gray-900 with transparency */
+    opacity: 0.5;
+  }
+
+  /* Fix for background image visibility - 降低不透明度以确保背景图片可见 */
   html[style*="--custom-background:url("] + body::before,
   html.has-custom-bg + body::before,
   body.has-background::before {
-    opacity: 0.75; /* Reduce opacity to make background more visible */
+    opacity: 0.3; /* 大幅降低不透明度，使背景更加可见 */
+    background-color: transparent;
   }
 
-  /* Ensure z-index is correct for background visibility */
-  html.has-custom-bg {
-    z-index: -2;
-    position: relative;
+  /* Ensure dark mode with background has transparent overlay */
+  .dark body.has-background::before {
+    background-color: rgba(0, 0, 0, 0.3);
+    opacity: 0.3;
+  }
+
+  /* Special class for dark mode with background */
+  body.dark-with-background::before {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    opacity: 0.2 !important;
+  }
+
+  /* Ensure body background is transparent when has background */
+  body.has-background {
+    background-color: transparent !important;
+  }
+
+  /* Ensure dark mode body is transparent when has background */
+  .dark body.has-background {
+    background-color: transparent !important;
   }
 
   /* Default link styles */
@@ -162,7 +193,7 @@
   }
 
   .card-header {
-    @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900;
+    @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80;
   }
 
   .card-body {
@@ -170,7 +201,7 @@
   }
 
   .card-footer {
-    @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900;
+    @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80;
   }
 
   /* Badge styles */

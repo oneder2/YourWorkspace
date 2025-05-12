@@ -54,7 +54,7 @@
 <PageLoadingIndicator />
 
 {#if showContent}
-  <div class="flex flex-col min-h-screen bg-light dark:bg-gray-900">
+  <div class="flex flex-col min-h-screen dark:bg-transparent">
     <Navbar {isAnchorPage} />
 
     <main class="flex-grow flex flex-col p-4">

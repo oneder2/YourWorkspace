@@ -122,7 +122,12 @@
         <div class={combineClasses(columnSpans.oneFourth, cardBase, pageStyle.border, "h-full flex flex-col")}>
           <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center">
-              <h3 class={headings.h3}>Plans</h3>
+              <h2 class={combineClasses(headings.h3, pageStyle.text)}>
+                <svg xmlns="http://www.w3.org/2000/svg" class={combineClasses("h-5 w-5 mr-2 inline", pageStyle.icon)} viewBox="0 0 448 512" fill="currentColor">
+                  <path d="M64 80c-8.8 0-16 7.2-16 16l0 320c0 8.8 7.2 16 16 16l224 0 0-80c0-17.7 14.3-32 32-32l80 0 0-224c0-8.8-7.2-16-16-16L64 80zM288 480L64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 224 0 5.5c0 17-6.7 33.3-18.7 45.3l-90.5 90.5c-12 12-28.3 18.7-45.3 18.7l-5.5 0z"/>
+                </svg>
+                Plans
+              </h2>
               <button
                 onclick={openCreateModal}
                 class={combineClasses("p-1 text-sm rounded-md focus:outline-none focus:ring-2", pageStyle.text, pageStyle.hover)}
@@ -136,12 +141,12 @@
           </div>
 
           <!-- Scrollable container with scrollbar indicator -->
-          <div class={combineClasses(scrollArea.container, "flex-grow")}>
+          <div class={combineClasses(scrollArea.container, "flex-grow relative")}>
             <!-- Scrollbar indicator on the left -->
             <div class={combineClasses(scrollArea.indicator, "left-0", pageStyle.scrollbar)}></div>
 
-            <!-- Scrollable content -->
-            <div class={combineClasses("pl-3", "h-full overflow-y-auto")}>
+            <!-- Scrollable content with fixed height and internal scrolling -->
+            <div class={combineClasses("pl-3", "absolute inset-0 overflow-y-auto pr-2")}>
               <FuturePlanList
                 onAddNewFuturePlan={openCreateModal}
                 onEditFuturePlan={(plan: FuturePlan) => openEditInline(plan)}
@@ -173,11 +178,12 @@
                   <div class="flex space-x-2">
                     <button
                       onclick={() => selectedPlan && openEditInline(selectedPlan)}
-                      class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      class={combineClasses("p-2 rounded-md focus:outline-none focus:ring-2", pageStyle.text, pageStyle.hover)}
                       aria-label="Edit plan"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                       </svg>
                     </button>
                     <button
@@ -188,11 +194,15 @@
                           isViewMode = false;
                         }
                       }}
-                      class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      class="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                       aria-label="Delete plan"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
                       </svg>
                     </button>
                   </div>
@@ -248,8 +258,8 @@
             {:else}
               <!-- Empty state when no plan is selected -->
               <div class="flex flex-col items-center justify-center h-full">
-                <svg xmlns="http://www.w3.org/2000/svg" class={combineClasses("h-16 w-16 mb-4", pageStyle.icon)} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg xmlns="http://www.w3.org/2000/svg" class={combineClasses("h-16 w-16 mb-4", pageStyle.icon)} viewBox="0 0 448 512" fill="currentColor">
+                  <path d="M64 80c-8.8 0-16 7.2-16 16l0 320c0 8.8 7.2 16 16 16l224 0 0-80c0-17.7 14.3-32 32-32l80 0 0-224c0-8.8-7.2-16-16-16L64 80zM288 480L64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 224 0 5.5c0 17-6.7 33.3-18.7 45.3l-90.5 90.5c-12 12-28.3 18.7-45.3 18.7l-5.5 0z"/>
                 </svg>
                 <h3 class={combineClasses("text-xl font-medium mb-2", pageStyle.text)}>Select a Plan</h3>
                 <p class="text-gray-600 dark:text-gray-400 text-center max-w-md">

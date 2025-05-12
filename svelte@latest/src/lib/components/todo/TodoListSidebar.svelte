@@ -24,7 +24,7 @@
     isEditFormVisible = true;
   }
 
-  function handleEditSave(updatedTodo: TodoItem) {
+  function handleEditSave(_updatedTodo: TodoItem) {
     // This will be called when the edit is successful
     isEditFormVisible = false;
     editingTodo = null;
@@ -83,7 +83,7 @@
   });
 </script>
 
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm py-2">
   {#if showAddFormSidebar}
     <div transition:slide={{ duration: 300 }} class="border-b border-blue-200 dark:border-blue-700 mb-4">
       <div class="p-4">
@@ -129,11 +129,11 @@
   {/if}
 
   {#if $todoStore.isLoading && todos.length === 0 && $todoStore.todos.length === 0}
-    <div class="p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 my-2 text-center text-sm">
+    <div class="p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mx-2 my-2 text-center text-sm">
       <p>Loading tasks...</p>
     </div>
   {:else if $todoStore.error && todos.length === 0 && $todoStore.todos.length === 0}
-    <div class="p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 my-2 text-center text-sm">
+    <div class="p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 mx-2 my-2 text-center text-sm">
       <p class="mb-1">Failed to load tasks: {$todoStore.error}</p>
       <button
         onclick={() => todoStore.loadAllTodos()}
@@ -143,14 +143,14 @@
       </button>
     </div>
   {:else if todos.length === 0}
-    <div class="p-4 rounded-md bg-gray-50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 my-2 text-center text-sm">
+    <div class="p-4 rounded-md bg-gray-50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 mx-2 my-2 text-center text-sm">
       <p>No tasks in this list.</p>
       {#if listTitle.toLowerCase().includes("active")}
         <p class="text-xs mt-1">All tasks are completed or set as current focus!</p>
       {/if}
     </div>
   {:else}
-    <ul class="space-y-2">
+    <ul class="space-y-2 px-2">
       {#each todos as todo (todo.id)}
         <li class="border border-blue-200 dark:border-blue-700 rounded-md p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors {todo.is_current_focus ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700' : ''}">
           <div class="flex items-center">

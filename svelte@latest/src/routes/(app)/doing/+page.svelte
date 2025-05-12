@@ -72,12 +72,12 @@
           </div>
 
           <!-- Scrollable container with scrollbar indicator -->
-          <div class={combineClasses(scrollArea.container, "flex-grow")}>
+          <div class={combineClasses(scrollArea.container, "flex-grow relative")}>
             <!-- Scrollbar indicator on the left -->
             <div class={combineClasses(scrollArea.indicator, "left-0", pageStyle.scrollbar)}></div>
 
-            <!-- Scrollable content -->
-            <div class={combineClasses("pl-3", "h-full overflow-y-auto")}>
+            <!-- Scrollable content with fixed height and internal scrolling -->
+            <div class={combineClasses("pl-3", "absolute inset-0 overflow-y-auto pr-2")}>
               {#if !showCompletedTasks}
                 <TodoListSidebar todos={$otherActiveTodos} addButtonId="add-todo-button" />
               {:else}

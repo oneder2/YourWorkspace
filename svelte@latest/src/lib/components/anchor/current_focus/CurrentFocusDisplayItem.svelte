@@ -236,7 +236,7 @@
         </div>
       </main>
 
-      <footer class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
+      <footer class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/80 flex-shrink-0">
         <div class="flex justify-end gap-3">
           <button
             type="button"

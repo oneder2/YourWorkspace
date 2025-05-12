@@ -64,8 +64,27 @@ function initializeTheme(): void {
         '--custom-background',
         `url(${settings.customBackground})`
       );
+      document.documentElement.classList.add('has-custom-bg');
+      document.body.classList.add('has-background');
+
+      // 确保背景可见
+      document.body.style.backgroundColor = 'transparent';
+      document.documentElement.style.backgroundColor = 'transparent';
+
+      // 如果是暗色模式，添加特殊类
+      if (settings.darkMode) {
+        document.body.classList.add('dark-with-background');
+      } else {
+        document.body.classList.remove('dark-with-background');
+      }
     } else {
       document.documentElement.style.setProperty('--custom-background', 'none');
+      document.documentElement.classList.remove('has-custom-bg');
+      document.body.classList.remove('has-background');
+
+      // 恢复默认背景色
+      document.body.style.backgroundColor = '';
+      document.documentElement.style.backgroundColor = '';
     }
   });
 

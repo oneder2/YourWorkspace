@@ -43,8 +43,21 @@
 								'--custom-background',
 								`url(${settings.customBackground})`
 							);
+							document.documentElement.classList.add('has-custom-bg');
+							// 确保背景在页面加载时立即可见
+							document.addEventListener('DOMContentLoaded', function() {
+								document.body.classList.add('has-background');
+								document.body.style.backgroundColor = 'transparent';
+								document.documentElement.style.backgroundColor = 'transparent';
+
+								// 如果是暗色模式，添加特殊类
+								if (darkMode) {
+									document.body.classList.add('dark-with-background');
+								}
+							});
 						} else {
 							document.documentElement.style.setProperty('--custom-background', 'none');
+							document.documentElement.classList.remove('has-custom-bg');
 						}
 					} catch (e) {
 						console.error('Failed to apply custom background');

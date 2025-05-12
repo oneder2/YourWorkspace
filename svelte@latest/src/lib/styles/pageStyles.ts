@@ -101,7 +101,7 @@ export const headings = {
 export const scrollArea = {
   container: 'relative overflow-hidden',
   content: 'h-full overflow-y-auto',
-  indicator: 'absolute top-0 bottom-0 w-1 opacity-50'
+  indicator: 'absolute top-0 bottom-0 w-1 opacity-50 z-10'
 };
 
 // 按钮样式

@@ -67,10 +67,29 @@ if (browser) {
       document.documentElement.style.setProperty('--custom-background', `url(${settings.customBackground})`);
       document.documentElement.classList.add('has-custom-bg');
       document.body.classList.add('has-background');
+
+      // 确保背景可见 - 无论是亮色还是暗色模式
+      document.body.style.backgroundColor = 'transparent';
+      document.documentElement.style.backgroundColor = 'transparent';
+
+      // 为暗色模式添加特殊处理
+      if (settings.darkMode) {
+        // 确保暗色模式下背景图片可见
+        document.body.style.backgroundColor = 'transparent';
+        document.documentElement.style.backgroundColor = 'transparent';
+        document.body.classList.add('dark-with-background');
+      } else {
+        document.body.classList.remove('dark-with-background');
+      }
     } else {
       document.documentElement.style.setProperty('--custom-background', 'none');
       document.documentElement.classList.remove('has-custom-bg');
       document.body.classList.remove('has-background');
+      document.body.classList.remove('dark-with-background');
+
+      // 恢复默认背景色
+      document.body.style.backgroundColor = '';
+      document.documentElement.style.backgroundColor = '';
     }
   });
 }

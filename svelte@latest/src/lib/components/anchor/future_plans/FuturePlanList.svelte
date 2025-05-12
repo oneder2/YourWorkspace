@@ -6,11 +6,10 @@
 
     // Component Props using $props rune
     let {
-      onAddNewFuturePlan = () => {},
       onEditFuturePlan = (_plan: any) => {},
       onSelectPlan = (_plan: any) => {}
     } = $props<{
-      onAddNewFuturePlan?: () => void;
+      onAddNewFuturePlan?: () => void; // Kept in type definition for backward compatibility
       onEditFuturePlan?: (plan: any) => void;
       onSelectPlan?: (plan: any) => void;
     }>();
@@ -46,7 +45,7 @@
     // Direct dispatch from FuturePlanItem to parent page is now handled inline
   </script>
 
-  <div>
+  <div class="py-2">
     {#if $isLoading && $futurePlans.length === 0}
       <div class="text-center py-6">
         <div role="status" class="flex justify-center items-center">
@@ -59,7 +58,7 @@
         <p class="mt-2 text-sm text-green-600 dark:text-green-400">Loading plans...</p>
       </div>
     {:else if $error}
-      <div class="p-3 mb-3 text-xs text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
+      <div class="p-3 mx-2 mb-3 text-xs text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
         <span class="font-medium">Error:</span> {$error}
         <button
           onclick={() => futurePlanStore.loadFuturePlans()}
@@ -77,7 +76,7 @@
         <p class="mt-1 text-xs text-green-600 dark:text-green-400">Click + to add one</p>
       </div>
     {:else}
-      <div class="space-y-2 py-2">
+      <div class="space-y-2 px-2">
         {#each $futurePlans as plan (plan.id)}
           <FuturePlanItem
             futurePlan={plan}

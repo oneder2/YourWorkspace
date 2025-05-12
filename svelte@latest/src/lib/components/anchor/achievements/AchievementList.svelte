@@ -50,11 +50,11 @@
     }
   </script>
 
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col h-full py-2">
     <!-- Main content area -->
     <div class="flex-grow">
       {#if $isLoading && $achievements.length === 0}
-        <div class="text-center py-10">
+        <div class="text-center py-6">
           <div role="status" class="flex justify-center items-center">
               <svg aria-hidden="true" class="w-10 h-10 text-purple-200 animate-spin dark:text-purple-700 fill-purple-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
@@ -65,7 +65,7 @@
           <p class="mt-2 text-purple-600 dark:text-purple-400">Loading achievements...</p>
         </div>
       {:else if $error}
-        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
+        <div class="p-4 mx-2 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
           <span class="font-medium">Loading error:</span> {$error}
           <button
             onclick={() => achievementStore.loadAchievements()}
@@ -75,7 +75,7 @@
           </button>
         </div>
       {:else if $achievements.length === 0}
-        <div class="text-center py-10">
+        <div class="text-center py-6">
           <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM12 11v2m0-4h.01" />
@@ -84,7 +84,7 @@
           <p class="mt-1 text-sm text-purple-600 dark:text-purple-400">Start adding your first achievement!</p>
         </div>
       {:else}
-        <div class="space-y-4">
+        <div class="space-y-4 px-2">
           {#each $achievements as achievement (achievement.id)}
             <AchievementItem
               {achievement}
