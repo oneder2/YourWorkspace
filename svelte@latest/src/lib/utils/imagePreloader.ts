@@ -1,12 +1,12 @@
 /**
  * Image Preloader Utility
- * 
+ *
  * This utility provides functions to preload images to improve page load performance.
  */
 
 /**
  * Preloads an image by creating a new Image object and setting its src
- * 
+ *
  * @param src - The URL of the image to preload
  * @returns A promise that resolves when the image is loaded or rejects on error
  */
@@ -21,7 +21,7 @@ export function preloadImage(src: string): Promise<HTMLImageElement> {
 
 /**
  * Preloads multiple images in parallel
- * 
+ *
  * @param srcs - An array of image URLs to preload
  * @returns A promise that resolves when all images are loaded
  */
@@ -31,20 +31,20 @@ export function preloadImages(srcs: string[]): Promise<HTMLImageElement[]> {
 
 /**
  * Preloads images from CSS background properties in the DOM
- * 
+ *
  * @param selector - CSS selector to find elements with background images
  * @returns A promise that resolves when all background images are preloaded
  */
 export function preloadBackgroundImages(selector: string = '[style*="background-image"]'): Promise<HTMLImageElement[]> {
   if (typeof window === 'undefined') return Promise.resolve([]);
-  
+
   const elements = document.querySelectorAll<HTMLElement>(selector);
   const urls: string[] = [];
-  
+
   elements.forEach(el => {
     const style = window.getComputedStyle(el);
     const backgroundImage = style.backgroundImage;
-    
+
     if (backgroundImage && backgroundImage !== 'none') {
       // Extract URL from the background-image property
       const match = /url\(['"]?([^'"]+)['"]?\)/g.exec(backgroundImage);
@@ -53,7 +53,7 @@ export function preloadBackgroundImages(selector: string = '[style*="background-
       }
     }
   });
-  
+
   return preloadImages(urls);
 }
 
@@ -64,9 +64,14 @@ export function preloadBackgroundImages(selector: string = '[style*="background-
 export function preloadCriticalImages(): Promise<HTMLImageElement[]> {
   // Add paths to critical images here
   const criticalImages: string[] = [
-    // Example: '/images/logo.png',
-    // Example: '/images/icons/home.svg',
+    '/favicon.png',
+    '/images/default-background.jpg',
+    '/images/icons/todo.svg',
+    '/images/icons/doing.svg',
+    '/images/icons/done.svg',
+    '/images/icons/plan.svg',
+    '/images/icons/anchor.svg'
   ];
-  
+
   return preloadImages(criticalImages);
 }

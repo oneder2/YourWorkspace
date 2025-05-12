@@ -48,11 +48,36 @@ async function loadAllTodos(): Promise<void> {
   mainTodoWritable.update(state => ({ ...state, isLoading: true, error: null }));
   try {
     const fetchedTodos = await todoService.getAllTodos();
-    mainTodoWritable.set({ ...get(mainTodoWritable), todos: fetchedTodos, isLoading: false, error: null });
+
+    // Sort todos once before updating the store to avoid multiple re-renders
+    const sortedTodos = fetchedTodos.sort((a, b) => {
+      // First sort by current focus status
+      if (a.is_current_focus && !b.is_current_focus) return -1;
+      if (!a.is_current_focus && b.is_current_focus) return 1;
+
+      // Then by completion status
+      if (a.status !== 'completed' && b.status === 'completed') return -1;
+      if (a.status === 'completed' && b.status !== 'completed') return 1;
+
+      // Then by creation date (newest first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    mainTodoWritable.set({
+      ...get(mainTodoWritable),
+      todos: sortedTodos,
+      isLoading: false,
+      error: null
+    });
   } catch (err) {
     const error = err as ApiError;
     console.error('TodoStore: Error fetching todos', error);
-    mainTodoWritable.set({ ...get(mainTodoWritable), todos: [], isLoading: false, error: error.message || 'Failed to fetch todos' });
+    mainTodoWritable.set({
+      ...get(mainTodoWritable),
+      todos: [],
+      isLoading: false,
+      error: error.message || 'Failed to fetch todos'
+    });
   }
 }
 
@@ -115,7 +140,7 @@ async function toggleCurrentFocus(todoId: number): Promise<TodoItem | null> {
     mainTodoWritable.update(state => ({ ...state, isLoading: false, error: message }));
     return null;
   }
-  
+
   mainTodoWritable.update(state => ({ ...state, isLoading: true, error: null }));
   try {
     const updatedTodo = await todoService.updateTodo(todoId, { is_current_focus: newFocusState });
@@ -153,7 +178,7 @@ async function removeTodo(todoId: number): Promise<void> {
 async function toggleCompleteStatus(todoId: number, currentItemStatus: TodoItem['status']): Promise<TodoItem | null> {
   const newStatus: TodoItem['status'] = currentItemStatus === 'completed' ? 'pending' : 'completed';
   const payload: UpdateTodoPayload = { status: newStatus };
-  
+
   const currentItem = get(mainTodoWritable).todos.find(t => t.id === todoId);
   if (newStatus === 'completed' && currentItem?.is_current_focus) {
       payload.is_current_focus = false;
