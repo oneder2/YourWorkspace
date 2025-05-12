@@ -65,12 +65,7 @@ export function preloadCriticalImages(): Promise<HTMLImageElement[]> {
   // Add paths to critical images here
   const criticalImages: string[] = [
     '/favicon.png',
-    '/images/default-background.jpg',
-    '/images/icons/todo.svg',
-    '/images/icons/doing.svg',
-    '/images/icons/done.svg',
-    '/images/icons/plan.svg',
-    '/images/icons/anchor.svg'
+    '/images/default-background.jpg'
   ];
 
   return preloadImages(criticalImages);

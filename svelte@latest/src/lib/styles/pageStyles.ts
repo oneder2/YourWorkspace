@@ -1,6 +1,6 @@
 /**
  * 统一页面风格配置
- * 
+ *
  * 这个文件定义了应用程序中所有页面的统一风格，包括颜色、边框、阴影等。
  * 通过集中管理这些样式，可以确保整个应用程序的视觉一致性。
  */
@@ -9,7 +9,7 @@
 export const pageContainer = 'max-w-7xl mx-auto px-4 py-4';
 
 // 卡片基础样式
-export const cardBase = 'rounded-lg shadow-md border overflow-hidden';
+export const cardBase = 'rounded-lg shadow-md border overflow-hidden bg-white dark:bg-gray-800';
 
 // 页面特定颜色方案
 export const colorSchemes = {
@@ -26,7 +26,7 @@ export const colorSchemes = {
       secondary: 'bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-800 dark:hover:bg-green-700 dark:text-green-100'
     }
   },
-  
+
   // Doing 页面 - 蓝色主题
   doing: {
     bg: 'bg-blue-50 dark:bg-blue-900/30',
@@ -40,7 +40,7 @@ export const colorSchemes = {
       secondary: 'bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-100'
     }
   },
-  
+
   // Done 页面 - 紫色主题
   done: {
     bg: 'bg-purple-50 dark:bg-purple-900/30',
@@ -54,7 +54,7 @@ export const colorSchemes = {
       secondary: 'bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-800 dark:hover:bg-purple-700 dark:text-purple-100'
     }
   },
-  
+
   // 通用中性颜色 - 用于次要元素
   neutral: {
     bg: 'bg-gray-50 dark:bg-gray-800',
@@ -100,7 +100,8 @@ export const headings = {
 // 滚动区域样式
 export const scrollArea = {
   container: 'relative overflow-hidden',
-  content: 'max-h-[calc(100vh-300px)] overflow-y-auto'
+  content: 'h-full overflow-y-auto',
+  indicator: 'absolute top-0 bottom-0 w-1 opacity-50'
 };
 
 // 按钮样式

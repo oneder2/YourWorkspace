@@ -1,8 +1,12 @@
-// Import the generic API handler
-import { api } from './api'; 
+// Import the generic API handler and mock API
+import { api } from './api';
+import { mockFuturePlanApi } from './mockApi';
 
 // Base URL for future plan endpoints
 const BASE_URL = '/anchor/future_plans';
+
+// Use mock API for development
+const USE_MOCK_API = true;
 
 // Define the structure of a Future Plan item based on the API documentation
 export interface FuturePlan {
@@ -45,6 +49,11 @@ export const futurePlanService = {
    * @returns Promise<FuturePlan[]> - A list of future plans.
    */
   async getFuturePlans(): Promise<FuturePlan[]> {
+    if (USE_MOCK_API) {
+      console.log('Using mock API for getFuturePlans');
+      return mockFuturePlanApi.getAll();
+    }
+
     try {
       const responseData = await api.get<FuturePlan[]>(BASE_URL);
       return responseData;
@@ -62,6 +71,11 @@ export const futurePlanService = {
    * @returns Promise<FuturePlan> - The newly created future plan.
    */
   async createFuturePlan(planData: FuturePlanCreateDto): Promise<FuturePlan> {
+    if (USE_MOCK_API) {
+      console.log('Using mock API for createFuturePlan', planData);
+      return mockFuturePlanApi.create(planData);
+    }
+
     try {
       const responseData = await api.post<FuturePlan>(BASE_URL, planData);
       return responseData;
@@ -78,10 +92,15 @@ export const futurePlanService = {
    * @returns Promise<FuturePlan> - The requested future plan.
    */
   async getFuturePlanById(planId: number): Promise<FuturePlan> {
+    if (USE_MOCK_API) {
+      console.log(`Using mock API for getFuturePlanById(${planId})`);
+      return mockFuturePlanApi.getById(planId);
+    }
+
     try {
       const responseData = await api.get<FuturePlan>(`${BASE_URL}/${planId}`);
       return responseData;
-    } catch (error) { // Corrected: Added opening brace for catch block
+    } catch (error) {
       console.error(`Error fetching future plan with ID ${planId}:`, error);
       throw error;
     }
@@ -95,6 +114,11 @@ export const futurePlanService = {
    * @returns Promise<FuturePlan> - The updated future plan.
    */
   async updateFuturePlan(planId: number, planData: FuturePlanUpdateDto): Promise<FuturePlan> {
+    if (USE_MOCK_API) {
+      console.log(`Using mock API for updateFuturePlan(${planId})`, planData);
+      return mockFuturePlanApi.update(planId, planData);
+    }
+
     try {
       const responseData = await api.put<FuturePlan>(`${BASE_URL}/${planId}`, planData);
       return responseData;
@@ -111,6 +135,12 @@ export const futurePlanService = {
    * @returns Promise<void> - Resolves when deletion is successful.
    */
   async deleteFuturePlan(planId: number): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log(`Using mock API for deleteFuturePlan(${planId})`);
+      mockFuturePlanApi.delete();
+      return;
+    }
+
     try {
       // DELETE requests typically return 204 No Content, so no response data is expected.
       await api.delete(`${BASE_URL}/${planId}`);

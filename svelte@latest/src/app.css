@@ -25,7 +25,9 @@
     background-size: cover;
     background-attachment: fixed;
     background-position: center;
-    min-height: 100%;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    width: 100%;
   }
 
   /* Add a subtle overlay to ensure text readability when custom background is used */
@@ -40,16 +42,24 @@
     background-color: white;
     opacity: 1;
     transition: opacity 0.3s ease;
+    pointer-events: none; /* Allow clicks to pass through */
   }
 
   .dark body::before {
     background-color: #111827; /* dark:bg-gray-900 */
   }
 
-  /* Fix for background image visibility - 降低不透明度以确保背景图片可见 */
+  /* Fix for background image visibility - reduce opacity to ensure background image is visible */
   html[style*="--custom-background:url("] + body::before,
-  html.has-custom-bg + body::before {
-    opacity: 0.75; /* 降低不透明度，使背景更加可见 */
+  html.has-custom-bg + body::before,
+  body.has-background::before {
+    opacity: 0.75; /* Reduce opacity to make background more visible */
+  }
+
+  /* Ensure z-index is correct for background visibility */
+  html.has-custom-bg {
+    z-index: -2;
+    position: relative;
   }
 
   /* Default link styles */

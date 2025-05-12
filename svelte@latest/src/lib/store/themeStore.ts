@@ -65,8 +65,12 @@ if (browser) {
     // Apply custom background if set
     if (settings.customBackground) {
       document.documentElement.style.setProperty('--custom-background', `url(${settings.customBackground})`);
+      document.documentElement.classList.add('has-custom-bg');
+      document.body.classList.add('has-background');
     } else {
       document.documentElement.style.setProperty('--custom-background', 'none');
+      document.documentElement.classList.remove('has-custom-bg');
+      document.body.classList.remove('has-background');
     }
   });
 }

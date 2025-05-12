@@ -114,17 +114,12 @@
     }
   </script>
 
-  <div class={pageContainer}>
-    <div class="mb-6">
-      <h1 class={combineClasses(headings.h1, pageStyle.text)}>
-        <span class={combineClasses(pageStyle.icon, "mr-2")}>🚀</span>
-        Future Plan
-      </h1>
-
+  <div class={combineClasses(pageContainer, "h-[calc(100vh-180px)] flex flex-col")}>
+    <div class="flex-grow overflow-hidden">
       <!-- Main content with two-column layout -->
-      <div class={layouts.twoColumnOneThree}>
+      <div class={combineClasses(layouts.twoColumnOneThree, "h-full")}>
         <!-- Left sidebar - List of plans -->
-        <div class={combineClasses(columnSpans.oneFourth, cardBase, "bg-white dark:bg-gray-800", pageStyle.border)}>
+        <div class={combineClasses(columnSpans.oneFourth, cardBase, pageStyle.border, "h-full flex flex-col")}>
           <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center">
               <h3 class={headings.h3}>Plans</h3>
@@ -141,12 +136,12 @@
           </div>
 
           <!-- Scrollable container with scrollbar indicator -->
-          <div class={scrollArea.container}>
+          <div class={combineClasses(scrollArea.container, "flex-grow")}>
             <!-- Scrollbar indicator on the left -->
-            <div class={combineClasses("absolute left-0 top-0 bottom-0 w-1 opacity-50", pageStyle.scrollbar)}></div>
+            <div class={combineClasses(scrollArea.indicator, "left-0", pageStyle.scrollbar)}></div>
 
             <!-- Scrollable content -->
-            <div class={combineClasses("pl-3", scrollArea.content)}>
+            <div class={combineClasses("pl-3", "h-full overflow-y-auto")}>
               <FuturePlanList
                 onAddNewFuturePlan={openCreateModal}
                 onEditFuturePlan={(plan: FuturePlan) => openEditInline(plan)}
@@ -157,8 +152,8 @@
         </div>
 
         <!-- Main content - Plan details or form -->
-        <div class={combineClasses(columnSpans.threeFourths, cardBase, "bg-white dark:bg-gray-800", pageStyle.border)}>
-          <div class="p-6">
+        <div class={combineClasses(columnSpans.threeFourths, cardBase, pageStyle.border, "h-full flex flex-col")}>
+          <div class="p-6 flex-grow overflow-auto">
             {#if currentEditingFuturePlan}
               <h2 class={combineClasses(headings.h2, pageStyle.text)}>
                 Edit Plan
@@ -252,7 +247,7 @@
               </div>
             {:else}
               <!-- Empty state when no plan is selected -->
-              <div class="flex flex-col items-center justify-center h-[calc(100vh-400px)]">
+              <div class="flex flex-col items-center justify-center h-full">
                 <svg xmlns="http://www.w3.org/2000/svg" class={combineClasses("h-16 w-16 mb-4", pageStyle.icon)} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>

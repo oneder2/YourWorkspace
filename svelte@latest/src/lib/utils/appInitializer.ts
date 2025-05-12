@@ -1,11 +1,12 @@
 /**
  * Application Initializer
- * 
+ *
  * This utility handles application initialization tasks like preloading assets,
  * setting up performance monitoring, and initializing stores.
  */
 import { browser } from '$app/environment';
 import { preloadCriticalImages } from './imagePreloader';
+import { preloadSvgIcons } from './svgUtils';
 import { mark } from './performance';
 import { themeStore } from '$lib/store/themeStore';
 
@@ -15,26 +16,33 @@ import { themeStore } from '$lib/store/themeStore';
  */
 export async function initializeApp(): Promise<void> {
   if (!browser) return;
-  
+
   // Start performance measurement
   mark('app-initialization-start');
-  
+
   // Initialize theme from localStorage
   initializeTheme();
-  
+
   // Preload critical images
   try {
     await preloadCriticalImages();
   } catch (error) {
     console.error('Failed to preload critical images:', error);
   }
-  
+
+  // Preload SVG icons
+  try {
+    await preloadSvgIcons();
+  } catch (error) {
+    console.error('Failed to preload SVG icons:', error);
+  }
+
   // Register service worker if available
   registerServiceWorker();
-  
+
   // End performance measurement
   mark('app-initialization-end', 'app-initialization');
-  
+
   console.log('Application initialized');
 }
 
@@ -50,17 +58,17 @@ function initializeTheme(): void {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    
+
     if (settings.customBackground) {
       document.documentElement.style.setProperty(
-        '--custom-background', 
+        '--custom-background',
         `url(${settings.customBackground})`
       );
     } else {
       document.documentElement.style.setProperty('--custom-background', 'none');
     }
   });
-  
+
   // No need to unsubscribe as we want this to persist for the app lifetime
 }
 

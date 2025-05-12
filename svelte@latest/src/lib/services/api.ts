@@ -18,7 +18,7 @@ import { goto } from '$app/navigation'; // For redirecting to login
 // Alternatively, token refresh logic can be moved into authStore or handled via events.
 import { authService } from './authService'; // We need this for refreshAccessToken
 
-const BASE_URL: string = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 if (!BASE_URL) {
   console.warn(

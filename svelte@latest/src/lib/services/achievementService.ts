@@ -1,17 +1,21 @@
-import { api } from './api'; // 引入通用的 API 请求处理器
+import { api } from './api'; // Import the generic API handler
+import { mockAchievementApi } from './mockApi'; // Import the mock API
 
-const BASE_URL = '/anchor/achievements'; // API 基础路径
+const BASE_URL = '/anchor/achievements'; // Base URL for API endpoints
+
+// Use mock API for development
+const USE_MOCK_API = true;
 
 /**
  * Achievement object structure from the backend.
  */
 export interface Achievement {
-  id: number; 
-  user_id: number; 
+  id: number;
+  user_id: number;
   title: string;
   description?: string | null;
   quantifiable_results?: string | null;
-  core_skills_json?: string[]; 
+  core_skills_json?: string[];
   date_achieved?: string | null; // YYYY-MM-DD format
   created_at?: string; // ISO 8601
   updated_at?: string; // ISO 8601
@@ -50,6 +54,11 @@ export const achievementService = {
    * @returns Promise<Achievement[]>
    */
   async getAchievements(): Promise<Achievement[]> {
+    if (USE_MOCK_API) {
+      console.log('Using mock API for getAchievements');
+      return mockAchievementApi.getAll();
+    }
+
     try {
       // Assuming api.get directly returns the data array
       const responseData = await api.get<Achievement[]>(BASE_URL);
@@ -67,6 +76,11 @@ export const achievementService = {
    * @returns Promise<Achievement> - The newly created achievement.
    */
   async createAchievement(achievementData: AchievementCreateDto): Promise<Achievement> {
+    if (USE_MOCK_API) {
+      console.log('Using mock API for createAchievement', achievementData);
+      return mockAchievementApi.create(achievementData);
+    }
+
     try {
       // Assuming api.post directly returns the created object
       const responseData = await api.post<Achievement>(BASE_URL, achievementData);
@@ -84,6 +98,11 @@ export const achievementService = {
    * @returns Promise<Achievement> - The requested achievement.
    */
   async getAchievementById(id: number): Promise<Achievement> {
+    if (USE_MOCK_API) {
+      console.log(`Using mock API for getAchievementById(${id})`);
+      return mockAchievementApi.getById(id);
+    }
+
     try {
       // Assuming api.get directly returns the object
       const responseData = await api.get<Achievement>(`${BASE_URL}/${id}`);
@@ -102,6 +121,11 @@ export const achievementService = {
    * @returns Promise<Achievement> - The updated achievement.
    */
   async updateAchievement(id: number, achievementData: AchievementUpdateDto): Promise<Achievement> {
+    if (USE_MOCK_API) {
+      console.log(`Using mock API for updateAchievement(${id})`, achievementData);
+      return mockAchievementApi.update(id, achievementData);
+    }
+
     try {
       // Assuming api.put directly returns the updated object
       const responseData = await api.put<Achievement>(`${BASE_URL}/${id}`, achievementData);
@@ -119,6 +143,12 @@ export const achievementService = {
    * @returns Promise<void>
    */
   async deleteAchievement(id: number): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log(`Using mock API for deleteAchievement(${id})`);
+      mockAchievementApi.delete();
+      return;
+    }
+
     try {
       await api.delete(`${BASE_URL}/${id}`);
     } catch (error) {

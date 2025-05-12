@@ -114,14 +114,17 @@
           document.documentElement.style.setProperty('--custom-background', `url(${base64String})`);
           console.log('Background applied to document element');
 
-          // 强制触发重绘
+          // Force a repaint by adding a class
           document.documentElement.classList.add('has-custom-bg');
 
-          // 验证样式是否被应用
+          // Ensure the overlay opacity is reduced to make background visible
+          document.body.classList.add('has-background');
+
+          // Verify the style was applied
           const appliedStyle = document.documentElement.style.getPropertyValue('--custom-background');
           console.log('Applied style value:', appliedStyle);
 
-          // 检查 localStorage 中是否正确保存
+          // Check if the background was correctly saved in localStorage
           setTimeout(() => {
             const storedSettings = localStorage.getItem('app_theme_settings');
             if (storedSettings) {
@@ -156,8 +159,9 @@
       // Remove the background immediately
       document.documentElement.style.setProperty('--custom-background', 'none');
 
-      // 移除自定义背景标记类
+      // Remove the custom background marker classes
       document.documentElement.classList.remove('has-custom-bg');
+      document.body.classList.remove('has-background');
 
       console.log('Background cleared successfully');
 
