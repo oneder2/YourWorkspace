@@ -95,17 +95,4 @@
         </div>
       {/if}
     </div>
-
-    <!-- Fixed Add button at the bottom -->
-    <div class="mt-4 pt-4 border-t border-purple-200 dark:border-purple-700 flex justify-center">
-      <button
-        onclick={handleAddNewRequest}
-        class="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-all shadow-lg"
-        aria-label="Add a new achievement"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-        </svg>
-      </button>
-    </div>
   </div>

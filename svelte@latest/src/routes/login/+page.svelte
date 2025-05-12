@@ -107,7 +107,7 @@
     align-items: center;
     min-height: 80vh; /* Adjust as needed, considering navbar etc. */
     padding: 2rem 1rem;
-    background-color: var(--light-color, #f4f7f9); /* From global.css or default */
+    background-color: var(--light-color, #f4f7f900); /* From global.css or default */
   }
 
   .login-card {

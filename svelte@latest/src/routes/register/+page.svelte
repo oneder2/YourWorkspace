@@ -218,7 +218,7 @@
       align-items: center;
       min-height: 80vh;
       padding: 2rem 1rem;
-      background-color: var(--light-color, #f4f7f9);
+      background-color: var(--light-color, #f4f7f900);
     }
 
     .register-card {
