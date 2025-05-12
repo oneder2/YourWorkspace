@@ -25,7 +25,7 @@
      */
     async function handleDelete() {
       // User confirmation before deleting
-      if (!confirm(`Are you sure you want to delete the plan: "${futurePlan.description}"? This action cannot be undone.`)) {
+      if (!confirm(`Are you sure you want to delete the plan: "${futurePlan.title}"? This action cannot be undone.`)) {
         return;
       }
 
@@ -91,16 +91,16 @@
     onkeydown={(e) => e.key === 'Enter' && onClick(futurePlan)}
     role="button"
     tabindex="0"
-    aria-label="View details for plan: {futurePlan.description}"
+    aria-label="View details for plan: {futurePlan.title}"
 >
     <!-- Header with title and action buttons -->
     <div class="border-b border-green-100 dark:border-green-800 p-4">
         <div class="flex justify-between items-center">
-            <h4 class="text-lg font-semibold text-green-700 dark:text-green-300">{futurePlan.description}</h4>
+            <h4 class="text-lg font-semibold text-green-700 dark:text-green-300">{futurePlan.title}</h4>
             <div class="flex space-x-1">
                 <button
                     onclick={(e) => { e.stopPropagation(); onEdit(futurePlan); }}
-                    aria-label="Edit plan: {futurePlan.description}"
+                    aria-label="Edit plan: {futurePlan.title}"
                     class="p-1.5 text-sm font-medium text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -111,7 +111,7 @@
                 <button
                     onclick={(e) => { e.stopPropagation(); handleDelete(); }}
                     disabled={isDeleting}
-                    aria-label="Delete plan: {futurePlan.description}"
+                    aria-label="Delete plan: {futurePlan.title}"
                     class="p-1.5 text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md disabled:opacity-50"
                 >
                     {#if isDeleting}

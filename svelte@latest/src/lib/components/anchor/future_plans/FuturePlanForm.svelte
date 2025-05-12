@@ -16,6 +16,7 @@
     }>();
 
     // Local state for form fields, initialized from `futurePlan` prop if in edit mode
+    let title = $state(futurePlan?.title || '');
     let description = $state(futurePlan?.description || '');
     let goal_type = $state(futurePlan?.goal_type || '');
     let target_date = $state(futurePlan?.target_date || ''); // Expected format: YYYY-MM-DD
@@ -42,6 +43,7 @@
     // Update form fields when futurePlan prop changes
     $effect(() => {
       if (futurePlan) {
+        title = futurePlan.title || '';
         description = futurePlan.description || '';
         goal_type = futurePlan.goal_type || '';
         target_date = futurePlan.target_date || '';
@@ -50,6 +52,7 @@
         formSuccess = null;
       } else {
         // Reset for create mode if futurePlan becomes null or is initially null
+        title = '';
         description = '';
         goal_type = '';
         target_date = '';
@@ -65,7 +68,13 @@
       formSuccess = null;
       internalIsLoading = true;
 
-      // Basic validation: description is required
+      // Basic validation: title and description are required
+      if (!title.trim()) {
+        formError = 'Title cannot be empty.';
+        internalIsLoading = false;
+        return;
+      }
+
       if (!description.trim()) {
         formError = 'Description cannot be empty.';
         internalIsLoading = false;
@@ -75,6 +84,7 @@
       if (futurePlan && futurePlan.id) {
         // Edit mode: Prepare update DTO
         const planData: FuturePlanUpdateDto = {
+          title: title.trim(),
           description: description.trim(),
           goal_type: goal_type.trim() || null,
           target_date: target_date || null,
@@ -95,6 +105,7 @@
       } else {
         // Create mode: Prepare create DTO
         const planData: FuturePlanCreateDto = {
+          title: title.trim(),
           description: description.trim(),
           goal_type: goal_type.trim() || undefined, // Send undefined if empty, API might treat null/undefined differently
           target_date: target_date || undefined,
@@ -122,6 +133,7 @@
      * Typically used after successful creation or when explicitly cancelled in create mode.
      */
     function resetForm() {
+      title = '';
       description = '';
       goal_type = '';
       target_date = '';
@@ -159,6 +171,20 @@
     {/if}
 
     <div class="mb-6">
+      <label for="fp-title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Title <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        id="fp-title"
+        bind:value={title}
+        required
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+        placeholder="Enter a title for your future plan..."
+      />
+    </div>
+
+    <div class="mb-6">
       <label for="fp-description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         Description <span class="text-red-500">*</span>
       </label>
@@ -168,7 +194,7 @@
         rows="4"
         required
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
-        placeholder="Describe your future plan or goal..."
+        placeholder="Describe your future plan or goal in detail..."
       ></textarea>
     </div>
 

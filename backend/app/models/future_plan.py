@@ -17,6 +17,7 @@ class FuturePlan(db.Model):
     # Type of goal, e.g., 'short_term_goal', 'long_term_vision', 'skill_development'
     goal_type = db.Column(db.String(50), nullable=True) # VARCHAR(50), consider making NOT NULL if required
 
+    title = db.Column(db.Text, nullable=False) # TEXT NOT NULL
     description = db.Column(db.Text, nullable=False) # TEXT NOT NULL
     target_date = db.Column(db.Date, nullable=True) # DATE, optional
 
@@ -39,7 +40,7 @@ class FuturePlan(db.Model):
 
     def __repr__(self):
         """String representation of the FuturePlan object."""
-        return f'<FuturePlan {self.id}: {self.description[:30]}>'
+        return f'<FuturePlan {self.id}: {self.title[:30]}>'
 
     def to_dict(self):
         """Converts the FuturePlan instance to a dictionary."""
@@ -47,6 +48,7 @@ class FuturePlan(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'goal_type': self.goal_type,
+            'title': self.title,
             'description': self.description,
             'target_date': self.target_date.isoformat() if self.target_date else None,
             'status': self.status,

@@ -1,10 +1,10 @@
 import { api } from './api'; // Import the generic API handler
 import { mockAchievementApi } from './mockApi'; // Import the mock API
 
-const BASE_URL = '/anchor/achievements'; // Base URL for API endpoints
+const BASE_URL = '/achievements'; // Base URL for API endpoints
 
-// Use mock API for development
-const USE_MOCK_API = true;
+// Use real API for production
+const USE_MOCK_API = false;
 
 /**
  * Achievement object structure from the backend.
@@ -50,7 +50,7 @@ export interface AchievementUpdateDto {
 export const achievementService = {
   /**
    * Retrieves all achievements for the authenticated user.
-   * GET /api/v1/anchor/achievements
+   * GET /api/achievements
    * @returns Promise<Achievement[]>
    */
   async getAchievements(): Promise<Achievement[]> {
@@ -71,7 +71,7 @@ export const achievementService = {
 
   /**
    * Creates a new achievement.
-   * POST /api/v1/anchor/achievements
+   * POST /api/achievements
    * @param achievementData - The data for the new achievement.
    * @returns Promise<Achievement> - The newly created achievement.
    */
@@ -93,7 +93,7 @@ export const achievementService = {
 
   /**
    * Retrieves a specific achievement by its ID.
-   * GET /api/v1/anchor/achievements/<achievement_id>
+   * GET /api/achievements/<achievement_id>
    * @param id - The ID of the achievement to retrieve.
    * @returns Promise<Achievement> - The requested achievement.
    */
@@ -115,7 +115,7 @@ export const achievementService = {
 
   /**
    * Updates an existing achievement.
-   * PUT /api/v1/anchor/achievements/<achievement_id>
+   * PUT /api/achievements/<achievement_id>
    * @param id - The ID of the achievement to update.
    * @param achievementData - The data to update the achievement with.
    * @returns Promise<Achievement> - The updated achievement.
@@ -138,7 +138,7 @@ export const achievementService = {
 
   /**
    * Deletes a specific achievement.
-   * DELETE /api/v1/anchor/achievements/<achievement_id>
+   * DELETE /api/achievements/<achievement_id>
    * @param id - The ID of the achievement to delete.
    * @returns Promise<void>
    */

@@ -50,44 +50,6 @@ const createFuturePlanStore = (): FuturePlanStoreType => {
     error.set(null);
 
     try {
-      // 为了演示目的，我们先模拟一些数据，而不是依赖于认证
-      // 这样即使用户未登录，页面也能显示一些内容
-      const mockPlans = [
-        {
-          id: 1,
-          user_id: 1,
-          description: "学习新的编程语言",
-          goal_type: "技能提升",
-          target_date: "2023-12-31",
-          status: "active",
-          created_at: "2023-01-15T10:30:00Z",
-          updated_at: "2023-01-15T10:30:00Z"
-        },
-        {
-          id: 2,
-          user_id: 1,
-          description: "完成个人项目",
-          goal_type: "项目",
-          target_date: "2023-10-15",
-          status: "active",
-          created_at: "2023-02-20T14:45:00Z",
-          updated_at: "2023-02-20T14:45:00Z"
-        },
-        {
-          id: 3,
-          user_id: 1,
-          description: "参加技术会议",
-          goal_type: "职业发展",
-          target_date: "2023-11-05",
-          status: "active",
-          created_at: "2023-03-10T09:15:00Z",
-          updated_at: "2023-03-10T09:15:00Z"
-        }
-      ];
-
-      // 设置模拟数据
-      futurePlans.set(mockPlans as FuturePlan[]);
-
       // 如果用户已登录，尝试从API获取真实数据
       if (currentUserId) {
         try {

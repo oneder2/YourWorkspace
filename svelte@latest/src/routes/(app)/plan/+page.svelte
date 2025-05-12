@@ -186,7 +186,7 @@
                 <div>
                   <div class="flex justify-between items-center mb-6">
                     <h2 class={combineClasses(headings.h2, pageStyle.text)}>
-                      {selectedPlan.description || 'Plan Details'}
+                      {selectedPlan.title || 'Plan Details'}
                     </h2>
                     <div class="flex space-x-2">
                       <button
