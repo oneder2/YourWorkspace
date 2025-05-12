@@ -7,28 +7,20 @@
     closeOnBackdropClick = true,
     title = null,
     modalWidth = 'max-w-lg',
-    close,
-    onClose = () => {}, // Event handler prop for Svelte 5
-    children
+    close = () => {}
   } = $props<{
     isOpen: boolean;
     closeOnBackdropClick?: boolean;
     title?: string | null;
     modalWidth?: string;
     close?: () => void;
-    onClose?: () => void;
-    children?: any;
   }>();
 
   let modalContentElement = $state<HTMLElement | null>(null); // To help manage focus
 
   function closeModal() {
-    // Support both callback prop approaches
-    close?.();
-    onClose?.();
+    close();
   }
-
-  // No default export in Svelte 5 components
 
   // Updated to check if the click was directly on the backdrop
   function handleBackdropClick(event: MouseEvent | KeyboardEvent) { // Accept KeyboardEvent too
@@ -99,10 +91,6 @@
           ) as HTMLElement | null;
           if (firstFocusable) {
             firstFocusable.focus();
-          } else {
-            // If no focusable elements, consider focusing modalContentElement itself.
-            // For this to work effectively, modalContentElement should have tabindex="-1".
-            // (modalContentElement as HTMLElement).focus(); // Add tabindex="-1" to modalContentElement for this
           }
         }
       });
@@ -157,16 +145,12 @@
     </header>
 
     <main class="p-6 overflow-y-auto flex-grow">
-      {#if children?.default}
-        {children.default}
-      {:else}
+      <slot>
         <p class="text-gray-700 dark:text-gray-300">This is the modal body. Pass content to override this.</p>
-      {/if}
+      </slot>
     </main>
 
-    {#if children?.footer}
-      {children.footer}
-    {/if}
+    <slot name="footer"></slot>
   </div>
 </div>
 {/if}

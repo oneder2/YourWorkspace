@@ -1,7 +1,7 @@
 import { api } from './api'; // Import the generic API handler
 import { mockAchievementApi } from './mockApi'; // Import the mock API
 
-const BASE_URL = '/achievements'; // Base URL for API endpoints
+const BASE_URL = '/achievements/'; // Base URL for API endpoints with trailing slash to match backend routes
 
 // Use real API for production
 const USE_MOCK_API = false;

@@ -2,8 +2,8 @@
 import { api } from './api';
 import { mockFuturePlanApi } from './mockApi';
 
-// Base URL for future plan endpoints
-const BASE_URL = '/plans';
+// Base URL for future plan endpoints with trailing slash to match backend routes
+const BASE_URL = '/plans/';
 
 // Use real API for production
 const USE_MOCK_API = false;
