@@ -123,7 +123,7 @@ export const futurePlanService = {
     }
 
     try {
-      const responseData = await api.put<FuturePlan>(`${BASE_URL}/${planId}`, planData);
+      const responseData = await api.put<FuturePlan>(`${BASE_URL}${planId}`, planData);
       return responseData;
     } catch (error) {
       console.error(`Error updating future plan with ID ${planId}:`, error);
@@ -146,7 +146,7 @@ export const futurePlanService = {
 
     try {
       // DELETE requests typically return 204 No Content, so no response data is expected.
-      await api.delete(`${BASE_URL}/${planId}`);
+      await api.delete(`${BASE_URL}${planId}`);
     } catch (error) {
       console.error(`Error deleting future plan with ID ${planId}:`, error);
       throw error;
