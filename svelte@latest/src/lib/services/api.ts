@@ -100,7 +100,22 @@ async function request<T = any>(
   }
 
   try {
+    // Log the request for debugging
+    console.log(`API Request: ${method} ${url}`);
+
     const response: Response = await fetch(url, config);
+
+    // Handle redirects (308 Permanent Redirect, 307 Temporary Redirect)
+    if (response.status === 308 || response.status === 307) {
+      console.warn(`Redirect detected (${response.status}) for ${url}. This may indicate a URL format issue.`);
+      // You can follow the redirect manually if needed
+      const redirectUrl = response.headers.get('Location');
+      if (redirectUrl) {
+        console.log(`Redirect URL: ${redirectUrl}`);
+        // Optionally follow the redirect manually
+        // return request(redirectUrl, method, body, requiresAuth, customHeaders, isRetry);
+      }
+    }
 
     if (response.status === 204) {
       return null as T;
@@ -121,6 +136,7 @@ async function request<T = any>(
       error.response = response;
       error.status = response.status;
       error.data = responseData;
+      console.error(`API Error: ${method} ${url} returned ${response.status} ${response.statusText}`);
       throw error; // Throw error to be caught by the catch block
     }
 

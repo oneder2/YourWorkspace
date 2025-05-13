@@ -1,6 +1,6 @@
 /**
  * Mock API Service
- * 
+ *
  * This service provides mock implementations of API endpoints for development and testing.
  * It simulates API responses without making actual network requests.
  */
@@ -24,30 +24,33 @@ export const mockFuturePlanApi = {
       {
         id: 1,
         user_id: 1,
-        description: "Learn a new programming language",
+        title: "Learn a new programming language",
+        description: "I want to learn Python to expand my programming skills and build data science projects.",
         goal_type: "Skill Development",
         target_date: "2023-12-31",
-        status: "active",
+        status: "active" as "active" | "achieved" | "deferred" | "abandoned",
         created_at: timestamp,
         updated_at: timestamp
       },
       {
         id: 2,
         user_id: 1,
-        description: "Complete personal project",
+        title: "Complete personal project",
+        description: "Finish building my portfolio website with all the latest projects and skills.",
         goal_type: "Project",
         target_date: "2023-10-15",
-        status: "active",
+        status: "active" as "active" | "achieved" | "deferred" | "abandoned",
         created_at: timestamp,
         updated_at: timestamp
       },
       {
         id: 3,
         user_id: 1,
-        description: "Attend tech conference",
+        title: "Attend tech conference",
+        description: "Participate in the annual tech conference to network and learn about new technologies.",
         goal_type: "Career Development",
         target_date: "2023-11-05",
-        status: "active",
+        status: "active" as "active" | "achieved" | "deferred" | "abandoned",
         created_at: timestamp,
         updated_at: timestamp
       }
@@ -62,10 +65,11 @@ export const mockFuturePlanApi = {
     return {
       id,
       user_id: 1,
-      description: "Mock future plan",
+      title: "Mock future plan",
+      description: "This is a detailed description of the mock future plan.",
       goal_type: "Career",
       target_date: "2023-12-31",
-      status: "active",
+      status: "active" as "active" | "achieved" | "deferred" | "abandoned",
       created_at: timestamp,
       updated_at: timestamp
     };
@@ -76,13 +80,15 @@ export const mockFuturePlanApi = {
    */
   create: (data: any) => {
     const timestamp = getCurrentTimestamp();
+    const status = (data.status || "active") as "active" | "achieved" | "deferred" | "abandoned";
     return {
       id: generateMockId(),
       user_id: 1,
+      title: data.title,
       description: data.description,
       goal_type: data.goal_type || null,
       target_date: data.target_date || null,
-      status: data.status || "active",
+      status,
       created_at: timestamp,
       updated_at: timestamp
     };
@@ -93,13 +99,15 @@ export const mockFuturePlanApi = {
    */
   update: (id: number, data: any) => {
     const timestamp = getCurrentTimestamp();
+    const status = (data.status || "active") as "active" | "achieved" | "deferred" | "abandoned";
     return {
       id,
       user_id: 1,
-      description: data.description,
+      title: data.title || "Updated plan title",
+      description: data.description || "Updated plan description",
       goal_type: data.goal_type || null,
       target_date: data.target_date || null,
-      status: data.status || "active",
+      status,
       created_at: timestamp,
       updated_at: timestamp
     };

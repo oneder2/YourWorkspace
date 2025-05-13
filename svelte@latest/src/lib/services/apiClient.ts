@@ -66,8 +66,8 @@ const createApiClient = () => {
 
 const apiClient = createApiClient();
 
-// Mock API implementation for development
-const useMockApi = true; // Set to false to use real API
+// Use real API for production
+const useMockApi = false;
 
 // Create a mock API client that returns fake data
 const mockApiClient = {

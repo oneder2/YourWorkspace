@@ -16,6 +16,7 @@
     }>();
 
     // Local state for form fields, initialized from `futurePlan` prop if in edit mode
+    let title = $state(futurePlan?.title || '');
     let description = $state(futurePlan?.description || '');
     let goal_type = $state(futurePlan?.goal_type || '');
     let target_date = $state(futurePlan?.target_date || ''); // Expected format: YYYY-MM-DD
@@ -42,6 +43,7 @@
     // Update form fields when futurePlan prop changes
     $effect(() => {
       if (futurePlan) {
+        title = futurePlan.title || '';
         description = futurePlan.description || '';
         goal_type = futurePlan.goal_type || '';
         target_date = futurePlan.target_date || '';
@@ -50,6 +52,7 @@
         formSuccess = null;
       } else {
         // Reset for create mode if futurePlan becomes null or is initially null
+        title = '';
         description = '';
         goal_type = '';
         target_date = '';
@@ -65,7 +68,13 @@
       formSuccess = null;
       internalIsLoading = true;
 
-      // Basic validation: description is required
+      // Basic validation: title and description are required
+      if (!title.trim()) {
+        formError = 'Title cannot be empty.';
+        internalIsLoading = false;
+        return;
+      }
+
       if (!description.trim()) {
         formError = 'Description cannot be empty.';
         internalIsLoading = false;
@@ -75,6 +84,7 @@
       if (futurePlan && futurePlan.id) {
         // Edit mode: Prepare update DTO
         const planData: FuturePlanUpdateDto = {
+          title: title.trim(),
           description: description.trim(),
           goal_type: goal_type.trim() || null,
           target_date: target_date || null,
@@ -95,6 +105,7 @@
       } else {
         // Create mode: Prepare create DTO
         const planData: FuturePlanCreateDto = {
+          title: title.trim(),
           description: description.trim(),
           goal_type: goal_type.trim() || undefined, // Send undefined if empty, API might treat null/undefined differently
           target_date: target_date || undefined,
@@ -122,6 +133,7 @@
      * Typically used after successful creation or when explicitly cancelled in create mode.
      */
     function resetForm() {
+      title = '';
       description = '';
       goal_type = '';
       target_date = '';
@@ -148,82 +160,85 @@
 
   <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
     {#if formError}
-      <div class="p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
+      <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
         <span class="font-medium">Error:</span> {formError}
       </div>
     {/if}
     {#if formSuccess}
-      <div class="p-3 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800" role="alert">
+      <div class="p-3 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800" role="alert">
         <span class="font-medium">Success:</span> {formSuccess}
       </div>
     {/if}
 
-    <!-- Two-column layout for form fields -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Left column - Description field (spans 2 columns) -->
-      <div class="md:col-span-2">
-        <label for="fp-description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-          Description <span class="text-red-500">*</span>
-        </label>
-        <textarea
-          id="fp-description"
-          bind:value={description}
-          rows="6"
-          required
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
-          placeholder="Describe your future plan or goal..."
-        ></textarea>
-      </div>
-
-      <!-- Right column - Other fields -->
-      <div class="space-y-4">
-        <!-- Status Field -->
-        <div>
-          <label for="fp-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            Status
-          </label>
-          <select
-            id="fp-status"
-            bind:value={status}
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
-          >
-            {#each statuses as s}
-              <option value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-            {/each}
-          </select>
-        </div>
-
-        <!-- Target Date Field -->
-        <div>
-          <label for="fp-target_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            Target Date (Optional)
-          </label>
-          <input
-            type="date"
-            id="fp-target_date"
-            bind:value={target_date}
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
-          />
-        </div>
-
-        <!-- Goal Type Field -->
-        <div>
-          <label for="fp-goal_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            Goal Type (Optional)
-          </label>
-          <input
-            type="text"
-            id="fp-goal_type"
-            bind:value={goal_type}
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
-            placeholder="e.g., Career, Personal, Financial"
-          />
-        </div>
-      </div>
+    <div class="mb-6">
+      <label for="fp-title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Title <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        id="fp-title"
+        bind:value={title}
+        required
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+        placeholder="Enter a title for your future plan..."
+      />
     </div>
 
-    <!-- Form Actions -->
-    <div class="flex justify-end space-x-3 pt-4">
+    <div class="mb-6">
+      <label for="fp-description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Description <span class="text-red-500">*</span>
+      </label>
+      <textarea
+        id="fp-description"
+        bind:value={description}
+        rows="4"
+        required
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+        placeholder="Describe your future plan or goal in detail..."
+      ></textarea>
+    </div>
+
+    <div class="mb-6">
+      <label for="fp-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Status
+      </label>
+      <select
+        id="fp-status"
+        bind:value={status}
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+      >
+        {#each statuses as s}
+          <option value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+        {/each}
+      </select>
+    </div>
+
+    <div class="mb-6">
+      <label for="fp-goal_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Goal Type (Optional)
+      </label>
+      <input
+        type="text"
+        id="fp-goal_type"
+        bind:value={goal_type}
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+        placeholder="e.g., Career, Personal, Financial"
+      />
+    </div>
+
+    <div class="mb-6">
+      <label for="fp-target_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Target Date (Optional)
+      </label>
+      <input
+        type="date"
+        id="fp-target_date"
+        bind:value={target_date}
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
+      />
+    </div>
+
+    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
       <button
         type="button"
         onclick={handleCancel}

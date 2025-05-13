@@ -77,7 +77,7 @@
       {:else if $achievements.length === 0}
         <div class="text-center py-6">
           <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <!-- <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /> -->
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM12 11v2m0-4h.01" />
           </svg>
           <h3 class="mt-2 text-lg font-medium text-purple-900 dark:text-purple-100">No achievements yet</h3>
@@ -94,18 +94,5 @@
           {/each}
         </div>
       {/if}
-    </div>
-
-    <!-- Fixed Add button at the bottom -->
-    <div class="mt-4 pt-4 border-t border-purple-200 dark:border-purple-700 flex justify-center">
-      <button
-        onclick={handleAddNewRequest}
-        class="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-all shadow-lg"
-        aria-label="Add a new achievement"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-        </svg>
-      </button>
     </div>
   </div>

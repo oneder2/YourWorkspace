@@ -33,16 +33,22 @@ def create_app(config_name='development'):
 
     # --- Register Blueprints ---
     from .api.auth_bp import auth_bp
-    from .api.blog_bp import blog_bp # Assuming this exists or will be added
-    from .api.todo_bp import todo_bp # Import the new todo_bp
-    from .api.ai_bp import ai_bp   # Assuming this exists or will be added
     from .api.anchor_bp import anchor_bp
+    from .api.todo_bp import todo_bp # Import the new todo_bp
+    from .api.achievements_bp import achievements_bp
+    from .api.plans_bp import plans_bp
+
+    from .api.blog_bp import blog_bp # Assuming this exists or will be added
+    from .api.ai_bp import ai_bp   # Assuming this exists or will be added
 
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(blog_bp, url_prefix='/api/v1/blog')
     app.register_blueprint(todo_bp, url_prefix='/api/v1/todo') # Register todo_bp
     app.register_blueprint(ai_bp, url_prefix='/api/v1/ai')
     app.register_blueprint(anchor_bp, url_prefix='/api/v1/anchor')
+    app.register_blueprint(achievements_bp, url_prefix='/api/v1/achievements')
+    app.register_blueprint(plans_bp, url_prefix='/api/v1/plans')
+
     
 
     # --- Database Creation (within Application Context) ---
