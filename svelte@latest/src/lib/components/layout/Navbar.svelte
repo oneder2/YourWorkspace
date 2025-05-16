@@ -5,10 +5,17 @@
   import { get } from 'svelte/store';
   import { ThemeToggle, BackgroundUploader } from '$lib/components/ui';
 
-  export let isAnchorPage: boolean = false; // New prop
+  // Props using $props rune for Svelte 5
+  let {
+    isAnchorPage = false,
+    currentViewDisplay = 'N/A'
+  } = $props<{
+    isAnchorPage?: boolean;
+    currentViewDisplay?: string;
+  }>();
 
-  let currentUser: UserProfile | null = null;
-  let lastWorkspacePage = '/doing';
+  let currentUser = $state<UserProfile | null>(null);
+  let lastWorkspacePage = $state('/doing');
 
   // Subscribe to the auth store to get the current user
   authStore.subscribe(value => {
@@ -16,40 +23,40 @@
   });
 
   // Update lastWorkspacePage when isAnchorPage changes
-  $: {
+  $effect(() => {
     try {
       if (!isAnchorPage) {
-        // 我们不在 anchor 页面上，存储当前页面
+        // We're not on the anchor page, store the current page
         const currentPath = window.location.pathname;
         if (currentPath !== '/anchor') {
-          // 确保路径是有效的工作区页面
+          // Ensure the path is a valid workspace page
           if (currentPath === '/doing' || currentPath === '/done' || currentPath === '/plan') {
             lastWorkspacePage = currentPath;
             sessionStorage.setItem('lastWorkspacePage', lastWorkspacePage);
             console.log('Stored lastWorkspacePage:', lastWorkspacePage);
           } else {
-            // 如果不是有效的工作区页面，使用默认值
+            // If not a valid workspace page, use default
             lastWorkspacePage = '/doing';
           }
         }
       } else {
-        // 我们在 anchor 页面上，获取上次的工作区页面
+        // We're on the anchor page, get the last workspace page
         const storedLastWorkspacePage = sessionStorage.getItem('lastWorkspacePage');
         if (storedLastWorkspacePage) {
           lastWorkspacePage = storedLastWorkspacePage;
           console.log('Retrieved lastWorkspacePage:', lastWorkspacePage);
         } else {
-          // 如果没有存储的页面，使用默认值
+          // If no stored page, use default
           lastWorkspacePage = '/doing';
           console.log('No stored lastWorkspacePage, using default:', lastWorkspacePage);
         }
       }
     } catch (error) {
       console.error('Error updating lastWorkspacePage:', error);
-      // 出错时使用默认值
+      // Use default on error
       lastWorkspacePage = '/doing';
     }
-  }
+  });
 
   async function handleLogout() {
     try {
@@ -95,29 +102,20 @@
         Personal Workspace
       </a>
     </div>
+
+    <!-- Current page display in center -->
     <div class="flex-grow flex justify-center items-center">
       {#if isAnchorPage}
-        <!-- Back button when on Anchor page -->
-        <a
-          href={lastWorkspacePage}
-          id="anchor-button"
-          class="inline-flex items-center px-4 py-2 rounded-md bg-indigo-100 dark:bg-indigo-800 border border-indigo-300 dark:border-indigo-600 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
-        >
-          <span class="mr-2 text-lg" aria-hidden="true">⬅️</span>
-          <span class="font-medium">Back</span>
-        </a>
+        <div class="px-6 py-2 min-w-[120px] text-center text-2xl font-bold text-indigo-900 dark:text-indigo-100">
+          My Anchor
+        </div>
       {:else}
-        <!-- Anchor button when not on Anchor page -->
-        <a
-          href="/anchor"
-          id="anchor-button"
-          class="inline-flex items-center px-4 py-2 rounded-md bg-amber-100 dark:bg-amber-800 border border-amber-300 dark:border-amber-600 text-amber-800 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-700 transition-colors"
-        >
-          <span class="mr-2 text-lg" aria-hidden="true">⚓️</span>
-          <span class="font-medium">My Anchor</span>
-        </a>
+        <div class="px-6 py-2 min-w-[120px] text-center text-2xl font-bold text-indigo-900 dark:text-indigo-100">
+          {currentViewDisplay}
+        </div>
       {/if}
     </div>
+
     <div class="flex items-center">
       <!-- Theme Toggle Button -->
       <div class="mr-3">

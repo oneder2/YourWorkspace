@@ -9,7 +9,8 @@
     { path: 'plan', display: 'Plan' }
   ];
 
-  let currentViewDisplay = $state('N/A');
+  // Use $props rune for Svelte 5 with bindable property
+  let { currentViewDisplay = $bindable('N/A') } = $props();
   let currentIndex = $state(-1);
 
   // Update the current view based on the pathname
@@ -91,34 +92,26 @@
   }
 </script>
 
-<div class="py-2 px-4 bg-teal-50 dark:bg-teal-900 border-b border-teal-200 dark:border-teal-700 shadow-sm">
-  <div class="flex justify-between items-center w-full max-w-3xl mx-auto">
-    <button
-      class="inline-flex items-center justify-center px-4 py-2 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium text-sm rounded-md border border-teal-300 dark:border-teal-600 transition-colors"
-      onclick={() => navigateTo('prev')}
-      title="Previous: {currentIndex !== -1 && currentIndex > 0 ? views[(currentIndex - 1 + views.length) % views.length].display : views[views.length - 1].display}"
-      aria-label="Go to previous section"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      <span>Prev</span>
-    </button>
+<!-- Left arrow button (fixed position) -->
+<div class="fixed left-8 top-1/2 transform -translate-y-1/2 z-40">
+  <button
+    class="inline-flex items-center justify-center p-4 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium rounded-full border border-teal-300 dark:border-teal-600 transition-colors shadow-lg"
+    onclick={() => navigateTo('prev')}
+    title="Previous: {currentIndex !== -1 && currentIndex > 0 ? views[(currentIndex - 1 + views.length) % views.length].display : views[views.length - 1].display}"
+    aria-label="Go to previous section"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
+</div>
 
-    <div
-      class="px-6 py-2 min-w-[120px] text-center text-lg font-bold text-teal-900 dark:text-teal-100 bg-white/50 dark:bg-teal-800/50 rounded-md border border-teal-200 dark:border-teal-700"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      {currentViewDisplay}
-    </div>
-
-    <button
-      class="inline-flex items-center justify-center px-4 py-2 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium text-sm rounded-md border border-teal-300 dark:border-teal-600 transition-colors"
-      onclick={() => navigateTo('next')}
-      title="Next: {currentIndex !== -1 ? views[(currentIndex + 1) % views.length].display : views[0].display}"
-      aria-label="Go to next section"
-    >
-      <span>Next</span>
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-    </button>
-  </div>
+<!-- Right arrow button (fixed position) -->
+<div class="fixed right-8 top-1/2 transform -translate-y-1/2 z-40">
+  <button
+    class="inline-flex items-center justify-center p-4 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium rounded-full border border-teal-300 dark:border-teal-600 transition-colors shadow-lg"
+    onclick={() => navigateTo('next')}
+    title="Next: {currentIndex !== -1 ? views[(currentIndex + 1) % views.length].display : views[0].display}"
+    aria-label="Go to next section"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </button>
 </div>

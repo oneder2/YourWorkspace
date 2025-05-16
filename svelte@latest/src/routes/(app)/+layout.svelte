@@ -7,16 +7,24 @@
 
   import Navbar from '$lib/components/layout/Navbar.svelte';
   import ArrowNav from '$lib/components/layout/ArrowNav.svelte';
+  import AnchorButton from '$lib/components/layout/AnchorButton.svelte';
   import PageLoadingIndicator from '$lib/components/layout/PageLoadingIndicator.svelte';
 
-  let showContent = false;
-  let isAnchorPage: boolean; // To pass to Navbar
+  let showContent = $state(false);
+  let isAnchorPage = $state(false);
+  let currentViewDisplay = $state('N/A');
 
   // Determine if the current page is the anchor page or one of its potential sub-routes
-  $: isAnchorPage = page.url.pathname.startsWith('/anchor');
+  $effect(() => {
+    isAnchorPage = page.url.pathname.startsWith('/anchor');
+  });
 
   // Force re-render when the URL changes
-  $: page.url.pathname;
+  $effect(() => {
+    // This will re-run when page.url.pathname changes
+    const path = page.url.pathname;
+    console.log('Current path changed:', path);
+  });
 
   onMount(() => {
     const unsubscribe = isAuthenticated.subscribe(authenticated => {
@@ -55,16 +63,19 @@
 
 {#if showContent}
   <div class="flex flex-col min-h-screen dark:bg-transparent">
-    <Navbar {isAnchorPage} />
+    <Navbar {isAnchorPage} {currentViewDisplay} />
 
     <main class="flex-grow flex flex-col p-4">
       {#if !isAnchorPage}
-        <ArrowNav />
+        <ArrowNav bind:currentViewDisplay />
       {/if}
 
       <div>
         <slot />
       </div>
+
+      <!-- Anchor Button (fixed position) -->
+      <AnchorButton {isAnchorPage} />
     </main>
   </div>
 {:else}
