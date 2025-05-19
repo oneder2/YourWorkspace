@@ -113,12 +113,30 @@ async function request<T = any>(
       const redirectUrl = response.headers.get('Location');
       if (redirectUrl) {
         console.log(`Redirect URL: ${redirectUrl}`);
+
         // 提取相对路径
         let redirectEndpoint = redirectUrl;
-        if (redirectUrl.startsWith(BASE_URL)) {
+
+        // 处理完整URL
+        if (redirectUrl.startsWith('http')) {
+          // 从完整URL中提取路径部分
+          try {
+            const urlObj = new URL(redirectUrl);
+            // 提取路径部分，例如 /api/v1/achievements/
+            redirectEndpoint = urlObj.pathname;
+            // 如果路径以 BASE_URL 开头，则去掉 BASE_URL 部分
+            if (redirectEndpoint.startsWith('/api/v1/')) {
+              redirectEndpoint = redirectEndpoint.substring('/api/v1'.length);
+            }
+          } catch (e) {
+            console.error('Error parsing redirect URL:', e);
+          }
+        } else if (redirectUrl.startsWith(BASE_URL)) {
+          // 如果是相对于BASE_URL的路径
           redirectEndpoint = redirectUrl.substring(BASE_URL.length);
         }
-        console.log(`Following redirect to: ${redirectEndpoint}`);
+
+        console.log(`Following redirect to endpoint: ${redirectEndpoint}`);
         // 手动跟随重定向
         return request(redirectEndpoint, method, body, requiresAuth, customHeaders, isRetry);
       }

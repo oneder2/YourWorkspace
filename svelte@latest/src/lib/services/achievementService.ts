@@ -128,7 +128,7 @@ export const achievementService = {
 
     try {
       // Assuming api.put directly returns the updated object
-      const responseData = await api.put<Achievement>(`${BASE_URL}${id}`, achievementData);
+      const responseData = await api.put<Achievement>(`${BASE_URL}${id}/`, achievementData);
       return responseData;
     } catch (error) {
       console.error(`Error updating achievement with ID ${id}:`, error);
@@ -150,7 +150,7 @@ export const achievementService = {
     }
 
     try {
-      await api.delete(`${BASE_URL}${id}`);
+      await api.delete(`${BASE_URL}${id}/`);
     } catch (error) {
       console.error(`Error deleting achievement with ID ${id}:`, error);
       throw error;
