@@ -84,25 +84,41 @@ async function loadIdentityProfile(): Promise<void> {
       identityProfile: { profile: profileData, isLoading: false, error: null }
     }));
   } catch (err) {
-    const error = err as ApiError;
-    console.error('AnchorStore: Error fetching identity profile', error);
-    if (error instanceof Error) {
+    console.error('AnchorStore: Error fetching identity profile', err);
+
+    // 安全地处理错误对象
+    let errorMessage = 'Failed to fetch identity profile.';
+
+    if (err instanceof Error) {
       console.error('AnchorStore: Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
+        message: err.message,
+        stack: err.stack,
+        name: err.name
       });
+      errorMessage = err.message;
+    } else if (typeof err === 'object' && err !== null) {
+      // 尝试从对象中提取消息
+      const anyErr = err as any;
+      if (anyErr.message) {
+        errorMessage = anyErr.message;
+      } else if (anyErr.data && anyErr.data.message) {
+        errorMessage = anyErr.data.message;
+      }
     }
+
     update(state => ({
       ...state,
       identityProfile: {
         ...state.identityProfile,
         isLoading: false,
-        error: error.message || 'Failed to fetch identity profile.'
+        error: errorMessage
       }
     }));
+
+    // 创建一个新的错误对象，避免类型问题
+    const safeError = new Error(errorMessage);
     // Re-throw the error to allow the component to handle it
-    throw error;
+    throw safeError;
   }
 }
 
@@ -119,14 +135,34 @@ async function saveIdentityProfile(payload: UpdateUserProfilePayload): Promise<U
     }));
     return updatedProfile;
   } catch (err) {
-    const error = err as ApiError;
-    console.error('AnchorStore: Error saving identity profile', error);
+    console.error('AnchorStore: Error saving identity profile', err);
+
+    // 安全地处理错误对象
+    let errorMessage = 'Failed to save identity profile.';
+
+    if (err instanceof Error) {
+      console.error('AnchorStore: Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      errorMessage = err.message;
+    } else if (typeof err === 'object' && err !== null) {
+      // 尝试从对象中提取消息
+      const anyErr = err as any;
+      if (anyErr.message) {
+        errorMessage = anyErr.message;
+      } else if (anyErr.data && anyErr.data.message) {
+        errorMessage = anyErr.data.message;
+      }
+    }
+
     update(state => ({
       ...state,
       identityProfile: {
         ...state.identityProfile,
         isLoading: false,
-        error: error.message || 'Failed to save identity profile.'
+        error: errorMessage
       }
     }));
     return null;

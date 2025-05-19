@@ -58,13 +58,13 @@ async function getIdentityProfile(): Promise<UserProfileData> {
         name: error.name
       });
 
-      // Enhance error message with more context
-      const enhancedError = new Error(`Failed to fetch identity profile: ${error.message}`);
-      enhancedError.stack = error.stack;
-      throw enhancedError;
+      // 不创建新的错误对象，而是直接抛出原始错误
+      // 这样可以保留原始错误的类型信息
+      throw error;
     }
 
-    throw error;
+    // 如果不是 Error 实例，则创建一个新的 Error
+    throw new Error('Failed to fetch identity profile: Unknown error');
   }
 }
 
@@ -92,13 +92,13 @@ async function updateIdentityProfile(payload: UpdateUserProfilePayload): Promise
         name: error.name
       });
 
-      // Enhance error message with more context
-      const enhancedError = new Error(`Failed to update identity profile: ${error.message}`);
-      enhancedError.stack = error.stack;
-      throw enhancedError;
+      // 不创建新的错误对象，而是直接抛出原始错误
+      // 这样可以保留原始错误的类型信息
+      throw error;
     }
 
-    throw error;
+    // 如果不是 Error 实例，则创建一个新的 Error
+    throw new Error('Failed to update identity profile: Unknown error');
   }
 }
 
