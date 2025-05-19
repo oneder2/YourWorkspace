@@ -58,6 +58,17 @@
       // Calculate the next view index
       let nextViewIndex;
 
+      // Handle special cases for Done and Plan pages
+      if (currentViewDisplay === 'Done' && direction === 'prev') {
+        console.log('Already at the first page (Done), cannot go previous');
+        return;
+      }
+
+      if (currentViewDisplay === 'Plan' && direction === 'next') {
+        console.log('Already at the last page (Plan), cannot go next');
+        return;
+      }
+
       if (currentIndex === -1) {
         // If current path is not in views array, default to first view for next, last view for prev
         nextViewIndex = direction === 'next' ? 0 : views.length - 1;
@@ -73,45 +84,84 @@
       const targetPath = `/${views[nextViewIndex].path}`;
       console.log(`Navigating to: ${targetPath}`);
 
-      // 使用 try-catch 包裹导航逻辑，确保即使导航失败也不会阻塞用户界面
+      // Use try-catch to ensure navigation doesn't block the UI even if it fails
       try {
-        // 使用 window.location 进行直接导航，确保它能正常工作
+        // Use window.location for direct navigation
         window.location.href = targetPath;
       } catch (navError) {
         console.error('Navigation error:', navError);
-        // 如果导航失败，尝试使用 history API
+        // If navigation fails, try using the history API
         window.history.pushState({}, '', targetPath);
-        // 触发一个 popstate 事件，让 SvelteKit 路由器知道 URL 已更改
+        // Trigger a popstate event to let the SvelteKit router know the URL has changed
         window.dispatchEvent(new Event('popstate'));
       }
     } catch (error) {
       console.error('Error in navigateTo function:', error);
-      // 最后的备用方案：直接设置 location.href
+      // Fallback: directly set location.href
       window.location.href = direction === 'next' ? '/doing' : '/done';
     }
   }
 </script>
 
-<!-- Left arrow button (fixed position) -->
-<div class="fixed left-8 top-1/2 transform -translate-y-1/2 z-40">
-  <button
-    class="inline-flex items-center justify-center p-4 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium rounded-full border border-teal-300 dark:border-teal-600 transition-colors shadow-lg"
-    onclick={() => navigateTo('prev')}
-    title="Previous: {currentIndex !== -1 && currentIndex > 0 ? views[(currentIndex - 1 + views.length) % views.length].display : views[views.length - 1].display}"
-    aria-label="Go to previous section"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-  </button>
-</div>
+<style>
+  @keyframes pulse-left {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+  }
 
-<!-- Right arrow button (fixed position) -->
-<div class="fixed right-8 top-1/2 transform -translate-y-1/2 z-40">
-  <button
-    class="inline-flex items-center justify-center p-4 bg-teal-100 hover:bg-teal-200 active:bg-teal-300 dark:bg-teal-800 dark:hover:bg-teal-700 dark:active:bg-teal-600 text-teal-800 dark:text-teal-100 font-medium rounded-full border border-teal-300 dark:border-teal-600 transition-colors shadow-lg"
-    onclick={() => navigateTo('next')}
-    title="Next: {currentIndex !== -1 ? views[(currentIndex + 1) % views.length].display : views[0].display}"
-    aria-label="Go to next section"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-  </button>
-</div>
+  @keyframes pulse-right {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
+  }
+
+  .arrow-left:hover svg {
+    animation: pulse-left 1.5s ease-in-out infinite;
+  }
+
+  .arrow-right:hover svg {
+    animation: pulse-right 1.5s ease-in-out infinite;
+  }
+
+  .arrow-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .arrow-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .arrow-button:active {
+    transform: scale(0.95);
+  }
+</style>
+
+<!-- Left arrow button (fixed position) - hidden on /done page -->
+{#if !(currentViewDisplay === 'Done')}
+  <div class="fixed left-8 top-1/2 transform -translate-y-1/2 z-40">
+    <button
+      class="arrow-button arrow-left inline-flex items-center justify-center p-5 bg-gray-500/30 hover:bg-gray-600/70 active:bg-gray-700/80 dark:bg-gray-700/30 dark:hover:bg-gray-600/70 dark:active:bg-gray-500/80 text-gray-700 hover:text-white dark:text-gray-300 dark:hover:text-white font-medium rounded-full border border-gray-400/30 dark:border-gray-500/30 shadow-lg"
+      onclick={() => navigateTo('prev')}
+      title="Previous: {currentIndex !== -1 && currentIndex > 0 ? views[(currentIndex - 1 + views.length) % views.length].display : views[views.length - 1].display}"
+      aria-label="Go to previous section"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+  </div>
+{/if}
+
+<!-- Right arrow button (fixed position) - hidden on /plan page -->
+{#if !(currentViewDisplay === 'Plan')}
+  <div class="fixed right-8 top-1/2 transform -translate-y-1/2 z-40">
+    <button
+      class="arrow-button arrow-right inline-flex items-center justify-center p-5 bg-gray-500/30 hover:bg-gray-600/70 active:bg-gray-700/80 dark:bg-gray-700/30 dark:hover:bg-gray-600/70 dark:active:bg-gray-500/80 text-gray-700 hover:text-white dark:text-gray-300 dark:hover:text-white font-medium rounded-full border border-gray-400/30 dark:border-gray-500/30 shadow-lg"
+      onclick={() => navigateTo('next')}
+      title="Next: {currentIndex !== -1 ? views[(currentIndex + 1) % views.length].display : views[0].display}"
+      aria-label="Go to next section"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+  </div>
+{/if}
