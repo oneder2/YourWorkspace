@@ -51,6 +51,7 @@ const AUTH_STORAGE_KEY = 'app_auth_state';
  */
 function getInitialState(): AuthState {
   if (!browser) {
+    console.log('AuthStore: Not in browser environment, returning default state');
     // If not in browser (e.g., during SSR), return default initial state
     return {
       user: null,
@@ -59,20 +60,27 @@ function getInitialState(): AuthState {
     };
   }
 
+  console.log('AuthStore: Attempting to load state from localStorage');
   const storedState = localStorage.getItem(AUTH_STORAGE_KEY);
   if (storedState) {
     try {
       const parsedState = JSON.parse(storedState);
+      console.log('AuthStore: Found stored state:', parsedState);
       // Basic validation of the stored state
-      if (parsedState && typeof parsedState.accessToken === 'string' || parsedState.accessToken === null) {
+      if (parsedState && (typeof parsedState.accessToken === 'string' || parsedState.accessToken === null)) {
+        console.log('AuthStore: Using stored state with accessToken:', parsedState.accessToken);
         return parsedState;
       }
     } catch (error) {
-      console.error('Error parsing stored auth state:', error);
+      console.error('AuthStore: Error parsing stored auth state:', error);
       localStorage.removeItem(AUTH_STORAGE_KEY); // Clear corrupted state
     }
+  } else {
+    console.log('AuthStore: No stored state found in localStorage');
   }
+
   // Default initial state if nothing is stored or if parsing fails
+  console.log('AuthStore: Using default initial state');
   return {
     user: null,
     accessToken: null,
@@ -155,7 +163,11 @@ function setTokens(tokens: { accessToken?: string | null, refreshToken?: string 
 // This provides a convenient way to check if the user is authenticated.
 export const isAuthenticated: Readable<boolean> = derived(
   { subscribe }, // Pass the subscribe method of the writable store
-  ($authState) => !!$authState.accessToken // User is considered authenticated if an access token exists
+  ($authState) => {
+    const isAuth = !!$authState.accessToken;
+    console.log('AuthStore: isAuthenticated derived value:', isAuth, 'accessToken:', $authState.accessToken);
+    return isAuth; // User is considered authenticated if an access token exists
+  }
 );
 
 // Export the store with its methods

@@ -101,9 +101,11 @@ async function request<T = any>(
 
   try {
     // Log the request for debugging
-    console.log(`API Request: ${method} ${url}`);
+    console.log(`API Request: ${method} ${url}`, body ? { body } : '');
+    console.log(`API Request Headers:`, headers);
 
     const response: Response = await fetch(url, config);
+    console.log(`API Response Status: ${response.status} ${response.statusText}`);
 
     // Handle redirects (308 Permanent Redirect, 307 Temporary Redirect)
     if (response.status === 308 || response.status === 307) {
@@ -116,6 +118,7 @@ async function request<T = any>(
         if (redirectUrl.startsWith(BASE_URL)) {
           redirectEndpoint = redirectUrl.substring(BASE_URL.length);
         }
+        console.log(`Following redirect to: ${redirectEndpoint}`);
         // 手动跟随重定向
         return request(redirectEndpoint, method, body, requiresAuth, customHeaders, isRetry);
       }
@@ -134,13 +137,25 @@ async function request<T = any>(
     }
 
     if (!response.ok) {
+      console.error(`API Error: ${method} ${url} returned ${response.status} ${response.statusText}`);
+      console.error('API Error Response Data:', responseData);
+
       const error: ApiError = new Error(
         responseData?.message || response.statusText || 'API Request Failed'
       );
       error.response = response;
       error.status = response.status;
       error.data = responseData;
-      console.error(`API Error: ${method} ${url} returned ${response.status} ${response.statusText}`);
+
+      // 添加更多调试信息
+      console.error('API Error Object:', {
+        status: error.status,
+        message: error.message,
+        data: error.data,
+        url: url,
+        method: method
+      });
+
       throw error; // Throw error to be caught by the catch block
     }
 
@@ -149,10 +164,14 @@ async function request<T = any>(
     const originalRequestConfig: RequestConfig = configArgs;
     // Check if it's a 401 error, not a retry, and auth is required
     if (error.status === 401 && !originalRequestConfig.isRetry && originalRequestConfig.requiresAuth) {
+      console.log('API: 401 Unauthorized error detected for', originalRequestConfig.endpoint);
+      console.log('API: isRetry =', originalRequestConfig.isRetry, 'requiresAuth =', originalRequestConfig.requiresAuth);
+
       if (!isRefreshing) {
+        console.log('API: Starting token refresh process');
         isRefreshing = true;
         try {
-          console.log('Access token expired or invalid. Attempting to refresh...');
+          console.log('API: Access token expired or invalid. Attempting to refresh...');
 
           if (!refreshTokenCallback) {
             console.error('No refresh token callback set. Cannot refresh token.');

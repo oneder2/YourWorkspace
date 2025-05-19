@@ -52,17 +52,37 @@ export interface ChangePasswordPayload {
  * @throws {ApiError} If login fails.
  */
 async function loginUser(credentials: LoginCredentials): Promise<void> {
+  console.log('AuthService: loginUser called with email:', credentials.email);
+
   try {
+    console.log('AuthService: Sending login request to API');
     const response = await api.post<LoginResponse>('/auth/login', credentials, false); // Login doesn't require auth initially
+    console.log('AuthService: Login API response received:', response);
+
     if (response.access_token && response.refresh_token) {
+      console.log('AuthService: Login successful, storing tokens');
       // Store tokens and then fetch user profile
       authStore.login({ access_token: response.access_token, refresh_token: response.refresh_token });
+
+      console.log('AuthService: Fetching user profile');
       await fetchUserProfile(); // Fetch and store user profile after successful login
+      console.log('AuthService: User profile fetched and stored');
     } else {
+      console.error('AuthService: Login response did not include tokens');
       throw new Error('Login response did not include tokens.');
     }
   } catch (error) {
     console.error('AuthService: Login failed', error);
+
+    // 添加更详细的错误日志
+    if (error instanceof Error) {
+      console.error('AuthService: Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+
     authStore.logout(); // Ensure state is cleared on failed login
     throw error; // Re-throw the error for the UI to handle
   }
@@ -133,19 +153,47 @@ async function registerUser(userData: RegisterPayload): Promise<RegisterResponse
  * @throws {ApiError} If fetching profile fails (e.g., due to invalid token).
  */
 async function fetchUserProfile(): Promise<UserProfile | null> {
+  console.log('AuthService: fetchUserProfile called');
+
   try {
+    console.log('AuthService: Sending request to /auth/me endpoint');
     // Requires auth (access token will be automatically attached by api.ts)
     const userProfile = await api.get<UserProfile>('/auth/me');
+    console.log('AuthService: User profile received:', userProfile);
+
     if (userProfile) {
+      console.log('AuthService: Setting user profile in authStore');
       authStore.setUserProfile(userProfile);
       return userProfile;
     }
+
+    console.log('AuthService: No user profile received');
     return null;
   } catch (error: any) {
     console.error('AuthService: Failed to fetch user profile', error);
+
+    // 添加更详细的错误日志
+    if (error.status) {
+      console.error('AuthService: Error status:', error.status);
+    }
+
+    if (error.data) {
+      console.error('AuthService: Error data:', error.data);
+    }
+
+    if (error instanceof Error) {
+      console.error('AuthService: Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+
     if (error.status === 401 || error.status === 422) {
+        console.log('AuthService: Unauthorized or invalid token, logging out');
         authStore.logout();
     }
+
     throw error;
   }
 }

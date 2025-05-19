@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { authService, type LoginCredentials, type ApiError } from '$lib/services/authService';
+  import { authService, type LoginCredentials } from '$lib/services/authService';
+  import type { ApiError } from '$lib/services/api';
   import { isAuthenticated } from '$lib/store/authStore';
   import { onMount } from 'svelte';
 
@@ -11,36 +12,63 @@
 
   // If the user is already authenticated, redirect them away from the login page.
   onMount(() => {
+    console.log('login/+page.svelte: onMount called');
+
     const unsubscribe = isAuthenticated.subscribe(authenticated => {
+      console.log('login/+page.svelte: isAuthenticated changed to:', authenticated);
+
       if (authenticated) {
+        console.log('login/+page.svelte: User is authenticated, redirecting to /doing');
         goto('/doing'); // Or your default authenticated route
+      } else {
+        console.log('login/+page.svelte: User is not authenticated, staying on login page');
       }
     });
-    return unsubscribe; // Cleanup subscription on component destroy
+
+    return () => {
+      console.log('login/+page.svelte: Unsubscribing from isAuthenticated');
+      unsubscribe(); // Cleanup subscription on component destroy
+    };
   });
 
   async function handleLogin() {
+    console.log('login/+page.svelte: handleLogin called with email:', email);
     isLoading = true;
     errorMessage = '';
     const credentials: LoginCredentials = { email, password };
 
     try {
+      console.log('login/+page.svelte: Calling authService.loginUser');
       await authService.loginUser(credentials);
+      console.log('login/+page.svelte: Login successful');
+
       // The authStore will be updated by loginUser,
       // and the onMount subscription to isAuthenticated should trigger redirection.
       // If not, or for immediate feedback:
-      // await goto('/doing'); // Or your default authenticated route
+      console.log('login/+page.svelte: Manually redirecting to /doing');
+      await goto('/doing'); // Or your default authenticated route
     } catch (error: any) {
+      console.error('login/+page.svelte: Login failed:', error);
+
       const apiError = error as ApiError;
       if (apiError.data && apiError.data.message) {
         errorMessage = apiError.data.message;
+        console.error('login/+page.svelte: API error message:', apiError.data.message);
       } else if (apiError.message) {
         errorMessage = apiError.message;
+        console.error('login/+page.svelte: Error message:', apiError.message);
       } else {
         errorMessage = 'An unexpected error occurred. Please try again.';
+        console.error('login/+page.svelte: Unknown error');
       }
-      console.error('Login page error:', apiError);
+
+      if (apiError.status) {
+        console.error('login/+page.svelte: Error status:', apiError.status);
+      }
+
+      console.error('login/+page.svelte: Full error:', apiError);
     } finally {
+      console.log('login/+page.svelte: Login attempt completed, isLoading set to false');
       isLoading = false;
     }
   }

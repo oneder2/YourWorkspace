@@ -15,35 +15,63 @@ import { themeStore } from '$lib/store/themeStore';
  * This should be called once when the app starts
  */
 export async function initializeApp(): Promise<void> {
-  if (!browser) return;
+  console.log('AppInitializer: initializeApp called');
+
+  if (!browser) {
+    console.log('AppInitializer: Not in browser environment, returning');
+    return;
+  }
 
   // Start performance measurement
   mark('app-initialization-start');
+  console.log('AppInitializer: Performance measurement started');
 
   // Initialize theme from localStorage
+  console.log('AppInitializer: Initializing theme');
   initializeTheme();
+  console.log('AppInitializer: Theme initialized');
+
+  // 检查认证状态
+  console.log('AppInitializer: Checking authentication state');
+  const authState = localStorage.getItem('auth_state');
+  if (authState) {
+    try {
+      const parsedState = JSON.parse(authState);
+      console.log('AppInitializer: Found stored auth state with accessToken:', !!parsedState.accessToken);
+    } catch (error) {
+      console.error('AppInitializer: Error parsing stored auth state:', error);
+    }
+  } else {
+    console.log('AppInitializer: No stored auth state found');
+  }
 
   // Preload critical images
+  console.log('AppInitializer: Preloading critical images');
   try {
     await preloadCriticalImages();
+    console.log('AppInitializer: Critical images preloaded');
   } catch (error) {
-    console.error('Failed to preload critical images:', error);
+    console.error('AppInitializer: Failed to preload critical images:', error);
   }
 
   // Preload SVG icons
+  console.log('AppInitializer: Preloading SVG icons');
   try {
     await preloadSvgIcons();
+    console.log('AppInitializer: SVG icons preloaded');
   } catch (error) {
-    console.error('Failed to preload SVG icons:', error);
+    console.error('AppInitializer: Failed to preload SVG icons:', error);
   }
 
   // Register service worker if available
+  console.log('AppInitializer: Registering service worker');
   registerServiceWorker();
 
   // End performance measurement
   mark('app-initialization-end', 'app-initialization');
+  console.log('AppInitializer: Performance measurement ended');
 
-  console.log('Application initialized');
+  console.log('AppInitializer: Application initialized successfully');
 }
 
 /**

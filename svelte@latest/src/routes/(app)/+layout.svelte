@@ -29,19 +29,29 @@
   });
 
   onMount(() => {
+    console.log('(app)/+layout.svelte: onMount called');
+
     // 简化认证状态检查逻辑
     const unsubscribe = isAuthenticated.subscribe(authenticated => {
-      console.log('Authentication state changed:', authenticated);
-      showContent = authenticated; // 直接根据认证状态设置显示内容
+      console.log('(app)/+layout.svelte: Authentication state changed:', authenticated);
 
-      if (!authenticated) {
-        // 如果未认证，重定向到登录页面
-        console.log('User not authenticated, redirecting to login');
-        goto('/login');
-      }
+      // 添加延迟，确保认证状态已经稳定
+      setTimeout(() => {
+        console.log('(app)/+layout.svelte: Setting showContent to:', authenticated);
+        showContent = authenticated; // 直接根据认证状态设置显示内容
+
+        if (!authenticated) {
+          // 如果未认证，重定向到登录页面
+          console.log('(app)/+layout.svelte: User not authenticated, redirecting to login');
+          goto('/login');
+        } else {
+          console.log('(app)/+layout.svelte: User is authenticated, showing content');
+        }
+      }, 500);
     });
 
     return () => {
+      console.log('(app)/+layout.svelte: Unsubscribing from isAuthenticated');
       unsubscribe();
     };
   });
