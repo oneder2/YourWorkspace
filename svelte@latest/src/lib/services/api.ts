@@ -9,22 +9,22 @@ import { authStore, type AuthState } from '$lib/store/authStore';
 import { get } from 'svelte/store';
 import { goto } from '$app/navigation'; // For redirecting to login
 
-// Assuming authService is where refreshAccessToken is defined.
-// This creates a slight circular dependency if authService also imports api.ts.
-// A common pattern is to have a separate, minimal auth.utils.ts for token refresh
-// or to pass the refresh function as a dependency.
-// For now, we'll try a direct import and see if bundler handles it,
-// or adjust if it becomes an issue.
-// Alternatively, token refresh logic can be moved into authStore or handled via events.
-import { authService } from './authService'; // We need this for refreshAccessToken
+// 避免循环依赖问题
+// 我们将使用一个简单的方法来解决循环依赖问题
+// 不直接导入 authService，而是通过回调函数来处理 token 刷新
+// 这个函数将在 authService 中被设置
+let refreshTokenCallback: (() => Promise<string | null>) | null = null;
 
-const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-
-if (!BASE_URL) {
-  console.warn(
-    'VITE_API_BASE_URL is not defined in your .env file. API calls may fail.'
-  );
+// 设置 token 刷新回调函数
+export function setRefreshTokenCallback(callback: () => Promise<string | null>) {
+  refreshTokenCallback = callback;
+  console.log('API Service: Token refresh callback set');
 }
+
+// 确保 BASE_URL 有一个默认值，即使环境变量未定义
+const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+
+console.log('API Service: Using BASE_URL:', BASE_URL);
 
 export interface ApiError extends Error {
   response?: Response;
@@ -107,13 +107,17 @@ async function request<T = any>(
 
     // Handle redirects (308 Permanent Redirect, 307 Temporary Redirect)
     if (response.status === 308 || response.status === 307) {
-      console.warn(`Redirect detected (${response.status}) for ${url}. This may indicate a URL format issue.`);
-      // You can follow the redirect manually if needed
+      console.warn(`Redirect detected (${response.status}) for ${url}. Following redirect...`);
       const redirectUrl = response.headers.get('Location');
       if (redirectUrl) {
         console.log(`Redirect URL: ${redirectUrl}`);
-        // Optionally follow the redirect manually
-        // return request(redirectUrl, method, body, requiresAuth, customHeaders, isRetry);
+        // 提取相对路径
+        let redirectEndpoint = redirectUrl;
+        if (redirectUrl.startsWith(BASE_URL)) {
+          redirectEndpoint = redirectUrl.substring(BASE_URL.length);
+        }
+        // 手动跟随重定向
+        return request(redirectEndpoint, method, body, requiresAuth, customHeaders, isRetry);
       }
     }
 
@@ -149,7 +153,16 @@ async function request<T = any>(
         isRefreshing = true;
         try {
           console.log('Access token expired or invalid. Attempting to refresh...');
-          const newAccessToken = await authService.refreshAccessToken(); // This should update the store
+
+          if (!refreshTokenCallback) {
+            console.error('No refresh token callback set. Cannot refresh token.');
+            // 如果没有设置回调函数，直接重定向到登录页面
+            authStore.logout();
+            if (typeof window !== 'undefined') goto('/login');
+            throw error;
+          }
+
+          const newAccessToken = await refreshTokenCallback(); // This should update the store
           if (newAccessToken) {
             console.log('Token refreshed successfully. Retrying original request and processing queue.');
             // The store is updated by refreshAccessToken, so subsequent calls to get(authStore) will have the new token.

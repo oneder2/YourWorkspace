@@ -7,7 +7,7 @@
  * `authStore` with the authentication state and user profile.
  */
 
-import { api, type ApiError } from './api';
+import { api, type ApiError, setRefreshTokenCallback } from './api';
 import { authStore, type UserProfile, type AuthState } from '$lib/store/authStore';
 import { get } from 'svelte/store'; // Import get for synchronously reading store values
 
@@ -212,13 +212,17 @@ async function refreshAccessToken(): Promise<string | null> {
   try {
     // The /auth/refresh endpoint expects the Refresh Token in the Bearer header.
     // We make a direct fetch call here, bypassing api.ts's default behavior of sending Access Token.
-    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+    console.log('AuthService: Refreshing token with URL:', `${BASE_URL}/auth/refresh`);
+
     const response = await fetch(`${BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${currentAuthState.refreshToken}`,
             'Content-Type': 'application/json', // Though body is empty, Content-Type might be expected
-        }
+        },
+        // 添加重定向跟随
+        redirect: 'follow'
         // No body is sent for this specific endpoint as per API spec
     });
 
@@ -258,3 +262,6 @@ export const authService = {
   changePassword,
   refreshAccessToken,
 };
+
+// 设置 refreshTokenCallback，解决循环依赖问题
+setRefreshTokenCallback(refreshAccessToken);

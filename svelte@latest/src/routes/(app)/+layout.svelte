@@ -29,29 +29,17 @@
   });
 
   onMount(() => {
+    // 简化认证状态检查逻辑
     const unsubscribe = isAuthenticated.subscribe(authenticated => {
+      console.log('Authentication state changed:', authenticated);
+      showContent = authenticated; // 直接根据认证状态设置显示内容
+
       if (!authenticated) {
-        // Only redirect if not already on a public auth page (though this layout shouldn't cover them)
-        if (page.route.id !== '/login' && page.route.id !== '/register') {
-          goto('/login');
-        }
-      } else {
-        showContent = true;
+        // 如果未认证，重定向到登录页面
+        console.log('User not authenticated, redirecting to login');
+        goto('/login');
       }
     });
-
-    // Initial check
-    let initialAuth = false;
-    const tempUnsub = isAuthenticated.subscribe(val => initialAuth = val);
-    tempUnsub();
-
-    if (initialAuth) {
-        showContent = true;
-    } else {
-        if (page.route.id !== '/login' && page.route.id !== '/register') {
-          goto('/login');
-        }
-    }
 
     return () => {
       unsubscribe();
@@ -85,6 +73,35 @@
     <div class="flex flex-col items-center">
       <div class="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
       <p>Loading...</p>
+
+      <!-- 调试按钮 - 仅在开发环境中显示 -->
+      {#if import.meta.env.DEV}
+        <div class="mt-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+          <h3 class="text-lg font-semibold mb-2">Debug Controls</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">页面卡在加载状态，可能是认证问题导致的。</p>
+          <div class="flex space-x-2">
+            <button
+              class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm"
+              onclick={() => {
+                // 手动设置认证状态为 true
+                showContent = true;
+                console.log('手动设置 showContent = true');
+              }}
+            >
+              强制显示内容
+            </button>
+            <button
+              class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm"
+              onclick={() => {
+                // 重定向到登录页面
+                window.location.href = '/login';
+              }}
+            >
+              返回登录页面
+            </button>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
