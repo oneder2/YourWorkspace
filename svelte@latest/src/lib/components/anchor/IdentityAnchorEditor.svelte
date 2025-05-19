@@ -6,25 +6,23 @@
     import type { ApiError } from '$lib/services/api';
 
     // Local state for form fields, initialized from the store
-    let professionalTitle = $state('');
-    let oneLinerBio = $state('');
-    let skill = $state('');
-    let summary = $state('');
+    let professionalTitle = '';
+    let oneLinerBio = '';
+    let skill = '';
+    let summary = '';
 
     // Local state for form feedback
-    let localIsLoading = $state(false); // For the save operation specifically
-    let localErrorMessage = $state('');
-    let localSuccessMessage = $state('');
+    let localIsLoading = false; // For the save operation specifically
+    let localErrorMessage = '';
+    let localSuccessMessage = '';
 
     // Subscribe to the identityProfile part of the anchorStore
-    // 使用 $state 创建响应式变量
-    let storeProfileData = $state<UserProfileData | null>(null);
-    let storeIsLoading = $state(false);
-    let storeError = $state<string | null>(null);
+    let storeProfileData: UserProfileData | null = null;
+    let storeIsLoading = false;
+    let storeError: string | null = null;
 
-    // 使用 $effect 监听 anchorStore 的变化
-    $effect(() => {
-      const storeValue = $anchorStore;
+    // 使用 subscribe 监听 anchorStore 的变化
+    const unsubscribe = anchorStore.subscribe(storeValue => {
       storeProfileData = storeValue.identityProfile.profile;
       storeIsLoading = storeValue.identityProfile.isLoading;
       storeError = storeValue.identityProfile.error;
@@ -42,7 +40,11 @@
         // The page hosting this component should ideally trigger the load.
         // anchorStore.loadIdentityProfile();
       }
-      // 不需要取消订阅，因为我们使用的是 $effect
+
+      // 在组件销毁时取消订阅
+      return () => {
+        unsubscribe();
+      };
     });
 
     async function handleSaveChanges() {
@@ -91,10 +93,10 @@
     {:else if storeError && !storeProfileData}
       <div class="message error-message">
         <p>Error loading profile: {storeError}</p>
-        <button class="retry-button" onclick={() => anchorStore.loadIdentityProfile()}>Try Again</button>
+        <button class="retry-button" on:click={() => anchorStore.loadIdentityProfile()}>Try Again</button>
       </div>
     {:else}
-      <form onsubmit={(e) => { e.preventDefault(); handleSaveChanges(); }} class="identity-form">
+      <form on:submit|preventDefault={handleSaveChanges} class="identity-form">
         <div class="form-section">
           <h3 class="section-title">Your Professional Identity</h3>
           <p class="section-description">Define your core professional standing. This helps anchor your activities and goals.</p>
