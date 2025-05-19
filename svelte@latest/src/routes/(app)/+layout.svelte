@@ -71,7 +71,7 @@
       {/if}
 
       <div>
-        {children}
+        {@render children()}
       </div>
 
       <!-- Anchor Button (fixed position) -->

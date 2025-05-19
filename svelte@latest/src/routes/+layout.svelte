@@ -82,4 +82,4 @@
   }
 </script>
 
-{children}
+{@render children()}

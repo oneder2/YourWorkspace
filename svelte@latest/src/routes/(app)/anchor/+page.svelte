@@ -4,8 +4,8 @@
     import IdentityAnchorEditor from '$lib/components/anchor/IdentityAnchorEditor.svelte';
 
     // State for error handling
-    let pageError: string | null = null;
-    let isLoading = true;
+    let pageError = $state<string | null>(null);
+    let isLoading = $state(true);
 
     onMount(async () => {
       try {
@@ -55,7 +55,7 @@
         <p class="text-red-600 dark:text-red-300 mb-4">{pageError}</p>
         <button
           class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm"
-          on:click={() => window.location.reload()}
+          onclick={() => window.location.reload()}
         >
           Reload Page
         </button>
