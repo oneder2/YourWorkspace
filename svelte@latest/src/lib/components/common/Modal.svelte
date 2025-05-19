@@ -7,13 +7,17 @@
     closeOnBackdropClick = true,
     title = null,
     modalWidth = 'max-w-lg',
-    close = () => {}
+    close = () => {},
+    defaultContent = null,
+    footerContent = null
   } = $props<{
     isOpen: boolean;
     closeOnBackdropClick?: boolean;
     title?: string | null;
     modalWidth?: string;
     close?: () => void;
+    defaultContent?: any;
+    footerContent?: any;
   }>();
 
   let modalContentElement = $state<HTMLElement | null>(null); // To help manage focus
@@ -145,12 +149,16 @@
     </header>
 
     <main class="p-6 overflow-y-auto flex-grow">
-      <slot>
+      {#if defaultContent}
+        {defaultContent}
+      {:else}
         <p class="text-gray-700 dark:text-gray-300">This is the modal body. Pass content to override this.</p>
-      </slot>
+      {/if}
     </main>
 
-    <slot name="footer"></slot>
+    {#if footerContent}
+      {footerContent}
+    {/if}
   </div>
 </div>
 {/if}

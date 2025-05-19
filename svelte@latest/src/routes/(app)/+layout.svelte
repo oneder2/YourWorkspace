@@ -10,6 +10,8 @@
   import AnchorButton from '$lib/components/layout/AnchorButton.svelte';
   import PageLoadingIndicator from '$lib/components/layout/PageLoadingIndicator.svelte';
 
+  let { children } = $props<{ children?: any }>();
+
   let showContent = $state(false);
   let isAnchorPage = $state(false);
   let currentViewDisplay = $state('N/A');
@@ -71,7 +73,7 @@
       {/if}
 
       <div>
-        <slot />
+        {children}
       </div>
 
       <!-- Anchor Button (fixed position) -->
