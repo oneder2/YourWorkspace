@@ -7,9 +7,28 @@
 		<meta name="description" content="Your personal workspace for managing tasks, achievements, and future plans" />
 		<meta name="theme-color" content="#4f46e5" />
 
-		<!-- Preload critical assets -->
+		<!-- Resource hints for performance optimization -->
+		<!-- DNS prefetch for external domains -->
+		<link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+		<link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+		<!-- Preconnect to establish early connections -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+		<!-- Preload critical assets -->
+		<link rel="preload" href="%sveltekit.assets%/favicon.png" as="image" />
+		<link rel="preload" href="%sveltekit.assets%/images/icons/todo.svg" as="image" type="image/svg+xml" />
+		<link rel="preload" href="%sveltekit.assets%/images/icons/doing.svg" as="image" type="image/svg+xml" />
+		<link rel="preload" href="%sveltekit.assets%/images/icons/done.svg" as="image" type="image/svg+xml" />
+		<link rel="preload" href="%sveltekit.assets%/images/icons/plan.svg" as="image" type="image/svg+xml" />
+		<link rel="preload" href="%sveltekit.assets%/images/icons/anchor.svg" as="image" type="image/svg+xml" />
+
+		<!-- Prefetch common routes -->
+		<link rel="prefetch" href="/doing" />
+		<link rel="prefetch" href="/done" />
+		<link rel="prefetch" href="/plan" />
+		<link rel="prefetch" href="/anchor" />
 
 		<!-- Prevent flash of unstyled content -->
 		<script>

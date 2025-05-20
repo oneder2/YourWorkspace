@@ -31,14 +31,59 @@
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let loadingStuckTimeoutId: ReturnType<typeof setTimeout> | null = null;
   let loadingStuck = $state(false);
+  let navigationStart = $state<number | null>(null);
+  let navigationDuration = $state(0);
+  let previousNavigations = $state<number[]>([]);
+  let averageNavigationTime = $state(0);
+  let expectedCompletionTime = $state(0);
+
+  // Maximum number of previous navigations to track for average calculation
+  const MAX_NAVIGATION_HISTORY = 5;
+
+  // Minimum progress to show (even for instant navigations)
+  const MIN_PROGRESS = 15;
 
   // Watch for navigation changes using $effect
   $effect(() => {
     const isNavigating = navigating.from !== null;
+    const navigationFromPath = navigating.from?.url.pathname;
+    const navigationToPath = navigating.to?.url.pathname;
 
     if (isNavigating) {
+      // Start navigation
+      navigationStart = performance.now();
+
+      // Calculate expected completion time based on previous navigations
+      if (previousNavigations.length > 0) {
+        averageNavigationTime = previousNavigations.reduce((sum, time) => sum + time, 0) / previousNavigations.length;
+        expectedCompletionTime = navigationStart + averageNavigationTime;
+      } else {
+        // Default to 500ms if no history
+        expectedCompletionTime = navigationStart + 500;
+      }
+
+      // Log navigation for debugging
+      console.log(`Navigation started: ${navigationFromPath} -> ${navigationToPath}`);
+      console.log(`Expected completion in ~${averageNavigationTime.toFixed(0)}ms based on history`);
+
       startLoading();
     } else if (visible) {
+      // Navigation complete
+      if (navigationStart) {
+        const endTime = performance.now();
+        navigationDuration = endTime - navigationStart;
+
+        // Add to history (keeping only the most recent ones)
+        previousNavigations = [navigationDuration, ...previousNavigations.slice(0, MAX_NAVIGATION_HISTORY - 1)];
+
+        // Log for debugging
+        console.log(`Navigation completed in ${navigationDuration.toFixed(0)}ms`);
+        console.log(`Navigation history: ${previousNavigations.map(t => t.toFixed(0)).join(', ')}ms`);
+
+        // Reset
+        navigationStart = null;
+      }
+
       completeLoading();
     }
   });
@@ -47,7 +92,7 @@
   function startLoading() {
     visible = true;
     complete = false;
-    progress = 0;
+    progress = MIN_PROGRESS; // Start with minimum progress
     loadingStuck = false;
 
     // Clear any existing timeout
@@ -74,17 +119,33 @@
     simulateProgress();
   }
 
-  // Simulate progress incrementally
+  // Simulate progress incrementally based on expected completion time
   function simulateProgress() {
     if (!visible || complete) return;
 
-    if (progress < 80) {
-      // Increment progress with decreasing speed
-      const increment = (100 - progress) / 10;
-      progress += Math.min(increment, 10);
+    if (progress < 90) {
+      // Calculate progress based on time elapsed and expected completion
+      if (navigationStart && expectedCompletionTime) {
+        const now = performance.now();
+        const elapsed = now - navigationStart;
+        const expectedTotal = expectedCompletionTime - navigationStart;
+
+        // Calculate target progress (capped at 90%)
+        const targetProgress = Math.min(
+          90,
+          MIN_PROGRESS + (elapsed / expectedTotal) * (90 - MIN_PROGRESS)
+        );
+
+        // Smooth progress updates
+        progress = progress + (targetProgress - progress) * 0.2;
+      } else {
+        // Fallback to simple increment if timing data is not available
+        const increment = (100 - progress) / 10;
+        progress += Math.min(increment, 5);
+      }
 
       // Schedule next increment
-      timeoutId = setTimeout(simulateProgress, 100 + Math.random() * 300);
+      timeoutId = setTimeout(simulateProgress, 50);
     }
   }
 
@@ -126,16 +187,32 @@
   style="transition: opacity 300ms ease-in-out;"
   {...rest}
 >
-  <div
-    class="h-full bg-current"
-    style="
-      height: {height};
-      width: {progress}%;
-      transition: width 300ms ease-out, opacity 300ms ease-in-out;
-      background-color: {color};
-      {complete ? 'transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);' : ''}
-    "
-  ></div>
+  <!-- Main progress bar -->
+  <div class="relative h-full">
+    <!-- Background track -->
+    <div
+      class="absolute top-0 left-0 right-0 bg-gray-200 dark:bg-gray-700 opacity-30"
+      style={`height: ${height};`}
+    ></div>
+
+    <!-- Progress indicator -->
+    <div
+      class="h-full bg-current relative"
+      style={`
+        height: ${height};
+        width: ${progress}%;
+        transition: width 300ms ease-out, opacity 300ms ease-in-out;
+        background-color: ${color};
+        ${complete ? 'transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);' : ''}
+      `}
+    >
+      <!-- Animated pulse effect for the leading edge -->
+      <div
+        class="absolute right-0 top-0 bottom-0 w-4 bg-white opacity-50 animate-pulse"
+        style={`height: ${height};`}
+      ></div>
+    </div>
+  </div>
 
   {#if loadingStuck}
     <div class="fixed inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 z-50">
