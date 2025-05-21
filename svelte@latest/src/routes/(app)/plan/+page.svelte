@@ -1,10 +1,10 @@
 <script lang="ts">
     // Import necessary Svelte components and types
-    import FuturePlanList from '$lib/components/anchor/future_plans/FuturePlanList.svelte';
-    import FuturePlanForm from '$lib/components/anchor/future_plans/FuturePlanForm.svelte';
+    import PlanList from '$lib/components/working_page/plan/PlanList.svelte';
+    import PlanForm from '$lib/components/working_page/plan/PlanForm.svelte';
     import Modal from '$lib/components/common/Modal.svelte';
-    import type { FuturePlan } from '$lib/services/futurePlanService';
-    import { futurePlanStore } from '$lib/store/futurePlanStore';
+    import type { FuturePlan as Plan } from '$lib/services/futurePlanService';
+    import { futurePlanStore as planStore } from '$lib/store/futurePlanStore';
     import {
       pageContainer,
       colorSchemes,
@@ -21,50 +21,50 @@
 
     // State variables
     let isModalOpen = $state(false);
-    let currentEditingFuturePlan = $state<FuturePlan | null>(null);
-    let selectedPlan = $state<FuturePlan | null>(null);
+    let currentEditingPlan = $state<Plan | null>(null);
+    let selectedPlan = $state<Plan | null>(null);
     let isViewMode = $state(false);
     let isDeleting = $state(false);
     let operationFeedback = $state<{type: 'success' | 'error', message: string} | null>(null);
 
     /**
-     * Opens the modal in 'create' mode for adding a new future plan.
+     * Opens the modal in 'create' mode for adding a new plan.
      */
     function openCreateModal() {
-      currentEditingFuturePlan = null;
+      currentEditingPlan = null;
       isModalOpen = true;
       isViewMode = false;
     }
 
     /**
-     * Opens the modal in 'edit' mode for an existing future plan.
+     * Opens the modal in 'edit' mode for an existing plan.
      * This function is kept for potential future use with modal editing.
-     * @param {FuturePlan} plan - The future plan to edit.
+     * @param {Plan} plan - The plan to edit.
      */
-    // function openEditModal(plan: FuturePlan) {
-    //   currentEditingFuturePlan = plan;
+    // function openEditModal(plan: Plan) {
+    //   currentEditingPlan = plan;
     //   isModalOpen = true;
     //   isViewMode = false;
     // }
 
     /**
-     * Opens the edit form in the main content area for an existing future plan.
-     * @param {FuturePlan} plan - The future plan to edit.
+     * Opens the edit form in the main content area for an existing plan.
+     * @param {Plan} plan - The plan to edit.
      */
-    function openEditInline(plan: FuturePlan) {
-      currentEditingFuturePlan = plan;
+    function openEditInline(plan: Plan) {
+      currentEditingPlan = plan;
       isViewMode = false;
       isModalOpen = false; // Ensure modal is closed
     }
 
     /**
      * Selects a plan to view its details
-     * @param {FuturePlan} plan - The future plan to view.
+     * @param {Plan} plan - The plan to view.
      */
-    function selectPlan(plan: FuturePlan) {
+    function selectPlan(plan: Plan) {
       selectedPlan = plan;
       isViewMode = true;
-      currentEditingFuturePlan = null;
+      currentEditingPlan = null;
     }
 
     /**
@@ -72,15 +72,15 @@
      */
     function closeModal() {
       isModalOpen = false;
-      currentEditingFuturePlan = null;
+      currentEditingPlan = null;
     }
 
     /**
-     * Handles the save callback from FuturePlanForm.
+     * Handles the save callback from PlanForm.
      * Closes the modal after a successful save. The list will update reactively.
-     * @param {FuturePlan} plan - The saved future plan.
+     * @param {Plan} plan - The saved plan.
      */
-    function handleFormSave(plan: FuturePlan) {
+    function handleFormSave(plan: Plan) {
       closeModal();
       // If we were editing the currently selected plan, update the selected plan
       if (selectedPlan && selectedPlan.id === plan.id) {
@@ -89,7 +89,7 @@
     }
 
     /**
-     * Handles the cancel callback from FuturePlanForm.
+     * Handles the cancel callback from PlanForm.
      * Closes the modal without saving.
      */
     function handleFormCancel() {
@@ -97,7 +97,7 @@
     }
 
     /**
-     * Deletes the currently selected future plan
+     * Deletes the currently selected plan
      */
     async function deleteSelectedPlan() {
       if (!selectedPlan) return;
@@ -110,7 +110,7 @@
       operationFeedback = null;
 
       try {
-        const success = await futurePlanStore.deleteFuturePlan(selectedPlan.id);
+        const success = await planStore.deleteFuturePlan(selectedPlan.id);
         if (success) {
           operationFeedback = {
             type: 'success',
@@ -230,10 +230,10 @@
 
               <!-- Scrollable content with fixed height and internal scrolling -->
               <div class={combineClasses("pl-3", "absolute inset-0 overflow-y-auto pr-2")}>
-                <FuturePlanList
-                  onAddNewFuturePlan={openCreateModal}
-                  onEditFuturePlan={(plan: FuturePlan) => openEditInline(plan)}
-                  onSelectPlan={(plan: FuturePlan) => selectPlan(plan)}
+                <PlanList
+                  onAddNewPlan={openCreateModal}
+                  onEditPlan={(plan: Plan) => openEditInline(plan)}
+                  onSelectPlan={(plan: Plan) => selectPlan(plan)}
                 />
               </div>
             </div>
@@ -244,18 +244,18 @@
         <div class={combineClasses(columnSpans.threeFourths, "h-full flex flex-col")}>
           <div class={combineClasses(cardBase, pageStyle.border, "h-full flex flex-col")}>
             <div class="p-6 flex-grow overflow-auto">
-              {#if currentEditingFuturePlan}
+              {#if currentEditingPlan}
                 <!-- Edit form for the selected plan -->
                 <div>
                   <div class="flex justify-between items-center mb-6">
                     <h2 class={combineClasses(headings.h2, pageStyle.text)}>
-                      {currentEditingFuturePlan ? 'Edit Plan' : 'Add New Plan'}
+                      {currentEditingPlan ? 'Edit Plan' : 'Add New Plan'}
                     </h2>
                   </div>
 
                   <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                    <FuturePlanForm
-                      futurePlan={currentEditingFuturePlan}
+                    <PlanForm
+                      plan={currentEditingPlan}
                       onSave={handleFormSave}
                       onCancel={handleFormCancel}
                     />
@@ -372,10 +372,10 @@
       <Modal
         isOpen={isModalOpen}
         close={closeModal}
-        title={currentEditingFuturePlan ? 'Edit Future Plan' : 'Add New Future Plan'}
+        title={currentEditingPlan ? 'Edit Plan' : 'Add New Plan'}
         modalWidth="max-w-xl">
-        <FuturePlanForm
-          futurePlan={currentEditingFuturePlan}
+        <PlanForm
+          plan={currentEditingPlan}
           onSave={handleFormSave}
           onCancel={handleFormCancel}
         />

@@ -1,7 +1,7 @@
 <script lang="ts">
     // Import necessary Svelte components and types
-    import AchievementList from '$lib/components/anchor/achievements/AchievementList.svelte';
-    import AchievementForm from '$lib/components/anchor/achievements/AchievementForm.svelte';
+    import AchievementList from '$lib/components/working_page/done/AchievementList.svelte';
+    import AchievementForm from '$lib/components/working_page/done/AchievementForm.svelte';
     import Modal from '$lib/components/common/Modal.svelte';
     import type { Achievement } from '$lib/services/achievementService';
     import { achievementStore } from '$lib/store/achievementStore';

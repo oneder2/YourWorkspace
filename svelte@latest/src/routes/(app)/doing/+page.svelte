@@ -3,8 +3,8 @@
   import { authStore, type UserProfile } from '$lib/store/authStore';
   // Import main store and specific derived stores
   import { todoStore, otherActiveTodos, completedTodos } from '$lib/store/todoStore';
-  import TodoListSidebar from '$lib/components/todo/TodoListSidebar.svelte';
-  import CurrentFocusDisplay from '$lib/components/anchor/current_focus/CurrentFocusDisplay.svelte';
+  import TodoListSidebar from '$lib/components/working_page/doing/todo/TodoListSidebar.svelte';
+  import CurrentFocusDisplay from '$lib/components/working_page/doing/current_focus/CurrentFocusDisplay.svelte';
   import {
     pageContainer,
     colorSchemes,

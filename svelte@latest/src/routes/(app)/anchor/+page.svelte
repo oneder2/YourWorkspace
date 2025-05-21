@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { anchorStore } from '$lib/store/anchorStore';
-    import IdentityAnchorEditor from '$lib/components/anchor/IdentityAnchorEditor.svelte';
+    import IdentityAnchorEditor from '$lib/components/working_page/anchor/IdentityAnchorEditor.svelte';
 
     // State for error handling
     let pageError = $state<string | null>(null);

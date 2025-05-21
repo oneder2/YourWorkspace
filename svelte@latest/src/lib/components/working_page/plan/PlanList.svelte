@@ -1,38 +1,38 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
     import { onMount } from 'svelte';
-    import { futurePlanStore } from '$lib/store/futurePlanStore'; // Main store for future plans
-    import FuturePlanItem from './FuturePlanItem.svelte'; // Component to display a single future plan
+    import { futurePlanStore as planStore } from "$lib/store/futurePlanStore"; // Main store for plans
+    import PlanItem from './PlanItem.svelte'; // Component to display a single future plan
 
     // Component Props using $props rune
     let {
-      onEditFuturePlan = (_plan: any) => {},
+      onEditPlan = (_plan: any) => {},
       onSelectPlan = (_plan: any) => {}
     } = $props<{
-      onAddNewFuturePlan?: () => void; // Kept in type definition for backward compatibility
-      onEditFuturePlan?: (plan: any) => void;
+      onAddNewPlan?: () => void; // Kept in type definition for backward compatibility
+      onEditPlan?: (plan: any) => void;
       onSelectPlan?: (plan: any) => void;
     }>();
 
-    // Subscribe to reactive stores from futurePlanStore
+    // Subscribe to reactive stores from planStore
     // These will automatically update the component when their values change.
-    const futurePlans = futurePlanStore.futurePlans; // Writable<FuturePlan[]>
-    const isLoading = futurePlanStore.isLoading;     // Writable<boolean>
-    const error = futurePlanStore.error;             // Writable<string | null>
+    const plans = planStore.plans; // Writable<Plan[]>
+    const isLoading = planStore.isLoading;     // Writable<boolean>
+    const error = planStore.error;             // Writable<string | null>
 
     // Lifecycle hook: Called after the component has been mounted to the DOM.
     onMount(() => {
       // 总是尝试加载数据，无论当前状态如何
       // 这样可以确保页面始终显示最新数据
-      futurePlanStore.loadFuturePlans();
+      planStore.loadPlans();
 
       // 设置一个超时，如果加载时间过长，自动重置加载状态
       const loadingTimeout = setTimeout(() => {
         if ($isLoading) {
           console.warn('Loading timeout reached, resetting loading state');
-          futurePlanStore.isLoading.set(false);
+          planStore.isLoading.set(false);
           if (!$error) {
-            futurePlanStore.error.set('加载超时，请重试');
+            planStore.error.set('加载超时，请重试');
           }
         }
       }, 5000); // 5秒超时
@@ -42,11 +42,11 @@
       };
     });
 
-    // Direct dispatch from FuturePlanItem to parent page is now handled inline
+    // Direct dispatch from PlanItem to parent page is now handled inline
   </script>
 
   <div class="py-2">
-    {#if $isLoading && $futurePlans.length === 0}
+    {#if $isLoading && $plans.length === 0}
       <div class="text-center py-6">
         <div role="status" class="flex justify-center items-center">
             <svg aria-hidden="true" class="w-8 h-8 text-green-200 animate-spin dark:text-green-700 fill-green-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -61,13 +61,13 @@
       <div class="p-3 mx-2 mb-3 text-xs text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
         <span class="font-medium">Error:</span> {$error}
         <button
-          onclick={() => futurePlanStore.loadFuturePlans()}
+          onclick={() => planStore.loadPlans()}
           class="ml-2 px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           Retry
         </button>
       </div>
-    {:else if $futurePlans.length === 0}
+    {:else if $plans.length === 0}
       <div class="text-center py-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-10 w-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -77,10 +77,10 @@
       </div>
     {:else}
       <div class="space-y-2 px-2">
-        {#each $futurePlans as plan (plan.id)}
-          <FuturePlanItem
-            futurePlan={plan}
-            onEdit={(plan) => onEditFuturePlan(plan)}
+        {#each $plans as plan (plan.id)}
+          <PlanItem
+            plan={plan}
+            onEdit={(plan) => onEditPlan(plan)}
             onClick={(plan) => onSelectPlan(plan)}
           />
         {/each}

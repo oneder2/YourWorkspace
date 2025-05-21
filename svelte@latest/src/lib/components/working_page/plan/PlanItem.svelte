@@ -1,17 +1,17 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
-    import type { FuturePlan } from '$lib/services/futurePlanService';
-    import { futurePlanStore } from '$lib/store/futurePlanStore'; // To call deleteFuturePlan
+    import type { Plan } from '$lib/services/planService';
+    import { futurePlanStore as planStore } from "$lib/store/futurePlanStore"; // To call deletePlan
 
     // Component props
     let {
-      futurePlan,
+      plan,
       onEdit = () => {}, // Event handler prop for Svelte 5
       onClick = () => {} // Event handler for clicking on the item to view details
     } = $props<{
-      futurePlan: FuturePlan;
-      onEdit?: (plan: FuturePlan) => void;
-      onClick?: (plan: FuturePlan) => void;
+      plan: Plan;
+      onEdit?: (plan: Plan) => void;
+      onClick?: (plan: Plan) => void;
     }>();
 
     // Local state for delete operation loading status
@@ -25,16 +25,16 @@
      */
     async function handleDelete() {
       // User confirmation before deleting
-      if (!confirm(`Are you sure you want to delete the plan: "${futurePlan.title}"? This action cannot be undone.`)) {
+      if (!confirm(`Are you sure you want to delete the plan: "${plan.title}"? This action cannot be undone.`)) {
         return;
       }
 
       isDeleting = true;
       try {
-        await futurePlanStore.deleteFuturePlan(futurePlan.id);
+        await planStore.deletePlan(plan.id);
         // The list will reactively update as the store changes.
         // Optionally, dispatch a 'deleted' event if the parent needs to know.
-        // dispatch('deleted', futurePlan.id);
+        // dispatch('deleted', plan.id);
       } catch (e: any) {
         // Display an alert for error (a more sophisticated notification system could be used)
         alert(`Failed to delete plan: ${e.message || 'Unknown error'}`);
@@ -87,20 +87,20 @@
 
 <div
     class="bg-white dark:bg-gray-800 shadow-md rounded-lg border border-green-200 dark:border-green-800 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow mb-3"
-    onclick={() => onClick(futurePlan)}
-    onkeydown={(e) => e.key === 'Enter' && onClick(futurePlan)}
+    onclick={() => onClick(plan)}
+    onkeydown={(e) => e.key === 'Enter' && onClick(plan)}
     role="button"
     tabindex="0"
-    aria-label="View details for plan: {futurePlan.title}"
+    aria-label="View details for plan: {plan.title}"
 >
     <!-- Header with title and action buttons -->
     <div class="border-b border-green-100 dark:border-green-800 p-4">
         <div class="flex justify-between items-center">
-            <h4 class="text-lg font-semibold text-green-700 dark:text-green-300">{futurePlan.title}</h4>
+            <h4 class="text-lg font-semibold text-green-700 dark:text-green-300">{plan.title}</h4>
             <div class="flex space-x-1">
                 <button
-                    onclick={(e) => { e.stopPropagation(); onEdit(futurePlan); }}
-                    aria-label="Edit plan: {futurePlan.title}"
+                    onclick={(e) => { e.stopPropagation(); onEdit(plan); }}
+                    aria-label="Edit plan: {plan.title}"
                     class="p-1.5 text-sm font-medium text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -111,7 +111,7 @@
                 <button
                     onclick={(e) => { e.stopPropagation(); handleDelete(); }}
                     disabled={isDeleting}
-                    aria-label="Delete plan: {futurePlan.title}"
+                    aria-label="Delete plan: {plan.title}"
                     class="p-1.5 text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md disabled:opacity-50"
                 >
                     {#if isDeleting}
@@ -128,9 +128,9 @@
             </div>
         </div>
 
-        {#if futurePlan.target_date}
+        {#if plan.target_date}
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Target date: {formatDate(futurePlan.target_date)}
+                Target date: {formatDate(plan.target_date)}
             </p>
         {/if}
     </div>
@@ -140,17 +140,17 @@
         <!-- Status -->
         <div class="mb-3">
             <h5 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Status:</h5>
-            <span class="px-2 py-0.5 text-xs font-medium rounded-full {statusClasses[futurePlan.status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800 dark:bg-gray-800/80 dark:text-gray-300'}">
-                {formatStatus(futurePlan.status)}
+            <span class="px-2 py-0.5 text-xs font-medium rounded-full {statusClasses[plan.status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800 dark:bg-gray-800/80 dark:text-gray-300'}">
+                {formatStatus(plan.status)}
             </span>
         </div>
 
         <!-- Goal Type -->
-        {#if futurePlan.goal_type}
+        {#if plan.goal_type}
             <div class="mb-3">
                 <h5 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Goal Type:</h5>
                 <span class="px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
-                    {futurePlan.goal_type}
+                    {plan.goal_type}
                 </span>
             </div>
         {/if}
@@ -159,11 +159,11 @@
     <!-- Footer with metadata -->
     <div class="px-4 py-2 bg-green-50 dark:bg-green-900/20 text-xs text-gray-500 dark:text-gray-400 border-t border-green-100 dark:border-green-800">
         <div class="flex justify-between">
-            <span>ID: {futurePlan.id}</span>
+            <span>ID: {plan.id}</span>
             <span>
-                {formatDate(futurePlan.created_at)}
-                {#if futurePlan.updated_at && futurePlan.updated_at !== futurePlan.created_at}
-                    (Updated: {formatDate(futurePlan.updated_at)})
+                {formatDate(plan.created_at)}
+                {#if plan.updated_at && plan.updated_at !== plan.created_at}
+                    (Updated: {formatDate(plan.updated_at)})
                 {/if}
             </span>
         </div>

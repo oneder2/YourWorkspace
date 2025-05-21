@@ -1,26 +1,26 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
     import { get } from 'svelte/store'; // To read store values imperatively
-    import type { FuturePlan, FuturePlanCreateDto, FuturePlanUpdateDto } from '$lib/services/futurePlanService';
-    import { futurePlanStore } from '$lib/store/futurePlanStore'; // The store for future plans
+    import type { Plan, PlanCreateDto, PlanUpdateDto } from '$lib/services/planService';
+    import { futurePlanStore as planStore } from "$lib/store/futurePlanStore"; // The store for plans
 
     // Component Props using $props rune
     let {
-      futurePlan = null,
-      onSave = (plan: FuturePlan) => {},
+      plan = null,
+      onSave = (plan: Plan) => {},
       onCancel = () => {}
     } = $props<{
-      futurePlan: FuturePlan | null;
-      onSave?: (plan: FuturePlan) => void;
+      plan: Plan | null;
+      onSave?: (plan: Plan) => void;
       onCancel?: () => void;
     }>();
 
-    // Local state for form fields, initialized from `futurePlan` prop if in edit mode
-    let title = $state(futurePlan?.title || '');
-    let description = $state(futurePlan?.description || '');
-    let goal_type = $state(futurePlan?.goal_type || '');
-    let target_date = $state(futurePlan?.target_date || ''); // Expected format: YYYY-MM-DD
-    let status = $state<'active' | 'achieved' | 'deferred' | 'abandoned'>(futurePlan?.status || 'active');
+    // Local state for form fields, initialized from `plan` prop if in edit mode
+    let title = $state(plan?.title || '');
+    let description = $state(plan?.description || '');
+    let goal_type = $state(plan?.goal_type || '');
+    let target_date = $state(plan?.target_date || ''); // Expected format: YYYY-MM-DD
+    let status = $state<'active' | 'achieved' | 'deferred' | 'abandoned'>(plan?.status || 'active');
 
     // Local state for form feedback and loading status
     let formError = $state<string | null>(null);
@@ -35,23 +35,23 @@
       'abandoned',
     ];
 
-    // Explicitly get the isLoading store from futurePlanStore
-    const isLoadingStore = futurePlanStore.isLoading;
+    // Explicitly get the isLoading store from planStore
+    const isLoadingStore = planStore.isLoading;
     // Reactive subscription to the store's global loading state for the submit button
     let storeIsLoading = $derived($isLoadingStore);
 
-    // Update form fields when futurePlan prop changes
+    // Update form fields when plan prop changes
     $effect(() => {
-      if (futurePlan) {
-        title = futurePlan.title || '';
-        description = futurePlan.description || '';
-        goal_type = futurePlan.goal_type || '';
-        target_date = futurePlan.target_date || '';
-        status = futurePlan.status || 'active';
+      if (plan) {
+        title = plan.title || '';
+        description = plan.description || '';
+        goal_type = plan.goal_type || '';
+        target_date = plan.target_date || '';
+        status = plan.status || 'active';
         formError = null; // Clear previous errors when plan changes
         formSuccess = null;
       } else {
-        // Reset for create mode if futurePlan becomes null or is initially null
+        // Reset for create mode if plan becomes null or is initially null
         title = '';
         description = '';
         goal_type = '';
@@ -81,9 +81,9 @@
         return;
       }
 
-      if (futurePlan && futurePlan.id) {
+      if (plan && plan.id) {
         // Edit mode: Prepare update DTO
-        const planData: FuturePlanUpdateDto = {
+        const planData: PlanUpdateDto = {
           title: title.trim(),
           description: description.trim(),
           goal_type: goal_type.trim() || null,
@@ -91,20 +91,20 @@
           status: status,
         };
         try {
-          const updated = await futurePlanStore.updateFuturePlan(futurePlan.id, planData);
+          const updated = await planStore.updatePlan(plan.id, planData);
           if (updated) {
             formSuccess = 'Future plan updated successfully!';
             onSave(updated); // Call the callback prop instead of dispatching an event
           } else {
             // Read error from store if update failed at store/service level
-            formError = get(futurePlanStore.error) || 'Failed to update future plan.';
+            formError = get(planStore.error) || 'Failed to update future plan.';
           }
         } catch (e: any) {
           formError = e.message || 'An unknown error occurred while updating.';
         }
       } else {
         // Create mode: Prepare create DTO
-        const planData: FuturePlanCreateDto = {
+        const planData: PlanCreateDto = {
           title: title.trim(),
           description: description.trim(),
           goal_type: goal_type.trim() || undefined, // Send undefined if empty, API might treat null/undefined differently
@@ -112,14 +112,14 @@
           status: status,
         };
         try {
-          const created = await futurePlanStore.addFuturePlan(planData);
+          const created = await planStore.addPlan(planData);
           if (created) {
             formSuccess = 'Future plan added successfully!';
             onSave(created); // Call the callback prop instead of dispatching an event
             resetForm(); // Reset form fields after successful creation
           } else {
             // Read error from store if creation failed
-            formError = get(futurePlanStore.error) || 'Failed to add future plan.';
+            formError = get(planStore.error) || 'Failed to add future plan.';
           }
         } catch (e: any) {
           formError = e.message || 'An unknown error occurred while adding.';
@@ -148,7 +148,7 @@
      * If creating, resets the form.
      */
     function handleCancel() {
-      if (futurePlan) { // If in edit mode
+      if (plan) { // If in edit mode
         onCancel();
       } else { // If in create mode
         resetForm();
@@ -244,7 +244,7 @@
         onclick={handleCancel}
         class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-green-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
       >
-        {futurePlan ? 'Cancel' : 'Reset'}
+        {plan ? 'Cancel' : 'Reset'}
       </button>
       <button
         type="submit"
@@ -258,7 +258,7 @@
           </svg>
           Processing...
         {:else}
-          {futurePlan ? 'Save Changes' : 'Add Plan'}
+          {plan ? 'Save Changes' : 'Add Plan'}
         {/if}
       </button>
     </div>
