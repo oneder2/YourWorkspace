@@ -1,7 +1,7 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
     import { get } from 'svelte/store'; // To read store values imperatively
-    import type { Plan, PlanCreateDto, PlanUpdateDto } from '$lib/services/planService';
+    import type { FuturePlan as Plan, FuturePlanCreateDto as PlanCreateDto, FuturePlanUpdateDto as PlanUpdateDto } from '$lib/services/futurePlanService';
     import { futurePlanStore as planStore } from "$lib/store/futurePlanStore"; // The store for plans
 
     // Component Props using $props rune
@@ -91,7 +91,7 @@
           status: status,
         };
         try {
-          const updated = await planStore.updatePlan(plan.id, planData);
+          const updated = await planStore.updateFuturePlan(plan.id, planData);
           if (updated) {
             formSuccess = 'Future plan updated successfully!';
             onSave(updated); // Call the callback prop instead of dispatching an event
@@ -112,7 +112,7 @@
           status: status,
         };
         try {
-          const created = await planStore.addPlan(planData);
+          const created = await planStore.addFuturePlan(planData);
           if (created) {
             formSuccess = 'Future plan added successfully!';
             onSave(created); // Call the callback prop instead of dispatching an event

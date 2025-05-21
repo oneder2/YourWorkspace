@@ -3,7 +3,8 @@ import { api } from './api';
 import { mockFuturePlanApi } from './mockApi';
 
 // Base URL for future plan endpoints without trailing slash to match backend routes
-const BASE_URL = '/plans';
+const BASE_URL = '/api/v1/plans';
+// Note: The full URL will be constructed correctly by the api.ts module
 
 // Use real API for production
 const USE_MOCK_API = false;

@@ -152,7 +152,11 @@
       {#if defaultContent}
         {defaultContent}
       {:else}
-        <p class="text-gray-700 dark:text-gray-300">This is the modal body. Pass content to override this.</p>
+        {#if $$slots.default}
+          {@render $$slots.default()}
+        {:else}
+          <p class="text-gray-700 dark:text-gray-300">This is the modal body. Pass content to override this.</p>
+        {/if}
       {/if}
     </main>
 

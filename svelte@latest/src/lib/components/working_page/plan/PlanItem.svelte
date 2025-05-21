@@ -1,6 +1,6 @@
 <script lang="ts">
     // Import necessary Svelte and project modules
-    import type { Plan } from '$lib/services/planService';
+    import type { FuturePlan as Plan } from '$lib/services/futurePlanService';
     import { futurePlanStore as planStore } from "$lib/store/futurePlanStore"; // To call deletePlan
 
     // Component props
@@ -31,7 +31,7 @@
 
       isDeleting = true;
       try {
-        await planStore.deletePlan(plan.id);
+        await planStore.deleteFuturePlan(plan.id);
         // The list will reactively update as the store changes.
         // Optionally, dispatch a 'deleted' event if the parent needs to know.
         // dispatch('deleted', plan.id);

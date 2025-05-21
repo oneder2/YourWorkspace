@@ -2,7 +2,7 @@
   // Import the main store for isLoading/error and the specific derived store
   import { todoStore, currentFocusTodos } from '$lib/store/todoStore';
   import type { TodoItem } from '$lib/services/todoService';
-  import TodoEditForm from '$lib/components/todo/TodoEditForm.svelte';
+  import TodoEditForm from "$lib/components/working_page/doing/todo/TodoEditForm.svelte";
 
   // State for edit modal
   let isEditModalOpen = $state(false);

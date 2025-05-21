@@ -22,7 +22,8 @@ export function setRefreshTokenCallback(callback: () => Promise<string | null>) 
 }
 
 // 确保 BASE_URL 有一个默认值，即使环境变量未定义
-const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+// When using Vite proxy, we use a relative URL to avoid CORS issues
+const BASE_URL: string = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 console.log('API Service: Using BASE_URL:', BASE_URL);
 
@@ -114,30 +115,62 @@ async function request<T = any>(
       if (redirectUrl) {
         console.log(`Redirect URL: ${redirectUrl}`);
 
-        // 提取相对路径
-        let redirectEndpoint = redirectUrl;
+        // Extract the relative path or use the full URL as needed
+        let redirectEndpoint;
+        let useFullUrl = false;
 
-        // 处理完整URL
+        // Handle full URLs
         if (redirectUrl.startsWith('http')) {
-          // 从完整URL中提取路径部分
           try {
             const urlObj = new URL(redirectUrl);
-            // 提取路径部分，例如 /api/v1/achievements/
-            redirectEndpoint = urlObj.pathname;
-            // 如果路径以 BASE_URL 开头，则去掉 BASE_URL 部分
-            if (redirectEndpoint.startsWith('/api/v1/')) {
-              redirectEndpoint = redirectEndpoint.substring('/api/v1'.length);
+            // Extract the path portion, e.g., /api/v1/achievements/
+            const pathname = urlObj.pathname;
+
+            // If the path starts with /api/v1/, remove that prefix for our endpoint
+            if (pathname.startsWith('/api/v1/')) {
+              redirectEndpoint = pathname.substring('/api/v1'.length);
+            } else {
+              // For other paths, use the full URL
+              redirectEndpoint = redirectUrl;
+              useFullUrl = true;
             }
           } catch (e) {
             console.error('Error parsing redirect URL:', e);
+            redirectEndpoint = redirectUrl;
+            useFullUrl = true;
           }
         } else if (redirectUrl.startsWith(BASE_URL)) {
-          // 如果是相对于BASE_URL的路径
+          // If it's relative to BASE_URL
           redirectEndpoint = redirectUrl.substring(BASE_URL.length);
+        } else {
+          // For other relative URLs
+          redirectEndpoint = redirectUrl;
         }
 
-        console.log(`Following redirect to endpoint: ${redirectEndpoint}`);
-        // 手动跟随重定向
+        console.log(`Following redirect to endpoint: ${redirectEndpoint} (useFullUrl: ${useFullUrl})`);
+
+        // For full URLs, make a direct fetch request
+        if (useFullUrl) {
+          console.log(`Making direct fetch to: ${redirectEndpoint}`);
+          const directResponse = await fetch(redirectEndpoint, {
+            method,
+            headers,
+            ...(body ? { body: JSON.stringify(body) } : {})
+          });
+
+          if (directResponse.status === 204) {
+            return null as T;
+          }
+
+          const contentType = directResponse.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            return await directResponse.json();
+          } else {
+            return await directResponse.text() as unknown as T;
+          }
+        }
+
+        // For relative endpoints, use our request function
         return request(redirectEndpoint, method, body, requiresAuth, customHeaders, isRetry);
       }
     }

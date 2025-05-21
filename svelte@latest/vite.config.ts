@@ -11,14 +11,24 @@ export default defineConfig({
   server: {
     port: 5173, // Default SvelteKit/Vite port, change if needed
     strictPort: true, // Exit if port is already in use
-    // proxy: { // Optional: Setup proxy for API requests during development to avoid CORS issues
-    //   // Example: All requests to '/api' in dev will be forwarded to 'http://localhost:5000/api'
-    //   '/api': {
-    //     target: 'http://localhost:5000', // Your backend API URL
-    //     changeOrigin: true, // Needed for virtual hosted sites
-    //     // rewrite: (path) => path.replace(/^\/api/, '') // If your backend doesn't have /api prefix
-    //   }
-    // }
+    proxy: { // Setup proxy for API requests during development to avoid CORS issues
+      '/api/v1': {
+        target: 'http://localhost:5000', // Your backend API URL
+        changeOrigin: true, // Needed for virtual hosted sites
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Sending Request to the Target:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+          });
+        },
+      }
+    }
   },
 
   // Build configuration

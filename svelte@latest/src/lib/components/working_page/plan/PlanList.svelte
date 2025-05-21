@@ -16,7 +16,7 @@
 
     // Subscribe to reactive stores from planStore
     // These will automatically update the component when their values change.
-    const plans = planStore.plans; // Writable<Plan[]>
+    const plans = planStore.futurePlans; // Writable<Plan[]>
     const isLoading = planStore.isLoading;     // Writable<boolean>
     const error = planStore.error;             // Writable<string | null>
 
@@ -24,7 +24,7 @@
     onMount(() => {
       // 总是尝试加载数据，无论当前状态如何
       // 这样可以确保页面始终显示最新数据
-      planStore.loadPlans();
+      planStore.loadFuturePlans();
 
       // 设置一个超时，如果加载时间过长，自动重置加载状态
       const loadingTimeout = setTimeout(() => {
@@ -61,7 +61,7 @@
       <div class="p-3 mx-2 mb-3 text-xs text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 text-center" role="alert">
         <span class="font-medium">Error:</span> {$error}
         <button
-          onclick={() => planStore.loadPlans()}
+          onclick={() => planStore.loadFuturePlans()}
           class="ml-2 px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           Retry

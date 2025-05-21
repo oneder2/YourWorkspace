@@ -54,9 +54,8 @@ const createFuturePlanStore = (): FuturePlanStoreType => {
       if (currentUserId) {
         try {
           const fetchedPlans = await futurePlanService.getFuturePlans();
-          if (fetchedPlans && fetchedPlans.length > 0) {
-            futurePlans.set(fetchedPlans);
-          }
+          // Always set the plans, even if it's an empty array
+          futurePlans.set(fetchedPlans);
         } catch (apiError: any) {
           console.warn("API请求失败，使用模拟数据", apiError);
           // 保持模拟数据，不设置错误

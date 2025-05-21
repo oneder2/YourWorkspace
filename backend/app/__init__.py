@@ -28,8 +28,14 @@ def create_app(config_name='development'):
     bcrypt.init_app(app)
     jwt.init_app(app) # Initialize JWTManager
 
-    # Initialize CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}}) # Adjust origins for production
+    # Initialize CORS with proper configuration
+    CORS(app,
+         resources={r"/api/*": {"origins": "*"}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         expose_headers=["Content-Type", "Authorization"]
+    )
 
     # --- Register Blueprints ---
     from .api.auth_bp import auth_bp
@@ -43,13 +49,13 @@ def create_app(config_name='development'):
 
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(blog_bp, url_prefix='/api/v1/blog')
-    app.register_blueprint(todo_bp, url_prefix='/api/v1/todo') # Register todo_bp
+    app.register_blueprint(todo_bp, url_prefix='/api/v1/doing') # Register todo_bp
     app.register_blueprint(ai_bp, url_prefix='/api/v1/ai')
     app.register_blueprint(anchor_bp, url_prefix='/api/v1/anchor')
     app.register_blueprint(achievements_bp, url_prefix='/api/v1/achievements')
     app.register_blueprint(plans_bp, url_prefix='/api/v1/plans')
 
-    
+
 
     # --- Database Creation (within Application Context) ---
     # This section is typically handled by Flask-Migrate.

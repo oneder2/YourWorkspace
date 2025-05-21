@@ -1,10 +1,12 @@
 <script lang="ts">
     // Import necessary Svelte components and types
+    import { onMount, onDestroy } from 'svelte';
     import PlanList from '$lib/components/working_page/plan/PlanList.svelte';
     import PlanForm from '$lib/components/working_page/plan/PlanForm.svelte';
-    import Modal from '$lib/components/common/Modal.svelte';
+    import SimpleModal from '$lib/components/common/SimpleModal.svelte';
     import type { FuturePlan as Plan } from '$lib/services/futurePlanService';
     import { futurePlanStore as planStore } from '$lib/store/futurePlanStore';
+    import { authStore, type UserProfile } from '$lib/store/authStore';
     import {
       pageContainer,
       colorSchemes,
@@ -26,6 +28,28 @@
     let isViewMode = $state(false);
     let isDeleting = $state(false);
     let operationFeedback = $state<{type: 'success' | 'error', message: string} | null>(null);
+
+    // Authentication state
+    let currentUser: UserProfile | null = $state(null);
+    let authUnsubscribe: () => void;
+
+    onMount(() => {
+      // Subscribe to auth store changes
+      authUnsubscribe = authStore.subscribe(value => {
+        currentUser = value.user;
+      });
+
+      // Load plans if not already loaded
+      if (planStore.futurePlans && !planStore.isLoading) {
+        planStore.loadFuturePlans();
+      }
+    });
+
+    onDestroy(() => {
+      if (authUnsubscribe) {
+        authUnsubscribe();
+      }
+    });
 
     /**
      * Opens the modal in 'create' mode for adding a new plan.
@@ -369,16 +393,17 @@
     </div>
 
     {#if isModalOpen}
-      <Modal
+      <SimpleModal
         isOpen={isModalOpen}
         close={closeModal}
         title={currentEditingPlan ? 'Edit Plan' : 'Add New Plan'}
-        modalWidth="max-w-xl">
+        modalWidth="max-w-xl"
+      >
         <PlanForm
           plan={currentEditingPlan}
           onSave={handleFormSave}
           onCancel={handleFormCancel}
         />
-      </Modal>
+      </SimpleModal>
     {/if}
   </div>
