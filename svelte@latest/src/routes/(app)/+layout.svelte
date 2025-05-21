@@ -55,12 +55,14 @@
 
 {#if showContent}
   <div class="flex flex-col min-h-screen dark:bg-transparent">
-    <Navbar {isAnchorPage} />
+    {#if !isAnchorPage}
+      <ArrowNav />
+      <Navbar {isAnchorPage} currentViewDisplay={page.url.pathname === '/done' ? 'Done' : page.url.pathname === '/doing' ? 'Doing' : page.url.pathname === '/plan' ? 'Plan' : 'N/A'} />
+    {:else}
+      <Navbar {isAnchorPage} />
+    {/if}
 
     <main class="flex-grow flex flex-col p-4">
-      {#if !isAnchorPage}
-        <ArrowNav />
-      {/if}
 
       <div>
         <slot />

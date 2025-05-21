@@ -3,53 +3,96 @@
   import { authStore, type UserProfile, isAuthenticated } from '$lib/store/authStore';
   import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
+  import { onMount } from 'svelte';
   import { ThemeToggle, BackgroundUploader } from '$lib/components/ui';
 
-  export let isAnchorPage: boolean = false; // New prop
+  // Props using $props rune for Svelte 5
+  let {
+    isAnchorPage = false,
+    currentViewDisplay = 'N/A'
+  } = $props<{
+    isAnchorPage?: boolean;
+    currentViewDisplay?: string;
+  }>();
 
-  let currentUser: UserProfile | null = null;
-  let lastWorkspacePage = '/doing';
+  let currentUser = $state<UserProfile | null>(null);
+  let lastWorkspacePage = $state('/doing');
+  let isDropdownOpen = $state(false);
+
+  // Page thumbnails configuration
+  const pageViews = [
+    { path: '/done', display: 'Done', icon: '✓', description: 'View your completed tasks and achievements' },
+    { path: '/doing', display: 'Doing', icon: '⚡', description: 'Manage your current tasks and focus' },
+    { path: '/plan', display: 'Plan', icon: '📝', description: 'Plan your future tasks and projects' }
+  ];
+
+  // Toggle dropdown menu
+  function toggleDropdown() {
+    isDropdownOpen = !isDropdownOpen;
+  }
+
+  // Close dropdown when clicking outside
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (isDropdownOpen && !target.closest('.page-dropdown-container')) {
+      isDropdownOpen = false;
+    }
+  }
+
+  // Navigate to selected page
+  function navigateTo(path: string) {
+    isDropdownOpen = false;
+    window.location.href = path;
+  }
 
   // Subscribe to the auth store to get the current user
   authStore.subscribe(value => {
     currentUser = value.user;
   });
 
+  // Set up click outside handler
+  onMount(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  });
+
   // Update lastWorkspacePage when isAnchorPage changes
-  $: {
+  $effect(() => {
     try {
       if (!isAnchorPage) {
-        // 我们不在 anchor 页面上，存储当前页面
+        // We're not on the anchor page, store the current page
         const currentPath = window.location.pathname;
         if (currentPath !== '/anchor') {
-          // 确保路径是有效的工作区页面
+          // Ensure the path is a valid workspace page
           if (currentPath === '/doing' || currentPath === '/done' || currentPath === '/plan') {
             lastWorkspacePage = currentPath;
             sessionStorage.setItem('lastWorkspacePage', lastWorkspacePage);
             console.log('Stored lastWorkspacePage:', lastWorkspacePage);
           } else {
-            // 如果不是有效的工作区页面，使用默认值
+            // If not a valid workspace page, use default
             lastWorkspacePage = '/doing';
           }
         }
       } else {
-        // 我们在 anchor 页面上，获取上次的工作区页面
+        // We're on the anchor page, get the last workspace page
         const storedLastWorkspacePage = sessionStorage.getItem('lastWorkspacePage');
         if (storedLastWorkspacePage) {
           lastWorkspacePage = storedLastWorkspacePage;
           console.log('Retrieved lastWorkspacePage:', lastWorkspacePage);
         } else {
-          // 如果没有存储的页面，使用默认值
+          // If no stored page, use default
           lastWorkspacePage = '/doing';
           console.log('No stored lastWorkspacePage, using default:', lastWorkspacePage);
         }
       }
     } catch (error) {
       console.error('Error updating lastWorkspacePage:', error);
-      // 出错时使用默认值
+      // Use default on error
       lastWorkspacePage = '/doing';
     }
-  }
+  });
 
   async function handleLogout() {
     try {
@@ -87,6 +130,24 @@
 
 </script>
 
+<style>
+  /* Fallback animation for browsers that don't support Tailwind's animate-dropdown */
+  @keyframes dropdown {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px) translateX(-50%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) translateX(-50%);
+    }
+  }
+
+  .animate-dropdown {
+    animation: dropdown 0.3s ease-out forwards;
+  }
+</style>
+
 <nav class="sticky top-0 z-navbar bg-indigo-50 dark:bg-indigo-900 border-b border-indigo-200 dark:border-indigo-700 shadow-sm">
   <div class="flex justify-between items-center w-full px-4 py-3">
     <!-- Main workspace navigation - always shown -->
@@ -95,29 +156,71 @@
         Personal Workspace
       </a>
     </div>
+
+    <!-- Current page display in center with enhanced styling and dropdown -->
     <div class="flex-grow flex justify-center items-center">
-      {#if isAnchorPage}
-        <!-- Back button when on Anchor page -->
-        <a
-          href={lastWorkspacePage}
-          id="anchor-button"
-          class="inline-flex items-center px-4 py-2 rounded-md bg-indigo-100 dark:bg-indigo-800 border border-indigo-300 dark:border-indigo-600 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-700 transition-colors"
-        >
-          <span class="mr-2 text-lg" aria-hidden="true">⬅️</span>
-          <span class="font-medium">Back</span>
-        </a>
-      {:else}
-        <!-- Anchor button when not on Anchor page -->
-        <a
-          href="/anchor"
-          id="anchor-button"
-          class="inline-flex items-center px-4 py-2 rounded-md bg-amber-100 dark:bg-amber-800 border border-amber-300 dark:border-amber-600 text-amber-800 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-700 transition-colors"
-        >
-          <span class="mr-2 text-lg" aria-hidden="true">⚓️</span>
-          <span class="font-medium">My Anchor</span>
-        </a>
-      {/if}
+      <div class="page-dropdown-container relative">
+        {#if isAnchorPage}
+          <div class="px-6 py-2 min-w-[180px] text-center text-3xl font-extrabold text-indigo-900 dark:text-indigo-100 tracking-wide relative group">
+            <span class="relative z-10">My Anchor</span>
+            <span class="absolute inset-0 bg-indigo-200 dark:bg-indigo-800 rounded-lg transform scale-95 opacity-20 group-hover:scale-100 group-hover:opacity-30 transition-all duration-300"></span>
+          </div>
+        {:else}
+          <!-- Clickable current page display that toggles dropdown -->
+          <button
+            type="button"
+            class="px-6 py-2 min-w-[180px] text-center text-3xl font-extrabold text-indigo-900 dark:text-indigo-100 tracking-wide relative group cursor-pointer bg-transparent border-0"
+            onclick={toggleDropdown}
+            aria-haspopup="true"
+            aria-expanded={isDropdownOpen}
+          >
+            <span class="relative z-10 flex items-center justify-center">
+              {currentViewDisplay}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 ml-2 transform transition-transform duration-300 {isDropdownOpen ? 'rotate-180' : ''}"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </span>
+            <span class="absolute inset-0 bg-indigo-200 dark:bg-indigo-800 rounded-lg transform scale-95 opacity-20 group-hover:scale-100 group-hover:opacity-30 transition-all duration-300"></span>
+          </button>
+
+          <!-- Dropdown menu with page thumbnails -->
+          {#if isDropdownOpen}
+            <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[600px] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden animate-dropdown">
+              <div class="flex p-4 justify-around">
+                {#each pageViews as page}
+                  <button
+                    type="button"
+                    class="flex flex-col items-center p-3 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors cursor-pointer {page.path === window.location.pathname ? 'bg-indigo-100 dark:bg-indigo-800/50' : ''} bg-transparent border-0 w-full"
+                    onclick={() => navigateTo(page.path)}
+                    aria-label="Navigate to {page.display} page"
+                  >
+                    <!-- Page thumbnail/icon -->
+                    <div class="w-32 h-24 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-4xl shadow-inner overflow-hidden relative">
+                      <div class="absolute inset-0 bg-gradient-to-br from-transparent to-gray-200 dark:to-gray-600 opacity-50"></div>
+                      <span class="relative z-10 transform transition-transform duration-300 group-hover:scale-110">{page.icon}</span>
+                    </div>
+                    <!-- Page name -->
+                    <div class="font-bold text-indigo-900 dark:text-indigo-100">
+                      {page.display}
+                    </div>
+                    <!-- Page description -->
+                    <div class="text-xs text-gray-600 dark:text-gray-400 text-center mt-1 max-w-[150px]">
+                      {page.description}
+                    </div>
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        {/if}
+      </div>
     </div>
+
     <div class="flex items-center">
       <!-- Theme Toggle Button -->
       <div class="mr-3">
