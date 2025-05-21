@@ -2,16 +2,15 @@
   import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore'; // Store for loading state and errors
   import type { TodoItem } from '$lib/services/todoService';
-  import { slide } from 'svelte/transition';
-  import TodoForm from './TodoForm.svelte';
-  import TodoEditForm from './TodoEditForm.svelte';
+  import TodoAddDrawer from './TodoAddDrawer.svelte';
+  import TodoEditDrawer from './TodoEditDrawer.svelte';
 
-  // State for showing/hiding the add form
-  let showAddForm = false;
+  // State for showing/hiding the add drawer
+  let isAddDrawerOpen = false;
 
   // State for editing
   let editingTodo: TodoItem | null = null;
-  let isEditFormVisible = false;
+  let isEditDrawerOpen = false;
 
   // Functions to handle todo actions
   function handleToggleStatus(todo: TodoItem) {
@@ -20,17 +19,17 @@
 
   function handleEdit(todo: TodoItem) {
     editingTodo = { ...todo };
-    isEditFormVisible = true;
+    isEditDrawerOpen = true;
   }
 
-  function handleEditSave(updatedTodo: TodoItem) {
+  function handleEditSave(_updatedTodo: TodoItem) {
     // This will be called when the edit is successful
-    isEditFormVisible = false;
+    isEditDrawerOpen = false;
     editingTodo = null;
   }
 
   function handleEditCancel() {
-    isEditFormVisible = false;
+    isEditDrawerOpen = false;
     editingTodo = null;
   }
 
@@ -41,7 +40,15 @@
   }
 
   function handleAddTask() {
-    showAddForm = !showAddForm;
+    isAddDrawerOpen = true;
+  }
+
+  function handleAddSuccess() {
+    isAddDrawerOpen = false;
+  }
+
+  function handleAddCancel() {
+    isAddDrawerOpen = false;
   }
 
   function handleSetAsFocus(todo: TodoItem) {
@@ -79,64 +86,30 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
   <div class="flex justify-center items-center mb-4">
     <button
-      class="p-2 rounded-full {showAddForm ? 'bg-blue-200 dark:bg-blue-700' : 'bg-blue-100 dark:bg-blue-800'} hover:bg-blue-200 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-300 transition-colors shadow-sm"
-      aria-label={showAddForm ? "Hide add form" : "Show add form"}
-      title={showAddForm ? "Hide add form" : "Show add form"}
+      class="p-2 rounded-full bg-blue-100 dark:bg-blue-800 hover:bg-blue-200 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-300 transition-colors shadow-sm"
+      aria-label="添加待办事项"
+      title="添加待办事项"
       on:click={handleAddTask}
     >
-      {#if showAddForm}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      {:else}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-      {/if}
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
     </button>
   </div>
 
-  {#if showAddForm}
-    <div transition:slide={{ duration: 300 }} class="mb-4">
-      <TodoForm />
-    </div>
-  {/if}
+  <TodoAddDrawer
+    isOpen={isAddDrawerOpen}
+    onAddSuccess={handleAddSuccess}
+    onCloseRequest={handleAddCancel}
+  />
 
-  {#if isEditFormVisible && editingTodo}
-    <div transition:slide={{ duration: 300 }} class="mb-4">
-      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4 border border-blue-200 dark:border-blue-700">
-        <h3 class="text-xl font-semibold text-blue-800 dark:text-blue-200 mb-4">Edit Todo</h3>
-        <TodoEditForm
-          todo={editingTodo}
-          onSaveSuccess={handleEditSave}
-          onCloseModalRequest={handleEditCancel}
-        />
-        <div class="flex justify-end space-x-2 mt-4">
-          <button
-            type="button"
-            class="py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md transition-colors"
-            on:click={handleEditCancel}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="py-2 px-4 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors"
-            on:click={() => {
-              if (editingTodo) {
-                const editForm = document.getElementById(`todo-edit-form-${editingTodo.id}`);
-                if (editForm) {
-                  const event = new Event('submit', { cancelable: true });
-                  editForm.dispatchEvent(event);
-                }
-              }
-            }}
-          >
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
+  {#if editingTodo}
+    <TodoEditDrawer
+      todo={editingTodo}
+      isOpen={isEditDrawerOpen}
+      onSaveSuccess={handleEditSave}
+      onCloseRequest={handleEditCancel}
+    />
   {/if}
 
   {#if $todoStore.isLoading && todos.length === 0 && $todoStore.todos.length === 0}

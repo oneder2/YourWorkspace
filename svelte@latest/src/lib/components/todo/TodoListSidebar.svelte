@@ -2,17 +2,16 @@
   import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore'; // Store for loading state and errors
   import type { TodoItem } from '$lib/services/todoService';
-  import { slide } from 'svelte/transition';
-  import TodoForm from './TodoForm.svelte';
-  import TodoEditForm from './TodoEditForm.svelte';
 
-  // State for showing/hiding the add form
-  let showAddForm = $state(false);
-  let showAddFormSidebar = $state(false);
+  import TodoAddDrawer from './TodoAddDrawer.svelte';
+  import TodoEditDrawer from './TodoEditDrawer.svelte';
+
+  // State for showing/hiding the add drawer
+  let isAddDrawerOpen = $state(false);
 
   // State for editing
   let editingTodo: TodoItem | null = $state(null);
-  let isEditFormVisible = $state(false);
+  let isEditDrawerOpen = $state(false);
 
   // Functions to handle todo actions
   function handleToggleStatus(todo: TodoItem) {
@@ -21,17 +20,17 @@
 
   function handleEdit(todo: TodoItem) {
     editingTodo = { ...todo };
-    isEditFormVisible = true;
+    isEditDrawerOpen = true;
   }
 
   function handleEditSave(_updatedTodo: TodoItem) {
     // This will be called when the edit is successful
-    isEditFormVisible = false;
+    isEditDrawerOpen = false;
     editingTodo = null;
   }
 
   function handleEditCancel() {
-    isEditFormVisible = false;
+    isEditDrawerOpen = false;
     editingTodo = null;
   }
 
@@ -42,8 +41,15 @@
   }
 
   function toggleAddForm() {
-    showAddForm = !showAddForm;
-    showAddFormSidebar = !showAddFormSidebar;
+    isAddDrawerOpen = true;
+  }
+
+  function handleAddSuccess() {
+    isAddDrawerOpen = false;
+  }
+
+  function handleAddCancel() {
+    isAddDrawerOpen = false;
   }
 
   function handleSetAsFocus(todo: TodoItem) {
@@ -84,48 +90,19 @@
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm py-2">
-  {#if showAddFormSidebar}
-    <div transition:slide={{ duration: 300 }} class="border-b border-blue-200 dark:border-blue-700 mb-4">
-      <div class="p-4">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="text-lg font-semibold text-blue-700 dark:text-blue-300">Add New Todo</h3>
-          <button
-            class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            onclick={toggleAddForm}
-            aria-label="Close form"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-        <TodoForm />
-      </div>
-    </div>
-  {/if}
+  <TodoAddDrawer
+    isOpen={isAddDrawerOpen}
+    onAddSuccess={handleAddSuccess}
+    onCloseRequest={handleAddCancel}
+  />
 
-  {#if isEditFormVisible && editingTodo}
-    <div transition:slide={{ duration: 300 }} class="mb-4">
-      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4 border border-blue-200 dark:border-blue-700">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="text-lg font-semibold text-blue-700 dark:text-blue-300">Edit Todo</h3>
-          <button
-            class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            onclick={handleEditCancel}
-            aria-label="Close form"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-        <TodoEditForm
-          todo={editingTodo}
-          onSaveSuccess={handleEditSave}
-          onCloseModalRequest={handleEditCancel}
-        />
-      </div>
-    </div>
+  {#if editingTodo}
+    <TodoEditDrawer
+      todo={editingTodo}
+      isOpen={isEditDrawerOpen}
+      onSaveSuccess={handleEditSave}
+      onCloseRequest={handleEditCancel}
+    />
   {/if}
 
   {#if $todoStore.isLoading && todos.length === 0 && $todoStore.todos.length === 0}

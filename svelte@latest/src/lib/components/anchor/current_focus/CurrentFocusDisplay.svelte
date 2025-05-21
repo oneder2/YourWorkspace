@@ -2,12 +2,11 @@
   // Import the main store for isLoading/error and the specific derived store
   import { todoStore, currentFocusTodos } from '$lib/store/todoStore';
   import type { TodoItem } from '$lib/services/todoService';
-  import TodoEditForm from '$lib/components/todo/TodoEditForm.svelte';
+  import TodoEditDrawer from '$lib/components/todo/TodoEditDrawer.svelte';
 
-  // State for edit modal
-  let isEditModalOpen = $state(false);
+  // State for edit drawer
+  let isEditDrawerOpen = $state(false);
   let currentEditingItem = $state<TodoItem | null>(null);
-  let todoEditFormComponent = $state<TodoEditForm | null>(null);
 
   // Function to handle removing an item from focus
   function handleRemoveFromFocus(id: number) {
@@ -16,23 +15,16 @@
     }
   }
 
-  // Function to open the edit modal
-  function openEditModal(item: TodoItem) {
+  // Function to open the edit drawer
+  function openEditDrawer(item: TodoItem) {
     currentEditingItem = item;
-    isEditModalOpen = true;
+    isEditDrawerOpen = true;
   }
 
-  // Function to close the edit modal
-  function closeEditModal() {
-    isEditModalOpen = false;
+  // Function to close the edit drawer
+  function closeEditDrawer() {
+    isEditDrawerOpen = false;
     currentEditingItem = null;
-  }
-
-  // Function to handle keyboard events for accessibility
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      closeEditModal();
-    }
   }
 </script>
 
@@ -93,7 +85,7 @@
                 onclick={() => {
                   const item = $todoStore.todos.find(t => t.id === focusItem.id);
                   if (item) {
-                    openEditModal(item);
+                    openEditDrawer(item);
                   }
                 }}
               >
@@ -138,60 +130,12 @@
     </div>
   {/if}
 
-  {#if isEditModalOpen && currentEditingItem}
-    <div
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      onclick={(e) => {
-        if (e.target === e.currentTarget) closeEditModal();
-      }}
-      onkeydown={(e) => {
-        if (e.key === 'Escape') closeEditModal();
-      }}
-      tabindex="-1"
-    >
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col w-full max-h-[90vh] overflow-hidden max-w-xl"
-        role="document"
-      >
-        <header class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white">Edit Main Focus Item</h2>
-          <button
-            class="bg-transparent border-none text-3xl font-light text-gray-500 dark:text-gray-400 cursor-pointer p-1 leading-none"
-            onclick={closeEditModal}
-            aria-label="Close modal"
-          >
-            &times;
-          </button>
-        </header>
-
-        <main class="p-6 overflow-y-auto flex-grow">
-          <TodoEditForm
-            bind:this={todoEditFormComponent}
-            todo={currentEditingItem}
-            onSaveSuccess={closeEditModal}
-          />
-        </main>
-
-        <footer class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/80">
-          <button
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            onclick={closeEditModal}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-md hover:bg-amber-700"
-            onclick={() => todoEditFormComponent?.handleSubmit()}
-          >
-            Save Changes
-          </button>
-        </footer>
-      </div>
-    </div>
+  {#if currentEditingItem}
+    <TodoEditDrawer
+      todo={currentEditingItem}
+      isOpen={isEditDrawerOpen}
+      onSaveSuccess={closeEditDrawer}
+      onCloseRequest={closeEditDrawer}
+    />
   {/if}
 </div>
