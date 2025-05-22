@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import type { TodoItem } from '$lib/services/todoService';
   import Modal from '$lib/components/common/Modal.svelte';
-  import TodoEditForm from '$lib/components/todo/TodoEditForm.svelte';
+  import TodoEditFormTailwind from '$lib/components/todo/TodoEditFormTailwind.svelte';
 
   // Props
   let {
@@ -62,7 +62,7 @@
     title="编辑主要焦点项目"
     modalWidth="max-w-xl"
   >
-    <TodoEditForm
+    <TodoEditFormTailwind
       bind:this={formComponent}
       {todo}
       isLoading={isLoading}
