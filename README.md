@@ -24,9 +24,18 @@ YourWorkplace是一个个人工作空间应用，用于管理任务、成就和�
 - Docker和Docker Compose
 - Git
 
-## 部署
+## 📚 文档导航
 
-### 使用Docker Compose（推荐）
+本项目提供了详细的文档系统，请根据您的需求选择相应的文档：
+
+- **[后端服务操作指南](backend/README.md)** - Flask后端API的详细使用说明
+- **[前端应用开发指南](svelte@latest/README.md)** - Svelte前端应用的开发和构建说明
+- **[开发须知](DEVELOPMENT.md)** - 详细的开发规范和注意事项（⚠️ AI主导项目）
+- **[Docker部署指南](DOCKER.md)** - 容器化部署的完整说明
+
+## 🚀 快速开始
+
+### 使用Docker Compose（推荐用于生产）
 
 1. 克隆仓库:
    ```bash
@@ -34,13 +43,13 @@ YourWorkplace是一个个人工作空间应用，用于管理任务、成就和�
    cd YourWorkplace
    ```
 
-2. 在根目录创建`.env`文件，包含以下变量:
-   ```
-   SECRET_KEY=your_secret_key
-   JWT_SECRET_KEY=your_jwt_secret_key
+2. 在根目录创建`.env`文件:
+   ```bash
+   cp .env.example .env
+   # 编辑.env文件设置您的密钥
    ```
 
-3. 使用部署脚本启动应用:
+3. 启动应用:
    ```bash
    chmod +x deploy.sh
    ./deploy.sh start
@@ -48,105 +57,110 @@ YourWorkplace是一个个人工作空间应用，用于管理任务、成就和�
 
 4. 访问应用: http://localhost
 
-### 手动部署
+### 手动部署（推荐用于开发）
 
-#### 后端
+#### 后端服务
 
-1. 导航到后端目录:
-   ```bash
-   cd backend
-   ```
-
-2. 使用Poetry安装依赖:
-   ```bash
-   poetry install
-   ```
-
-3. 初始化数据库:
-   ```bash
-   python init_db.py
-   ```
-
-4. 启动后端服务器:
-   ```bash
-   poetry run python run.py
-   ```
-
-#### 前端
-
-1. 导航到前端目录:
-   ```bash
-   cd svelte@latest
-   ```
-
-2. 安装依赖:
-   ```bash
-   npm install
-   ```
-
-3. 启动开发服务器:
-   ```bash
-   npm run dev
-   ```
-
-## 开发
-
-### 后端
-
-后端是一个Flask应用，具有以下结构:
-
-- `app/`: 主应用包
-  - `api/`: API端点
-  - `models/`: 数据库模型
-  - `utils/`: 实用函数
-- `migrations/`: 数据库迁移
-- `tests/`: 测试用例
-
-### 前端
-
-前端是一个Svelte应用，具有以下结构:
-
-- `src/`: 源代码
-  - `lib/`: 库代码
-    - `components/`: 可重用组件
-    - `services/`: API服务
-    - `store/`: Svelte存储
-  - `routes/`: 页面路由
-
-## 测试
-
-### 后端
-
-运行后端测试:
+详细说明请参考 **[后端README](backend/README.md)**
 
 ```bash
 cd backend
-poetry run pytest
+poetry install
+poetry run python init_db.py
+poetry run python run.py
 ```
 
-### 前端
+#### 前端应用
 
-运行前端测试:
+详细说明请参考 **[前端README](svelte@latest/README.md)**
 
 ```bash
 cd svelte@latest
-npm run test
+npm install
+npm run dev
 ```
 
-## 原始功能设想
+## ⚠️ 重要提醒
 
-#### 主要功能：
-1. 主界面展示个人技术、能力和项目经验
+**本项目为AI生产力主导开发**，在进行人工修改前请务必阅读 **[开发须知](DEVELOPMENT.md)**
 
-2. Todo-List界面存放目前的任务
-    - 任务分级，大任务下会细分为若干小目标
-    - 自行评定大任务是否完成
-    - 完成时自己撰写完成情况
-    - 由AI生成任务完成报告
-    - 合并到主界面的个人信息
+## 🏗️ 项目架构
 
-#### 额外功能：
-1. 博客系统，类似日志
-    - 在私有空间分享开发记录
-    - 可以加装外链，同步共享到主流社交平台
-2. 根据任务完成时间、创建时间等参数，生成月报和年报
+### 后端 (Flask)
+- RESTful API设计
+- JWT认证系统
+- SQLite数据库
+- Poetry依赖管理
+
+### 前端 (Svelte 5)
+- 现代化SPA应用
+- Tailwind CSS样式
+- 响应式设计
+- 深色模式支持
+
+详细的架构说明请参考各模块的README文档。
+
+## 🧪 测试
+
+### 后端测试
+```bash
+cd backend
+poetry run pytest
+poetry run python test_api.py  # API集成测试
+```
+
+### 前端测试
+```bash
+cd svelte@latest
+npm run check      # 类型检查
+npm run build      # 构建测试
+```
+
+## 📦 部署选项
+
+| 部署方式 | 适用场景 | 文档链接 |
+|---------|---------|---------|
+| Docker Compose | 生产环境 | [Docker部署指南](DOCKER.md) |
+| 手动部署 | 开发环境 | [后端README](backend/README.md) + [前端README](svelte@latest/README.md) |
+
+## 🎯 功能特性
+
+### 已实现功能
+- ✅ 用户认证（注册/登录）
+- ✅ 个人档案管理（Anchor页面）
+- ✅ 任务管理（Doing页面）
+- ✅ 成就跟踪（Done页面）
+- ✅ 计划制定（Plan页面）
+- ✅ 响应式设计
+- ✅ 深色模式
+- ✅ 自定义背景
+
+### 原始设想功能
+- 📝 博客系统集成
+- 🤖 AI生成任务报告
+- 📊 月报/年报生成
+- 🔗 社交平台同步
+
+## 🤝 贡献指南
+
+1. **阅读文档** - 首先阅读 [开发须知](DEVELOPMENT.md)
+2. **理解架构** - 本项目为AI主导开发，请保持架构一致性
+3. **遵循规范** - 参考各模块README中的代码规范
+4. **测试验证** - 确保修改不破坏现有功能
+5. **更新文档** - 及时更新相关文档
+
+## 📄 许可证
+
+MIT License
+
+## 📞 支持
+
+如需帮助，请参考：
+- [开发须知](DEVELOPMENT.md) - 详细的开发指南
+- [Docker部署指南](DOCKER.md) - 容器化部署说明
+- [后端README](backend/README.md) - 后端服务文档
+- [前端README](svelte@latest/README.md) - 前端应用文档
+
+---
+
+**🤖 本项目由AI助手主导开发，体现了AI在现代软件开发中的强大能力**
