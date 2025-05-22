@@ -2,11 +2,14 @@
 # Defines the TokenBlocklist model for storing revoked JWTs.
 
 from ..extensions import db
-import datetime # Import datetime module
+import datetime
+from .base import BaseModel
+from typing import Dict, Any
 
-class TokenBlocklist(db.Model):
+class TokenBlocklist(BaseModel):
     """
     Model for storing JTI of revoked JWTs.
+    Inherits common fields and methods from BaseModel.
     """
     __tablename__ = 'token_blocklist'
 
@@ -14,12 +17,22 @@ class TokenBlocklist(db.Model):
     jti = db.Column(db.String(36), nullable=False, unique=True, index=True)
     token_type = db.Column(db.String(10), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    # Use timezone-aware UTC datetime for default
-    created_at = db.Column(db.DateTime, nullable=False,
-                           default=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+    # No need for updated_at in this model, so we'll override it to None
+    updated_at = None
 
     user = db.relationship('User')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """String representation of the TokenBlocklist object."""
         return f"<TokenBlocklist jti={self.jti}, user_id={self.user_id}>"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Converts the TokenBlocklist instance to a dictionary."""
+        return {
+            'id': self.id,
+            'jti': self.jti,
+            'token_type': self.token_type,
+            'user_id': self.user_id,
+            'created_at': self.format_datetime(self.created_at),
+        }

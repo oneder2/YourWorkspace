@@ -1,5 +1,6 @@
 # /your_project_root/run.py
-# This script imports the app factory and runs the Flask development server.
+# This script imports the app factory and creates the Flask application.
+# It can be run directly for development or via Gunicorn for production.
 
 import os
 from dotenv import load_dotenv
@@ -18,6 +19,9 @@ from app import create_app
 config_name = os.getenv('FLASK_CONFIG', 'development')
 app = create_app(config_name)
 
+# This app object is used by Gunicorn in production
+# The if block below is only executed when running this file directly
+
 if __name__ == '__main__':
     # Run the app using Flask's built-in development server
     # host='0.0.0.0' makes it accessible on your local network
@@ -25,4 +29,3 @@ if __name__ == '__main__':
     # port can be set via PORT env var or defaults to 5000
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=app.config.get('DEBUG', False))
-

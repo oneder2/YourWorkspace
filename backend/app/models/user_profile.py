@@ -3,12 +3,15 @@
 
 from ..extensions import db
 import datetime
+from .base import BaseModel
+from typing import Dict, Any, Optional
 
-class UserProfile(db.Model):
+class UserProfile(BaseModel):
     """
     UserProfile model for storing additional user profile information,
     including professional title and one-liner bio for the "Anchor Overview".
     This model has a one-to-one relationship with the User model.
+    Inherits common fields and methods from BaseModel.
     """
     __tablename__ = 'user_profiles'
 
@@ -21,13 +24,6 @@ class UserProfile(db.Model):
     skill = db.Column(db.Text, nullable=True) # TEXT - New field for user skills
     summary = db.Column(db.Text, nullable=True) # TEXT - New field for user summary
 
-    # Timestamps
-    # default=lambda: datetime.datetime.now(datetime.timezone.utc) ensures timezone-aware UTC timestamps
-    created_at = db.Column(db.DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
-    updated_at = db.Column(db.DateTime,
-                           default=lambda: datetime.datetime.now(datetime.timezone.utc),
-                           onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
-
     # --- Relationship to User ---
     # This creates a bidirectional relationship:
     # - UserProfile instance will have a 'user' attribute to access the parent User.
@@ -36,12 +32,11 @@ class UserProfile(db.Model):
     # 'back_populates' is preferred over 'backref' for explicit relationship definition.
     user = db.relationship('User', back_populates='profile')
 
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         """String representation of the UserProfile object."""
         return f'<UserProfile for UserID {self.id}>'
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Converts the UserProfile instance to a dictionary."""
         return {
             'user_id': self.id, # Same as user.id
@@ -49,6 +44,6 @@ class UserProfile(db.Model):
             'one_liner_bio': self.one_liner_bio,
             'skill': self.skill,
             'summary': self.summary,
-            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() + 'Z' if self.updated_at else None,
+            'created_at': self.format_datetime(self.created_at),
+            'updated_at': self.format_datetime(self.updated_at),
         }

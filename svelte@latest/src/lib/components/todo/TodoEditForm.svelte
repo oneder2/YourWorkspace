@@ -7,7 +7,7 @@
   let {
     todo,
     isLoading: externalIsLoading = false,
-    onSaveSuccess = (updatedTodo: TodoItem) => {},
+    onSaveSuccess = (_: TodoItem) => {},
     onCloseModalRequest = () => {}
   } = $props<{
     todo: TodoItem;
@@ -200,7 +200,7 @@
           {/each}
         </select>
       </div>
-      
+
       <div class="form-group form-group-half focus-toggle-container">
         <div class="focus-toggle-group">
           <input
@@ -239,12 +239,12 @@
   .todo-edit-form-container {
     padding: 0.5rem 0.75rem;
   }
-  
+
   /* 表单组样式 */
   .todo-edit-form .form-group {
     margin-bottom: 0.75rem;
   }
-  
+
   /* 标签样式 */
   .form-label {
     display: flex;
@@ -254,15 +254,15 @@
     color: var(--text-secondary, #495057);
     font-size: 0.85rem;
   }
-  
+
   .label-text {
     margin-right: 0.2rem;
   }
-  
+
   .required-asterisk {
     color: var(--danger-color, #dc3545);
   }
-  
+
   /* 输入框通用样式 */
   .form-input {
     width: 100%;
@@ -274,7 +274,7 @@
     background-color: var(--input-bg, #f8f9fa);
     color: var(--text-primary, #212529);
   }
-  
+
   /* 输入框焦点状态 */
   .form-input:focus {
     border-color: var(--primary-color, #007bff);
@@ -282,37 +282,37 @@
     outline: none;
     background-color: #fff;
   }
-  
+
   /* 输入框禁用状态 */
   .form-input:disabled {
     background-color: #e9ecef;
     opacity: 0.7;
     cursor: not-allowed;
   }
-  
+
   /* 占位符样式 */
   .form-input::placeholder {
     color: var(--text-placeholder, #6c757d);
     opacity: 0.7;
   }
-  
+
   /* 行布局 */
   .form-row {
     display: flex;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .form-group-half {
     flex: 1;
   }
-  
+
   /* 焦点切换组样式 */
   .focus-toggle-container {
     display: flex;
     align-items: center;
   }
-  
+
   .focus-toggle-group {
     display: flex;
     align-items: center;
@@ -323,7 +323,7 @@
     width: 100%;
     height: 38px; /* 与其他输入框高度一致 */
   }
-  
+
   /* 复选框样式 */
   .focus-checkbox {
     margin-right: 0.5rem;
@@ -332,20 +332,20 @@
     width: 1rem;
     cursor: pointer;
   }
-  
+
   .checkbox-label-inline {
     font-weight: normal;
     font-size: 0.85rem;
     color: var(--text-primary, #333);
     vertical-align: middle;
   }
-  
+
   .checkbox-label-inline small {
     font-size: 0.75rem;
     color: var(--text-muted, #6c757d);
     margin-left: 0.25rem;
   }
-  
+
   /* 消息样式 */
   .message {
     padding: 0.6rem 0.75rem;
@@ -355,17 +355,17 @@
     text-align: center;
     font-size: 0.85rem;
   }
-  
+
   .message p {
     margin: 0;
   }
-  
+
   .error-message {
     background-color: rgba(220, 53, 69, 0.1);
     color: var(--danger-color, #dc3545);
     border: 1px solid rgba(220, 53, 69, 0.2);
   }
-  
+
   .success-message {
     background-color: rgba(40, 167, 69, 0.1);
     color: var(--success-color, #28a745);

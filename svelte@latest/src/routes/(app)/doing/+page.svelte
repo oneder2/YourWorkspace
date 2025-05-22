@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { authStore, type UserProfile } from '$lib/store/authStore';
+  import { authStore } from '$lib/store/authStore';
   // Import main store and specific derived stores
   import { todoStore, otherActiveTodos, completedTodos } from '$lib/store/todoStore';
   import TodoListSidebar from '$lib/components/todo/TodoListSidebar.svelte';
@@ -20,15 +20,15 @@
   const pageStyle = colorSchemes.doing;
 
   // State variables
-  let currentUser: UserProfile | null = null;
   let authUnsubscribe: () => void;
 
   // State to toggle between active and completed tasks
   let showCompletedTasks = $state(false);
 
   onMount(async () => {
-    authUnsubscribe = authStore.subscribe(value => {
-      currentUser = value.user;
+    // Subscribe to auth store to keep track of authentication state
+    authUnsubscribe = authStore.subscribe(() => {
+      // We don't need to store the user profile here, just keep the subscription active
     });
 
     // Access main store state for the condition
