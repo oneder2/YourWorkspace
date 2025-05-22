@@ -2,15 +2,15 @@
   import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore'; // Store for loading state and errors
   import type { TodoItem } from '$lib/services/todoService';
-  import TodoAddDrawer from './TodoAddDrawer.svelte';
-  import TodoEditDrawer from './TodoEditDrawer.svelte';
+  import TodoAddModal from './TodoAddModal.svelte';
+  import TodoEditModal from './TodoEditModal.svelte';
 
-  // State for showing/hiding the add drawer
-  let isAddDrawerOpen = false;
+  // State for showing/hiding the add modal
+  let isAddModalOpen = false;
 
   // State for editing
   let editingTodo: TodoItem | null = null;
-  let isEditDrawerOpen = false;
+  let isEditModalOpen = false;
 
   // Functions to handle todo actions
   function handleToggleStatus(todo: TodoItem) {
@@ -19,17 +19,17 @@
 
   function handleEdit(todo: TodoItem) {
     editingTodo = { ...todo };
-    isEditDrawerOpen = true;
+    isEditModalOpen = true;
   }
 
   function handleEditSave(_updatedTodo: TodoItem) {
     // This will be called when the edit is successful
-    isEditDrawerOpen = false;
+    isEditModalOpen = false;
     editingTodo = null;
   }
 
   function handleEditCancel() {
-    isEditDrawerOpen = false;
+    isEditModalOpen = false;
     editingTodo = null;
   }
 
@@ -40,15 +40,15 @@
   }
 
   function handleAddTask() {
-    isAddDrawerOpen = true;
+    isAddModalOpen = true;
   }
 
   function handleAddSuccess() {
-    isAddDrawerOpen = false;
+    isAddModalOpen = false;
   }
 
   function handleAddCancel() {
-    isAddDrawerOpen = false;
+    isAddModalOpen = false;
   }
 
   function handleSetAsFocus(todo: TodoItem) {
@@ -97,16 +97,16 @@
     </button>
   </div>
 
-  <TodoAddDrawer
-    isOpen={isAddDrawerOpen}
+  <TodoAddModal
+    isOpen={isAddModalOpen}
     onAddSuccess={handleAddSuccess}
     onCloseRequest={handleAddCancel}
   />
 
   {#if editingTodo}
-    <TodoEditDrawer
+    <TodoEditModal
       todo={editingTodo}
-      isOpen={isEditDrawerOpen}
+      isOpen={isEditModalOpen}
       onSaveSuccess={handleEditSave}
       onCloseRequest={handleEditCancel}
     />

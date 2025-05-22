@@ -2,10 +2,10 @@
   // Import the main store for isLoading/error and the specific derived store
   import { todoStore, currentFocusTodos } from '$lib/store/todoStore';
   import type { TodoItem } from '$lib/services/todoService';
-  import TodoEditDrawer from '$lib/components/todo/TodoEditDrawer.svelte';
+  import MainFocusEditModal from './MainFocusEditModal.svelte';
 
-  // State for edit drawer
-  let isEditDrawerOpen = $state(false);
+  // State for edit modal
+  let isEditModalOpen = $state(false);
   let currentEditingItem = $state<TodoItem | null>(null);
 
   // Function to handle removing an item from focus
@@ -15,15 +15,15 @@
     }
   }
 
-  // Function to open the edit drawer
-  function openEditDrawer(item: TodoItem) {
+  // Function to open the edit modal
+  function openEditModal(item: TodoItem) {
     currentEditingItem = item;
-    isEditDrawerOpen = true;
+    isEditModalOpen = true;
   }
 
-  // Function to close the edit drawer
-  function closeEditDrawer() {
-    isEditDrawerOpen = false;
+  // Function to close the edit modal
+  function closeEditModal() {
+    isEditModalOpen = false;
     currentEditingItem = null;
   }
 </script>
@@ -85,7 +85,7 @@
                 onclick={() => {
                   const item = $todoStore.todos.find(t => t.id === focusItem.id);
                   if (item) {
-                    openEditDrawer(item);
+                    openEditModal(item);
                   }
                 }}
               >
@@ -131,11 +131,11 @@
   {/if}
 
   {#if currentEditingItem}
-    <TodoEditDrawer
+    <MainFocusEditModal
       todo={currentEditingItem}
-      isOpen={isEditDrawerOpen}
-      onSaveSuccess={closeEditDrawer}
-      onCloseRequest={closeEditDrawer}
+      isOpen={isEditModalOpen}
+      onSaveSuccess={closeEditModal}
+      onCloseRequest={closeEditModal}
     />
   {/if}
 </div>

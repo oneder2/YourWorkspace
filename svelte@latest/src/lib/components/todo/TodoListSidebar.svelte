@@ -3,15 +3,15 @@
   import { todoStore } from '$lib/store/todoStore'; // Store for loading state and errors
   import type { TodoItem } from '$lib/services/todoService';
 
-  import TodoAddDrawer from './TodoAddDrawer.svelte';
-  import TodoEditDrawer from './TodoEditDrawer.svelte';
+  import TodoAddModal from './TodoAddModal.svelte';
+  import TodoEditModal from './TodoEditModal.svelte';
 
-  // State for showing/hiding the add drawer
-  let isAddDrawerOpen = $state(false);
+  // State for showing/hiding the add modal
+  let isAddModalOpen = $state(false);
 
   // State for editing
   let editingTodo: TodoItem | null = $state(null);
-  let isEditDrawerOpen = $state(false);
+  let isEditModalOpen = $state(false);
 
   // Functions to handle todo actions
   function handleToggleStatus(todo: TodoItem) {
@@ -20,17 +20,17 @@
 
   function handleEdit(todo: TodoItem) {
     editingTodo = { ...todo };
-    isEditDrawerOpen = true;
+    isEditModalOpen = true;
   }
 
   function handleEditSave(_updatedTodo: TodoItem) {
     // This will be called when the edit is successful
-    isEditDrawerOpen = false;
+    isEditModalOpen = false;
     editingTodo = null;
   }
 
   function handleEditCancel() {
-    isEditDrawerOpen = false;
+    isEditModalOpen = false;
     editingTodo = null;
   }
 
@@ -41,15 +41,15 @@
   }
 
   function toggleAddForm() {
-    isAddDrawerOpen = true;
+    isAddModalOpen = true;
   }
 
   function handleAddSuccess() {
-    isAddDrawerOpen = false;
+    isAddModalOpen = false;
   }
 
   function handleAddCancel() {
-    isAddDrawerOpen = false;
+    isAddModalOpen = false;
   }
 
   function handleSetAsFocus(todo: TodoItem) {
@@ -90,16 +90,16 @@
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm py-2">
-  <TodoAddDrawer
-    isOpen={isAddDrawerOpen}
+  <TodoAddModal
+    isOpen={isAddModalOpen}
     onAddSuccess={handleAddSuccess}
     onCloseRequest={handleAddCancel}
   />
 
   {#if editingTodo}
-    <TodoEditDrawer
+    <TodoEditModal
       todo={editingTodo}
-      isOpen={isEditDrawerOpen}
+      isOpen={isEditModalOpen}
       onSaveSuccess={handleEditSave}
       onCloseRequest={handleEditCancel}
     />
