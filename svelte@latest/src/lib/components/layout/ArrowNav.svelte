@@ -144,28 +144,28 @@
 
 <!-- Left arrow button (fixed position) - hidden on /done page -->
 {#if !(currentViewDisplay === 'Done')}
-  <div class="fixed left-8 top-1/2 transform -translate-y-1/2 z-40">
+  <div class="fixed left-0 top-1/2 transform -translate-y-1/2 z-40"> 
     <button
-      class="arrow-button arrow-left inline-flex items-center justify-center p-5 bg-gray-500/30 hover:bg-gray-600/70 active:bg-gray-700/80 dark:bg-gray-700/30 dark:hover:bg-gray-600/70 dark:active:bg-gray-500/80 text-gray-700 hover:text-white dark:text-gray-300 dark:hover:text-white font-medium rounded-full border border-gray-400/30 dark:border-gray-500/30 shadow-lg"
+      class="arrow-button arrow-left inline-flex items-center justify-center p-5 bg-gray-500/30 hover:bg-gray-600/70 active:bg-gray-700/80 dark:bg-gray-700/30 dark:hover:bg-gray-600/70 dark:active:bg-gray-500/80 text-gray-700 hover:text-white dark:text-gray-300 dark:hover:text-white font-medium rounded-md border border-gray-400/30 dark:border-gray-500/30 shadow-lg h-[calc(100vh/3)] aspect-[2/5]" 
       onclick={() => navigateTo('prev')}
       title="Previous: {currentIndex !== -1 && currentIndex > 0 ? views[(currentIndex - 1 + views.length) % views.length].display : views[views.length - 1].display}"
       aria-label="Go to previous section"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-1/1 h-1/1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
   </div>
 {/if}
 
 <!-- Right arrow button (fixed position) - hidden on /plan page -->
 {#if !(currentViewDisplay === 'Plan')}
-  <div class="fixed right-8 top-1/2 transform -translate-y-1/2 z-40">
+  <div class="fixed right-0 top-1/2 transform -translate-y-1/2 z-40">
     <button
-      class="arrow-button arrow-right inline-flex items-center justify-center p-5 bg-gray-500/30 hover:bg-gray-600/70 active:bg-gray-700/80 dark:bg-gray-700/30 dark:hover:bg-gray-600/70 dark:active:bg-gray-500/80 text-gray-700 hover:text-white dark:text-gray-300 dark:hover:text-white font-medium rounded-full border border-gray-400/30 dark:border-gray-500/30 shadow-lg"
+      class="arrow-button arrow-right inline-flex items-center justify-center p-5 bg-gray-500/30 hover:bg-gray-600/70 active:bg-gray-700/80 dark:bg-gray-700/30 dark:hover:bg-gray-600/70 dark:active:bg-gray-500/80 text-gray-700 hover:text-white dark:text-gray-300 dark:hover:text-white font-medium rounded-md border border-gray-400/30 dark:border-gray-500/30 shadow-lg h-[calc(100vh/3)] aspect-[2/5]"
       onclick={() => navigateTo('next')}
       title="Next: {currentIndex !== -1 ? views[(currentIndex + 1) % views.length].display : views[0].display}"
       aria-label="Go to next section"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-1/1 h-1/1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
     </button>
   </div>
 {/if}
