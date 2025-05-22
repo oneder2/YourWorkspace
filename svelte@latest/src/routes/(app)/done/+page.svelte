@@ -235,7 +235,8 @@
         <!-- Main content - Achievement details -->
         <div class={combineClasses(columnSpans.threeFourths, "h-full flex flex-col")}>
           <div class={combineClasses(cardBase, pageStyle.border, "h-full flex flex-col")}>
-            <div class="p-6 flex-grow overflow-auto">
+            <div class="flex-grow overflow-hidden">
+              <div class="h-full overflow-y-auto p-6">
               {#if selectedAchievement && isViewMode}
                 <!-- Detailed view of the selected achievement -->
                 <div>
@@ -352,6 +353,7 @@
                   </p>
                 </div>
               {/if}
+              </div>
             </div>
           </div>
         </div>

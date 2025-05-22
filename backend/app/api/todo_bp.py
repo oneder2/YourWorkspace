@@ -1,7 +1,7 @@
 # /your_project_root/app/api/todo_bp.py
 # Blueprint for To-Do list related API endpoints.
 
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import datetime # For handling date conversions if needed
 
