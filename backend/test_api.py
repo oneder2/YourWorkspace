@@ -14,7 +14,7 @@ from app import create_app
 
 # Start the Flask server in a separate thread
 def start_flask_server():
-    app = create_app('testing')
+    app = create_app('development')
     app.run(host='localhost', port=5000, debug=False)
 
 # Start the server in a separate thread

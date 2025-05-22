@@ -43,8 +43,10 @@ class DevelopmentConfig(Config):
     """Development-specific configuration."""
     DEBUG = True
     SQLALCHEMY_ECHO = True # Echo SQL statements for debugging
+    # 使用绝对路径
+    db_path = os.path.abspath(os.path.join(basedir, 'instance', 'dev.sqlite'))
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'instance', 'dev.sqlite')
+        f'sqlite:///{db_path}'
 
 
 class TestingConfig(Config):
@@ -54,41 +56,53 @@ class TestingConfig(Config):
     SECRET_KEY = 'test-secret-key' # Predictable key for testing
     JWT_SECRET_KEY = 'test-jwt-secret-key' # Use a predictable key for tests
     SQLALCHEMY_ECHO = False # Usually disable SQL echo during tests unless debugging specific SQL
-    
-    # Determine if TEST_DATABASE_URL is set, otherwise fallback to SQLite in-memory
-    # This ensures that if TEST_DATABASE_URL is not set, we use SQLite for tests
-    _test_db_url = os.environ.get('TEST_DATABASE_URL')
-    if not _test_db_url:
-        print("INFO: TEST_DATABASE_URL not set, using in-memory SQLite for testing.")
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    else:
-        print(f"INFO: Using TEST_DATABASE_URL for testing: {_test_db_url}")
-        SQLALCHEMY_DATABASE_URI = _test_db_url
-    
+    # 使用绝对路径
+    db_path = os.path.abspath(os.path.join(basedir, 'instance', 'test.sqlite'))
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
+        f'sqlite:///{db_path}'
+
     # Increased token expiry times for testing
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=30)  # Increased from 5
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(minutes=1) # Increased from 10 seconds
+
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+
+        # Determine if TEST_DATABASE_URL is set, otherwise fallback to SQLite in-memory
+        # This ensures that if TEST_DATABASE_URL is not set, we use SQLite for tests
+        _test_db_url = os.environ.get('TEST_DATABASE_URL')
+        if not _test_db_url:
+            print("INFO: TEST_DATABASE_URL not set, using in-memory SQLite for testing.")
+            app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        else:
+            print(f"INFO: Using TEST_DATABASE_URL for testing: {_test_db_url}")
+            app.config['SQLALCHEMY_DATABASE_URI'] = _test_db_url
 
 
 class ProductionConfig(Config):
     """Production-specific configuration."""
     DEBUG = False
     TESTING = False
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    if not SECRET_KEY:
-        raise ValueError("No SECRET_KEY set for production configuration")
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
-    if not JWT_SECRET_KEY:
-        raise ValueError("No JWT_SECRET_KEY set for production configuration")
-
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    if not SQLALCHEMY_DATABASE_URI:
-        raise ValueError("No DATABASE_URL set for production configuration")
+    # 使用绝对路径
+    db_path = os.path.abspath(os.path.join(basedir, 'instance', 'prod.sqlite'))
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        f'sqlite:///{db_path}'
 
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
-        pass
+
+        # 在初始化应用时检查必要的环境变量
+        SECRET_KEY = os.environ.get('SECRET_KEY')
+        if not SECRET_KEY:
+            raise ValueError("No SECRET_KEY set for production configuration")
+        app.config['SECRET_KEY'] = SECRET_KEY
+
+        JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+        if not JWT_SECRET_KEY:
+            raise ValueError("No JWT_SECRET_KEY set for production configuration")
+        app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
 
 
 config = {
