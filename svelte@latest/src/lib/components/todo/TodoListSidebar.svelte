@@ -90,17 +90,22 @@
     addButtonId?: string;
   }>();
 
+  // Expose the toggleAddForm function to parent components
+  export function triggerAddForm() {
+    toggleAddForm();
+  }
+
   onMount(() => {
-    // Add event listener to the add button
-    const addButton = document.getElementById(addButtonId);
-    if (addButton) {
-      addButton.addEventListener('click', toggleAddForm);
+    // Set up a global function that can be called by parent components
+    // This is a more reliable way than DOM event listeners
+    if (typeof window !== 'undefined') {
+      (window as any)[`toggleAddForm_${addButtonId}`] = toggleAddForm;
     }
 
     return () => {
-      // Clean up event listener
-      if (addButton) {
-        addButton.removeEventListener('click', toggleAddForm);
+      // Clean up global function
+      if (typeof window !== 'undefined') {
+        delete (window as any)[`toggleAddForm_${addButtonId}`];
       }
     };
   });
@@ -169,14 +174,19 @@
             </div>
             <div class="flex space-x-1">
               <button
-                class="p-1 {todo.is_current_focus ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'} transition-colors"
+                class="p-1 {todo.is_current_focus ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'} transition-colors {loadingFocusToggle.has(todo.id) ? 'opacity-50 cursor-not-allowed' : ''}"
                 title={todo.is_current_focus ? "Remove from Main Focus" : "Set as Main Focus"}
                 aria-label={todo.is_current_focus ? "Remove from Main Focus" : "Set as Main Focus"}
                 onclick={() => handleSetAsFocus(todo)}
+                disabled={loadingFocusToggle.has(todo.id)}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+                {#if loadingFocusToggle.has(todo.id)}
+                  <div class="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                {/if}
               </button>
               <button
                 class="p-1 text-gray-400 hover:text-blue-500 transition-colors"

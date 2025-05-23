@@ -27,13 +27,25 @@
 
   onMount(async () => {
     // Subscribe to auth store to keep track of authentication state
-    authUnsubscribe = authStore.subscribe(() => {
-      // We don't need to store the user profile here, just keep the subscription active
+    authUnsubscribe = authStore.subscribe(async (authState) => {
+      // Only load todos if user is authenticated and we don't have data yet
+      if (authState.accessToken && $todoStore.todos.length === 0 && !$todoStore.isLoading && !$todoStore.error) {
+        try {
+          await todoStore.loadAllTodos();
+        } catch (error) {
+          console.error('Failed to load todos on auth state change:', error);
+        }
+      }
     });
 
-    // Access main store state for the condition
-    if ($todoStore.todos.length === 0 && !$todoStore.isLoading && !$todoStore.error) {
-      await todoStore.loadAllTodos();
+    // Initial load if already authenticated
+    const currentAuth = $authStore;
+    if (currentAuth.accessToken && $todoStore.todos.length === 0 && !$todoStore.isLoading && !$todoStore.error) {
+      try {
+        await todoStore.loadAllTodos();
+      } catch (error) {
+        console.error('Failed to load todos on mount:', error);
+      }
     }
   });
 
