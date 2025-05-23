@@ -14,8 +14,12 @@
   let isEditModalOpen = $state(false);
 
   // Functions to handle todo actions
-  function handleToggleStatus(todo: TodoItem) {
-    todoStore.toggleCompleteStatus(todo.id, todo.status);
+  async function handleToggleStatus(todo: TodoItem) {
+    try {
+      await todoStore.toggleCompleteStatus(todo.id, todo.status);
+    } catch (error) {
+      console.error('Failed to toggle todo status:', error);
+    }
   }
 
   function handleEdit(todo: TodoItem) {
@@ -34,9 +38,13 @@
     editingTodo = null;
   }
 
-  function handleDelete(todo: TodoItem) {
+  async function handleDelete(todo: TodoItem) {
     if (confirm(`Are you sure you want to delete "${todo.title}"?`)) {
-      todoStore.removeTodo(todo.id);
+      try {
+        await todoStore.removeTodo(todo.id);
+      } catch (error) {
+        console.error('Failed to delete todo:', error);
+      }
     }
   }
 

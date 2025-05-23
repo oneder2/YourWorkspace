@@ -11,6 +11,9 @@
   // State for loading operations
   let loadingFocusToggle = $state<Set<number>>(new Set());
 
+  // Use derived for reactive focus todos
+  let localFocusTodos = $derived($currentFocusTodos);
+
   // Function to handle removing an item from focus
   async function handleRemoveFromFocus(id: number) {
     if (confirm("Remove this item from Main Focus?")) {
@@ -18,9 +21,31 @@
       loadingFocusToggle = new Set(loadingFocusToggle); // Trigger reactivity
       try {
         await todoStore.toggleCurrentFocus(id);
+      } catch (error) {
+        console.error('Failed to remove from focus:', error);
       } finally {
         loadingFocusToggle.delete(id);
         loadingFocusToggle = new Set(loadingFocusToggle); // Trigger reactivity
+      }
+    }
+  }
+
+  // Function to handle completing a focus item
+  async function handleToggleCompleteStatus(id: number, currentStatus: string) {
+    try {
+      await todoStore.toggleCompleteStatus(id, currentStatus as any);
+    } catch (error) {
+      console.error('Failed to toggle complete status:', error);
+    }
+  }
+
+  // Function to handle deleting a focus item
+  async function handleDeleteFocusItem(id: number, title: string) {
+    if (confirm(`Are you sure you want to delete "${title}"?`)) {
+      try {
+        await todoStore.removeTodo(id);
+      } catch (error) {
+        console.error('Failed to delete todo:', error);
       }
     }
   }
@@ -43,7 +68,7 @@
     <div class="p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-md text-center">
       <p>Loading focus items...</p>
     </div>
-  {:else if $currentFocusTodos.length === 0}
+  {:else if localFocusTodos.length === 0}
     <div class="p-6 bg-amber-50/50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-400 border border-dashed border-amber-300 dark:border-amber-700 rounded-md text-center">
       <p>
         No current focus set.
@@ -53,7 +78,7 @@
     </div>
   {:else}
     <div class="focus-item-container border border-amber-200 dark:border-amber-700 rounded-md overflow-hidden bg-amber-50/50 dark:bg-amber-900/10">
-      {#each $currentFocusTodos as focusItem (focusItem.id)}
+      {#each localFocusTodos as focusItem (focusItem.id)}
         <div class="focus-item p-4 border-b border-amber-200 dark:border-amber-700 last:border-b-0">
           <div class="flex items-start">
             <div class="flex-shrink-0 mr-3">
@@ -62,7 +87,7 @@
                 id="focus-status-{focusItem.id}"
                 class="w-5 h-5 rounded border-amber-300 text-amber-500 focus:ring-amber-500"
                 checked={focusItem.status === 'completed'}
-                onchange={() => todoStore.toggleCompleteStatus(focusItem.id, focusItem.status)}
+                onchange={() => handleToggleCompleteStatus(focusItem.id, focusItem.status)}
               />
             </div>
             <div class="flex-grow">
@@ -126,11 +151,7 @@
                 class="p-1 text-amber-600 hover:text-red-500 dark:text-amber-400 dark:hover:text-red-400 transition-colors"
                 title="Delete"
                 aria-label="Delete task"
-                onclick={() => {
-                  if (confirm(`Are you sure you want to delete "${focusItem.title}"?`)) {
-                    todoStore.removeTodo(focusItem.id);
-                  }
-                }}
+                onclick={() => handleDeleteFocusItem(focusItem.id, focusItem.title)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />

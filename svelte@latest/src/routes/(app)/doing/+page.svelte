@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { authStore } from '$lib/store/authStore';
   // Import main store and specific derived stores
-  import { todoStore, otherActiveTodos, completedTodos } from '$lib/store/todoStore';
+  import { todoStore, otherActiveTodos, completedTodos, currentFocusTodos } from '$lib/store/todoStore';
   import TodoListSidebar from '$lib/components/todo/TodoListSidebar.svelte';
   import CurrentFocusDisplay from '$lib/components/anchor/current_focus/CurrentFocusDisplay.svelte';
   import {
@@ -24,6 +24,10 @@
 
   // State to toggle between active and completed tasks
   let showCompletedTasks = $state(false);
+
+  // Force reactivity by creating reactive variables that depend on store state
+  let activeTodos = $derived($otherActiveTodos);
+  let completedTodosLocal = $derived($completedTodos);
 
   onMount(async () => {
     // Subscribe to auth store to keep track of authentication state
@@ -91,9 +95,9 @@
             <!-- Scrollable content with fixed height and internal scrolling -->
             <div class={combineClasses("pl-3", "absolute inset-0 overflow-y-auto pr-2")}>
               {#if !showCompletedTasks}
-                <TodoListSidebar todos={$otherActiveTodos} addButtonId="add-todo-button" />
+                <TodoListSidebar todos={activeTodos} addButtonId="add-todo-button" />
               {:else}
-                <TodoListSidebar todos={$completedTodos} addButtonId="add-todo-button" />
+                <TodoListSidebar todos={completedTodosLocal} addButtonId="add-todo-button" />
               {/if}
             </div>
           </div>
