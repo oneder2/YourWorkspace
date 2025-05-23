@@ -241,9 +241,9 @@
                 <!-- Detailed view of the selected achievement -->
                 <div>
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class={combineClasses(headings.h2, pageStyle.text)}>
+                    <h1 class={combineClasses(headings.h1, pageStyle.text)}>
                       {selectedAchievement.title}
-                    </h2>
+                    </h1>
                     <div class="flex space-x-2">
                       <button
                         onclick={() => selectedAchievement && openEditModal(selectedAchievement)}

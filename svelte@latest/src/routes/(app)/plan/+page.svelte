@@ -266,9 +266,9 @@
                 <!-- Detailed view of the selected plan -->
                 <div>
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class={combineClasses(headings.h2, pageStyle.text)}>
+                    <h1 class={combineClasses(headings.h1, pageStyle.text)}>
                       {selectedPlan.title || 'Plan Details'}
-                    </h2>
+                    </h1>
                     <div class="flex space-x-2">
                       <button
                         onclick={() => selectedPlan && openEditInline(selectedPlan)}
@@ -306,6 +306,7 @@
 
                   <!-- Status -->
                   <div class="mb-6">
+                    <h3 class={combineClasses("text-lg font-semibold mb-2", pageStyle.text)}>Status</h3>
                     <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                       {selectedPlan.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
                        selectedPlan.status === 'achieved' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
@@ -322,6 +323,7 @@
                   <!-- Target Date -->
                   {#if selectedPlan.target_date}
                     <div class="mb-6">
+                      <h3 class={combineClasses("text-lg font-semibold mb-2", pageStyle.text)}>Target Date</h3>
                       <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
