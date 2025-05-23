@@ -2,48 +2,53 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
-  plugins: [
-    sveltekit() // Integrates SvelteKit with Vite
-  ],
+export default defineConfig(({ mode }) => {
+  // Determine if we're in production mode
+  const isProduction = mode === 'production';
 
-  // Server configuration (for the Vite development server)
-  server: {
-    port: 5173, // Default SvelteKit/Vite port, change if needed
-    strictPort: true, // Exit if port is already in use
-    // proxy: { // Optional: Setup proxy for API requests during development to avoid CORS issues
-    //   // Example: All requests to '/api' in dev will be forwarded to 'http://localhost:5000/api'
-    //   '/api': {
-    //     target: 'http://localhost:5000', // Your backend API URL
-    //     changeOrigin: true, // Needed for virtual hosted sites
-    //     // rewrite: (path) => path.replace(/^\/api/, '') // If your backend doesn't have /api prefix
-    //   }
-    // }
-  },
+  // Set the backend API URL based on environment
+  // In production, the backend service will be available at 'http://backend:5000'
+  // In development, it will be 'http://localhost:5000'
+  const backendUrl = isProduction
+    ? 'http://backend:5000'
+    : 'http://localhost:5000';
 
-  // Build configuration
-  build: {
-    // Options for the production build
-    // sourcemap: true, // Generate source maps for production (can be 'inline', 'hidden')
-  },
+  return {
+    plugins: [
+      sveltekit() // Integrates SvelteKit with Vite
+    ],
 
-  // Preview server configuration (for `vite preview` command)
-  preview: {
-    port: 4173, // Port for the preview server
-    strictPort: true,
-  },
+    // Server configuration (for the Vite development server)
+    server: {
+      port: 5173, // Default SvelteKit/Vite port, change if needed
+      strictPort: true, // Exit if port is already in use
+      proxy: { // Setup proxy for API requests during development to avoid CORS issues
+        // All requests to '/api/v1' in dev will be forwarded to the backend API URL
+        '/api/v1': {
+          target: backendUrl, // Your backend API URL
+          changeOrigin: true, // Needed for virtual hosted sites
+          secure: false,
+          rewrite: (path) => path // Keep the path as is since backend has the same prefix
+        }
+      }
+    },
 
-  // Environment variable handling
-  // Vite automatically loads .env files.
-  // envPrefix: 'VITE_', // Default prefix for environment variables exposed to client-side
+    // Build configuration
+    build: {
+      // Options for the production build
+      sourcemap: false, // Don't generate source maps for production to reduce size
+      reportCompressedSize: false, // Disable reporting compressed chunk sizes to speed up build
+      chunkSizeWarningLimit: 1000, // Increase the size limit for warnings
+    },
 
-  // Resolve aliases (can also be defined in svelte.config.js, keeping them in one place is good)
-  // resolve: {
-  //   alias: {
-  //     '$lib': path.resolve(__dirname, './src/lib'),
-  //     '$components': path.resolve(__dirname, './src/lib/components'),
-  //     // Add other aliases if you prefer to manage them here
-  //   }
-  // }
-  // If using path.resolve, you'd need: import path from 'path';
+    // Preview server configuration (for `vite preview` command)
+    preview: {
+      port: 4173, // Port for the preview server
+      strictPort: true,
+    },
+
+    // Environment variable handling
+    // Vite automatically loads .env files.
+    envPrefix: 'VITE_', // Default prefix for environment variables exposed to client-side
+  };
 });

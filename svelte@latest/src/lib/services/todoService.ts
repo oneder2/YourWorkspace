@@ -59,8 +59,8 @@ export interface UpdateTodoPayload {
  */
 async function getAllTodos(): Promise<TodoItem[]> {
   try {
-    const todos = await api.get<TodoItem[]>('/todo/todos');
-    return todos || [];
+    const response = await api.get<{data: TodoItem[]}>('/todo/todos');
+    return response.data || [];
   } catch (error) {
     console.error('TodoService: Failed to fetch all todos', error);
     throw error;
@@ -77,8 +77,8 @@ async function getAllTodos(): Promise<TodoItem[]> {
  */
 async function createTodo(payload: CreateTodoPayload): Promise<TodoItem> {
   try {
-    const newTodo = await api.post<TodoItem>('/todo/todos', payload);
-    return newTodo;
+    const response = await api.post<{data: TodoItem}>('/todo/todos', payload);
+    return response.data;
   } catch (error) {
     console.error('TodoService: Failed to create todo', error);
     throw error;
@@ -95,8 +95,8 @@ async function createTodo(payload: CreateTodoPayload): Promise<TodoItem> {
  */
 async function getTodoById(todoId: number): Promise<TodoItem | null> {
   try {
-    const todoItem = await api.get<TodoItem>(`/todo/todos/${todoId}`);
-    return todoItem;
+    const response = await api.get<{data: TodoItem}>(`/todo/todos/${todoId}`);
+    return response.data;
   } catch (error: any) {
     if (error.status === 404) {
       console.warn(`TodoService: Todo item with ID ${todoId} not found.`);
@@ -118,8 +118,8 @@ async function getTodoById(todoId: number): Promise<TodoItem | null> {
  */
 async function updateTodo(todoId: number, payload: UpdateTodoPayload): Promise<TodoItem> {
   try {
-    const updatedTodo = await api.put<TodoItem>(`/todo/todos/${todoId}`, payload);
-    return updatedTodo;
+    const response = await api.put<{data: TodoItem}>(`/todo/todos/${todoId}`, payload);
+    return response.data;
   } catch (error) {
     console.error(`TodoService: Failed to update todo with ID ${todoId}`, error);
     throw error;

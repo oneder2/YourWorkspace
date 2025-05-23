@@ -2,17 +2,51 @@
   // Import the main store for isLoading/error and the specific derived store
   import { todoStore, currentFocusTodos } from '$lib/store/todoStore';
   import type { TodoItem } from '$lib/services/todoService';
-  import TodoEditForm from '$lib/components/todo/TodoEditForm.svelte';
+  import MainFocusEditModal from './MainFocusEditModal.svelte';
 
   // State for edit modal
   let isEditModalOpen = $state(false);
   let currentEditingItem = $state<TodoItem | null>(null);
-  let todoEditFormComponent = $state<TodoEditForm | null>(null);
+
+  // State for loading operations
+  let loadingFocusToggle = $state<Set<number>>(new Set());
+
+  // Use derived for reactive focus todos
+  let localFocusTodos = $derived($currentFocusTodos);
 
   // Function to handle removing an item from focus
-  function handleRemoveFromFocus(id: number) {
+  async function handleRemoveFromFocus(id: number) {
     if (confirm("Remove this item from Main Focus?")) {
-      todoStore.toggleCurrentFocus(id);
+      loadingFocusToggle.add(id);
+      loadingFocusToggle = new Set(loadingFocusToggle); // Trigger reactivity
+      try {
+        await todoStore.toggleCurrentFocus(id);
+      } catch (error) {
+        console.error('Failed to remove from focus:', error);
+      } finally {
+        loadingFocusToggle.delete(id);
+        loadingFocusToggle = new Set(loadingFocusToggle); // Trigger reactivity
+      }
+    }
+  }
+
+  // Function to handle completing a focus item
+  async function handleToggleCompleteStatus(id: number, currentStatus: string) {
+    try {
+      await todoStore.toggleCompleteStatus(id, currentStatus as any);
+    } catch (error) {
+      console.error('Failed to toggle complete status:', error);
+    }
+  }
+
+  // Function to handle deleting a focus item
+  async function handleDeleteFocusItem(id: number, title: string) {
+    if (confirm(`Are you sure you want to delete "${title}"?`)) {
+      try {
+        await todoStore.removeTodo(id);
+      } catch (error) {
+        console.error('Failed to delete todo:', error);
+      }
     }
   }
 
@@ -27,13 +61,6 @@
     isEditModalOpen = false;
     currentEditingItem = null;
   }
-
-  // Function to handle keyboard events for accessibility
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      closeEditModal();
-    }
-  }
 </script>
 
 <div class="focus-display-container">
@@ -41,7 +68,7 @@
     <div class="p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-md text-center">
       <p>Loading focus items...</p>
     </div>
-  {:else if $currentFocusTodos.length === 0}
+  {:else if localFocusTodos.length === 0}
     <div class="p-6 bg-amber-50/50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-400 border border-dashed border-amber-300 dark:border-amber-700 rounded-md text-center">
       <p>
         No current focus set.
@@ -51,7 +78,7 @@
     </div>
   {:else}
     <div class="focus-item-container border border-amber-200 dark:border-amber-700 rounded-md overflow-hidden bg-amber-50/50 dark:bg-amber-900/10">
-      {#each $currentFocusTodos as focusItem (focusItem.id)}
+      {#each localFocusTodos as focusItem (focusItem.id)}
         <div class="focus-item p-4 border-b border-amber-200 dark:border-amber-700 last:border-b-0">
           <div class="flex items-start">
             <div class="flex-shrink-0 mr-3">
@@ -60,12 +87,16 @@
                 id="focus-status-{focusItem.id}"
                 class="w-5 h-5 rounded border-amber-300 text-amber-500 focus:ring-amber-500"
                 checked={focusItem.status === 'completed'}
-                onchange={() => todoStore.toggleCompleteStatus(focusItem.id, focusItem.status)}
+                onchange={() => handleToggleCompleteStatus(focusItem.id, focusItem.status)}
               />
             </div>
             <div class="flex-grow">
               <div class="flex items-center">
-                <span class="text-yellow-500 mr-2">⭐</span>
+                <span class="text-yellow-500 mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                </span>
                 <h3 class="text-lg font-medium text-amber-900 dark:text-amber-100">{focusItem.title}</h3>
               </div>
               {#if focusItem.description}
@@ -102,24 +133,25 @@
                 </svg>
               </button>
               <button
-                class="p-1 text-amber-600 hover:text-blue-500 dark:text-amber-400 dark:hover:text-blue-400 transition-colors"
+                class="p-1 text-amber-600 hover:text-blue-500 dark:text-amber-400 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
                 title="Remove from Main Focus"
                 aria-label="Remove from Main Focus"
                 onclick={() => handleRemoveFromFocus(focusItem.id)}
+                disabled={loadingFocusToggle.has(focusItem.id)}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+                {#if loadingFocusToggle.has(focusItem.id)}
+                  <div class="h-5 w-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                {/if}
               </button>
               <button
                 class="p-1 text-amber-600 hover:text-red-500 dark:text-amber-400 dark:hover:text-red-400 transition-colors"
                 title="Delete"
                 aria-label="Delete task"
-                onclick={() => {
-                  if (confirm(`Are you sure you want to delete "${focusItem.title}"?`)) {
-                    todoStore.removeTodo(focusItem.id);
-                  }
-                }}
+                onclick={() => handleDeleteFocusItem(focusItem.id, focusItem.title)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -138,60 +170,12 @@
     </div>
   {/if}
 
-  {#if isEditModalOpen && currentEditingItem}
-    <div
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      onclick={(e) => {
-        if (e.target === e.currentTarget) closeEditModal();
-      }}
-      onkeydown={(e) => {
-        if (e.key === 'Escape') closeEditModal();
-      }}
-      tabindex="-1"
-    >
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col w-full max-h-[90vh] overflow-hidden max-w-xl"
-        role="document"
-      >
-        <header class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white">Edit Main Focus Item</h2>
-          <button
-            class="bg-transparent border-none text-3xl font-light text-gray-500 dark:text-gray-400 cursor-pointer p-1 leading-none"
-            onclick={closeEditModal}
-            aria-label="Close modal"
-          >
-            &times;
-          </button>
-        </header>
-
-        <main class="p-6 overflow-y-auto flex-grow">
-          <TodoEditForm
-            bind:this={todoEditFormComponent}
-            todo={currentEditingItem}
-            onSaveSuccess={closeEditModal}
-          />
-        </main>
-
-        <footer class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/80">
-          <button
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            onclick={closeEditModal}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-md hover:bg-amber-700"
-            onclick={() => todoEditFormComponent?.handleSubmit()}
-          >
-            Save Changes
-          </button>
-        </footer>
-      </div>
-    </div>
+  {#if currentEditingItem}
+    <MainFocusEditModal
+      todo={currentEditingItem}
+      isOpen={isEditModalOpen}
+      onSaveSuccess={closeEditModal}
+      onCloseRequest={closeEditModal}
+    />
   {/if}
 </div>

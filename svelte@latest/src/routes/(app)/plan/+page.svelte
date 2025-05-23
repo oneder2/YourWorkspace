@@ -38,23 +38,12 @@
 
     /**
      * Opens the modal in 'edit' mode for an existing future plan.
-     * This function is kept for potential future use with modal editing.
      * @param {FuturePlan} plan - The future plan to edit.
      */
-    // function openEditModal(plan: FuturePlan) {
-    //   currentEditingFuturePlan = plan;
-    //   isModalOpen = true;
-    //   isViewMode = false;
-    // }
-
-    /**
-     * Opens the edit form in the main content area for an existing future plan.
-     * @param {FuturePlan} plan - The future plan to edit.
-     */
-    function openEditInline(plan: FuturePlan) {
+    function openEditModal(plan: FuturePlan) {
       currentEditingFuturePlan = plan;
+      isModalOpen = true;
       isViewMode = false;
-      isModalOpen = false; // Ensure modal is closed
     }
 
     /**
@@ -85,6 +74,12 @@
       // If we were editing the currently selected plan, update the selected plan
       if (selectedPlan && selectedPlan.id === plan.id) {
         selectedPlan = plan;
+      }
+
+      // If this was a new plan, select it for viewing
+      if (!currentEditingFuturePlan) {
+        selectedPlan = plan;
+        isViewMode = true;
       }
     }
 
@@ -232,7 +227,7 @@
               <div class={combineClasses("pl-3", "absolute inset-0 overflow-y-auto pr-2")}>
                 <FuturePlanList
                   onAddNewFuturePlan={openCreateModal}
-                  onEditFuturePlan={(plan: FuturePlan) => openEditInline(plan)}
+                  onEditFuturePlan={(plan: FuturePlan) => openEditModal(plan)}
                   onSelectPlan={(plan: FuturePlan) => selectPlan(plan)}
                 />
               </div>
@@ -243,34 +238,18 @@
         <!-- Main content - Plan details -->
         <div class={combineClasses(columnSpans.threeFourths, "h-full flex flex-col")}>
           <div class={combineClasses(cardBase, pageStyle.border, "h-full flex flex-col")}>
-            <div class="p-6 flex-grow overflow-auto">
-              {#if currentEditingFuturePlan}
-                <!-- Edit form for the selected plan -->
-                <div>
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class={combineClasses(headings.h2, pageStyle.text)}>
-                      {currentEditingFuturePlan ? 'Edit Plan' : 'Add New Plan'}
-                    </h2>
-                  </div>
-
-                  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                    <FuturePlanForm
-                      futurePlan={currentEditingFuturePlan}
-                      onSave={handleFormSave}
-                      onCancel={handleFormCancel}
-                    />
-                  </div>
-                </div>
-              {:else if selectedPlan && isViewMode}
+            <div class="flex-grow overflow-hidden">
+              <div class="h-full overflow-y-auto p-6">
+              {#if selectedPlan && isViewMode}
                 <!-- Detailed view of the selected plan -->
                 <div>
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class={combineClasses(headings.h2, pageStyle.text)}>
+                    <h1 class={combineClasses(headings.h1, pageStyle.text)}>
                       {selectedPlan.title || 'Plan Details'}
-                    </h2>
+                    </h1>
                     <div class="flex space-x-2">
                       <button
-                        onclick={() => selectedPlan && openEditInline(selectedPlan)}
+                        onclick={() => selectedPlan && openEditModal(selectedPlan)}
                         class={combineClasses("p-2 rounded-md focus:outline-none focus:ring-2", pageStyle.text, pageStyle.hover)}
                         aria-label="Edit plan"
                       >
@@ -303,50 +282,70 @@
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Left column - Basic information -->
-                    <div>
-                      <div class="mb-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Status</h3>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium
-                          {selectedPlan.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                           selectedPlan.status === 'achieved' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                           selectedPlan.status === 'deferred' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                           'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}">
-                          {selectedPlan.status.charAt(0).toUpperCase() + selectedPlan.status.slice(1)}
+                  <!-- Status -->
+                  <div class="mb-6">
+                    <h3 class={combineClasses("text-lg font-semibold mb-2", pageStyle.text)}>Status</h3>
+                    <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                      {selectedPlan.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                       selectedPlan.status === 'achieved' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                       selectedPlan.status === 'deferred' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                       'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                      </svg>
+                      Status: {selectedPlan.status.charAt(0).toUpperCase() + selectedPlan.status.slice(1)}
+                    </div>
+                  </div>
+
+                  <!-- Target Date -->
+                  {#if selectedPlan.target_date}
+                    <div class="mb-6">
+                      <h3 class={combineClasses("text-lg font-semibold mb-2", pageStyle.text)}>Target Date</h3>
+                      <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        Target Date: {formatDate(selectedPlan.target_date)}
+                      </div>
+                    </div>
+                  {/if}
+
+                  <!-- Goal Type -->
+                  {#if selectedPlan.goal_type}
+                    <div class="mb-6">
+                      <h3 class={combineClasses("text-lg font-semibold mb-2", pageStyle.text)}>Goal Type</h3>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
+                          {selectedPlan.goal_type}
                         </span>
                       </div>
-
-                      {#if selectedPlan.target_date}
-                        <div class="mb-4">
-                          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Target Date</h3>
-                          <p class="text-gray-900 dark:text-white">{formatDate(selectedPlan.target_date)}</p>
-                        </div>
-                      {/if}
-
-                      {#if selectedPlan.goal_type}
-                        <div class="mb-4">
-                          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Goal Type</h3>
-                          <p class="text-gray-900 dark:text-white">{selectedPlan.goal_type}</p>
-                        </div>
-                      {/if}
                     </div>
+                  {/if}
 
-                    <!-- Right column - Description and additional info -->
-                    <div>
-                      <div class="mb-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Description</h3>
-                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <p class="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedPlan.description}</p>
-                        </div>
+                  <!-- Description -->
+                  {#if selectedPlan.description}
+                    <div class="mb-6">
+                      <h3 class={combineClasses("text-lg font-semibold mb-2", pageStyle.text)}>Description</h3>
+                      <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
+                        <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{selectedPlan.description}</p>
                       </div>
+                    </div>
+                  {/if}
 
-                      <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-4">
-                        <span>Created: {formatDate(selectedPlan.created_at)}</span>
+                  <!-- Metadata -->
+                  <div class="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <span>ID: {selectedPlan.id}</span>
+                      <span>
+                        Created: {formatDate(selectedPlan.created_at)}
                         {#if selectedPlan.updated_at && selectedPlan.updated_at !== selectedPlan.created_at}
-                          <span>Updated: {formatDate(selectedPlan.updated_at)}</span>
+                          <span class="ml-2">(Updated: {formatDate(selectedPlan.updated_at)})</span>
                         {/if}
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -362,6 +361,7 @@
                   </p>
                 </div>
               {/if}
+              </div>
             </div>
           </div>
         </div>

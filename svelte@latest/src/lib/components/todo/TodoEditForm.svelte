@@ -7,7 +7,7 @@
   let {
     todo,
     isLoading: externalIsLoading = false,
-    onSaveSuccess = (updatedTodo: TodoItem) => {},
+    onSaveSuccess = (_: TodoItem) => {},
     onCloseModalRequest = () => {}
   } = $props<{
     todo: TodoItem;
@@ -133,41 +133,55 @@
 <div class="todo-edit-form-container">
   <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="todo-edit-form" id={formId}>
     <div class="form-group">
-      <label for="edit-todo-title-{todo.id}">标题 <span class="required-asterisk">*</span></label>
+      <label for="edit-todo-title-{todo.id}" class="form-label">
+        <span class="label-text">标题</span>
+        <span class="required-asterisk">*</span>
+      </label>
       <input
         type="text"
         id="edit-todo-title-{todo.id}"
         bind:value={title}
+        placeholder="输入待办事项标题"
         required
         disabled={isLoading}
+        class="form-input"
       />
     </div>
 
     <div class="form-group">
-      <label for="edit-todo-description-{todo.id}">描述</label>
+      <label for="edit-todo-description-{todo.id}" class="form-label">
+        <span class="label-text">描述</span>
+      </label>
       <textarea
         id="edit-todo-description-{todo.id}"
         bind:value={description}
-        rows="4"
+        placeholder="添加详细描述..."
+        rows="3"
         disabled={isLoading}
+        class="form-input"
       ></textarea>
     </div>
 
     <div class="form-row">
       <div class="form-group form-group-half">
-        <label for="edit-todo-due-date-{todo.id}">截止日期</label>
+        <label for="edit-todo-due-date-{todo.id}" class="form-label">
+          <span class="label-text">截止日期</span>
+        </label>
         <input
           type="date"
           id="edit-todo-due-date-{todo.id}"
           bind:value={dueDate}
           min={getCurrentDateString()}
           disabled={isLoading}
+          class="form-input"
         />
       </div>
 
       <div class="form-group form-group-half">
-        <label for="edit-todo-status-{todo.id}">状态</label>
-        <select id="edit-todo-status-{todo.id}" bind:value={status} disabled={isLoading}>
+        <label for="edit-todo-status-{todo.id}" class="form-label">
+          <span class="label-text">状态</span>
+        </label>
+        <select id="edit-todo-status-{todo.id}" bind:value={status} disabled={isLoading} class="form-input">
           {#each statusOptions as statusOpt (statusOpt)}
             <option value={statusOpt}>{statusOpt.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
           {/each}
@@ -175,30 +189,36 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label for="edit-todo-priority-{todo.id}">优先级</label>
-      <select id="edit-todo-priority-{todo.id}" bind:value={priority} disabled={isLoading}>
-        {#each priorityOptions as priorityOpt (priorityOpt)}
-          <option value={priorityOpt}>{priorityOpt.charAt(0).toUpperCase() + priorityOpt.slice(1)}</option>
-        {/each}
-      </select>
-    </div>
+    <div class="form-row">
+      <div class="form-group form-group-half">
+        <label for="edit-todo-priority-{todo.id}" class="form-label">
+          <span class="label-text">优先级</span>
+        </label>
+        <select id="edit-todo-priority-{todo.id}" bind:value={priority} disabled={isLoading} class="form-input">
+          {#each priorityOptions as priorityOpt (priorityOpt)}
+            <option value={priorityOpt}>{priorityOpt.charAt(0).toUpperCase() + priorityOpt.slice(1)}</option>
+          {/each}
+        </select>
+      </div>
 
-    <div class="form-group focus-toggle-group">
-      <input
-        type="checkbox"
-        id="edit-todo-is-focus-{todo.id}"
-        bind:checked={isCurrentFocus}
-        disabled={isLoading || (status === 'completed' && isCurrentFocus)}
-      />
-      <label for="edit-todo-is-focus-{todo.id}" class="checkbox-label-inline">
-        标记为当前焦点
-        {#if status === 'completed' && todo.is_current_focus}
-          <small>(已完成的任务不能是当前焦点)</small>
-        {/if}
-      </label>
+      <div class="form-group form-group-half focus-toggle-container">
+        <div class="focus-toggle-group">
+          <input
+            type="checkbox"
+            id="edit-todo-is-focus-{todo.id}"
+            bind:checked={isCurrentFocus}
+            disabled={isLoading || (status === 'completed' && isCurrentFocus)}
+            class="focus-checkbox"
+          />
+          <label for="edit-todo-is-focus-{todo.id}" class="checkbox-label-inline">
+            标记为当前焦点
+            {#if status === 'completed' && todo.is_current_focus}
+              <small>(已完成的任务不能是当前焦点)</small>
+            {/if}
+          </label>
+        </div>
+      </div>
     </div>
-
 
     {#if errorMessage}
       <div class="message error-message" aria-live="assertive">
@@ -215,62 +235,140 @@
 </div>
 
 <style>
-  .todo-edit-form-container { padding: 0.5rem; }
-  .todo-edit-form .form-group { margin-bottom: 1.25rem; }
-  .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-secondary, #495057); font-size: 0.9rem; }
-  .required-asterisk { color: var(--danger-color, #dc3545); margin-left: 0.2rem; }
-  .form-group input[type="text"],
-  .form-group input[type="date"],
-  .form-group input[type="checkbox"], /* 为复选框添加基础样式 */
-  .form-group textarea,
-  .form-group select {
+  /* 容器样式 */
+  .todo-edit-form-container {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* 表单组样式 */
+  .todo-edit-form .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  /* 标签样式 */
+  .form-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: var(--text-secondary, #495057);
+    font-size: 0.85rem;
+  }
+
+  .label-text {
+    margin-right: 0.2rem;
+  }
+
+  .required-asterisk {
+    color: var(--danger-color, #dc3545);
+  }
+
+  /* 输入框通用样式 */
+  .form-input {
     width: 100%;
-    padding: 0.65rem 0.9rem;
+    padding: 0.5rem 0.75rem;
     border: 1px solid var(--border-color, #ced4da);
     border-radius: var(--border-radius, 0.375rem);
-    font-size: 0.95rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
     background-color: var(--input-bg, #f8f9fa);
     color: var(--text-primary, #212529);
   }
-  .form-group input[type="checkbox"] { /* 复选框特定样式调整 */
-    width: auto; /* 不要占满整行 */
-    margin-right: 0.5rem;
-    vertical-align: middle;
-    height: 1.1em; /* 调整大小 */
-    width: 1.1em;
-  }
-  .checkbox-label-inline {
-    font-weight: normal;
-    font-size: 0.95rem;
-    color: var(--text-primary, #333);
-    vertical-align: middle;
-  }
-  .checkbox-label-inline small {
-    font-size: 0.8em;
-    color: var(--text-muted);
+
+  /* 输入框焦点状态 */
+  .form-input:focus {
+    border-color: var(--primary-color, #007bff);
+    box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.2);
+    outline: none;
+    background-color: #fff;
   }
 
-  .form-group input::placeholder,
-  .form-group textarea::placeholder { color: var(--text-placeholder, #6c757d); opacity: 0.8; }
-  .form-group input:focus,
-  .form-group textarea:focus,
-  .form-group select:focus { border-color: var(--primary-color, #007bff); box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); outline: none; background-color: #fff; }
-  .form-group input:disabled,
-  .form-group textarea:disabled,
-  .form-group select:disabled { background-color: #e9ecef; opacity: 0.7; cursor: not-allowed; }
-  .form-row { display: flex; gap: 1rem; margin-bottom: 1.25rem; }
-  .form-group-half { flex: 1; }
-  .message { padding: 0.75rem 1rem; border-radius: var(--border-radius, 0.375rem); margin-top: 1rem; margin-bottom: 0.5rem; text-align: center; font-size: 0.9rem; }
-  .message p { margin: 0; }
-  .error-message { background-color: rgba(220, 53, 69, 0.1); color: var(--danger-color, #dc3545); border: 1px solid rgba(220, 53, 69, 0.2); }
-  .success-message { background-color: rgba(40, 167, 69, 0.1); color: var(--success-color, #28a745); border: 1px solid rgba(40, 167, 69, 0.2); }
-  .focus-toggle-group { /* “标记为当前焦点”复选框组的样式 */
+  /* 输入框禁用状态 */
+  .form-input:disabled {
+    background-color: #e9ecef;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  /* 占位符样式 */
+  .form-input::placeholder {
+    color: var(--text-placeholder, #6c757d);
+    opacity: 0.7;
+  }
+
+  /* 行布局 */
+  .form-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .form-group-half {
+    flex: 1;
+  }
+
+  /* 焦点切换组样式 */
+  .focus-toggle-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .focus-toggle-group {
     display: flex;
     align-items: center;
     padding: 0.5rem;
-    background-color: var(--background-alt-light, #f8f9fa); /* 轻微背景 */
+    background-color: var(--background-alt-light, #f8f9fa);
     border-radius: var(--border-radius-sm, 0.25rem);
     border: 1px solid var(--border-color-extra-light, #eef0f2);
+    width: 100%;
+    height: 38px; /* 与其他输入框高度一致 */
+  }
+
+  /* 复选框样式 */
+  .focus-checkbox {
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    height: 1rem;
+    width: 1rem;
+    cursor: pointer;
+  }
+
+  .checkbox-label-inline {
+    font-weight: normal;
+    font-size: 0.85rem;
+    color: var(--text-primary, #333);
+    vertical-align: middle;
+  }
+
+  .checkbox-label-inline small {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6c757d);
+    margin-left: 0.25rem;
+  }
+
+  /* 消息样式 */
+  .message {
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--border-radius, 0.375rem);
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+
+  .message p {
+    margin: 0;
+  }
+
+  .error-message {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color, #dc3545);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+  }
+
+  .success-message {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color, #28a745);
+    border: 1px solid rgba(40, 167, 69, 0.2);
   }
 </style>

@@ -49,13 +49,11 @@ def create_app(config_name='development'):
     app.register_blueprint(achievements_bp, url_prefix='/api/v1/achievements')
     app.register_blueprint(plans_bp, url_prefix='/api/v1/plans')
 
-    
+
 
     # --- Database Creation (within Application Context) ---
     # This section is typically handled by Flask-Migrate.
-    # If you want to ensure tables are created on app start (e.g., for SQLite in-memory tests
-    # without migrations), you might uncomment db.create_all().
-    # For PostgreSQL with migrations, this is usually not needed here.
+    # If you want to ensure tables are created on app start, you might uncomment db.create_all().
     # with app.app_context():
     #     # Import models here to avoid circular imports earlier
     #     from . import models # Or explicitly import needed models

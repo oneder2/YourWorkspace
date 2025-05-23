@@ -3,11 +3,14 @@
 
 from ..extensions import db
 import datetime
+from .base import BaseModel
+from typing import Dict, Any, Optional
 
-class FuturePlan(db.Model):
+class FuturePlan(BaseModel):
     """
     FuturePlan model for storing user's future goals, plans, or vision items.
     Represents the "打算做什么" section of the Personal Anchor Overview.
+    Inherits common fields and methods from BaseModel.
     """
     __tablename__ = 'future_plans'
 
@@ -26,23 +29,17 @@ class FuturePlan(db.Model):
     # Default: 'active'
     status = db.Column(db.String(20), default='active', nullable=False)
 
-    # Timestamps
-    created_at = db.Column(db.DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
-    updated_at = db.Column(db.DateTime,
-                           default=lambda: datetime.datetime.now(datetime.timezone.utc),
-                           onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
-
     # Relationship to User (optional)
     # user = db.relationship('User', backref=db.backref('future_plans', lazy='dynamic'))
 
     # Database constraints for status (CHECK constraint can be added via migration)
     # CHECK (status IN ('active', 'achieved', 'deferred', 'abandoned'))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """String representation of the FuturePlan object."""
         return f'<FuturePlan {self.id}: {self.title[:30]}>'
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Converts the FuturePlan instance to a dictionary."""
         return {
             'id': self.id,
@@ -50,8 +47,8 @@ class FuturePlan(db.Model):
             'goal_type': self.goal_type,
             'title': self.title,
             'description': self.description,
-            'target_date': self.target_date.isoformat() if self.target_date else None,
+            'target_date': self.format_date(self.target_date),
             'status': self.status,
-            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() + 'Z' if self.updated_at else None,
+            'created_at': self.format_datetime(self.created_at),
+            'updated_at': self.format_datetime(self.updated_at),
         }

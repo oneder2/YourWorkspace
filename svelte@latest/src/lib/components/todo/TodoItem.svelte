@@ -3,10 +3,9 @@
   import { todoStore } from '$lib/store/todoStore';
   import type { TodoItem, TodoStatus, TodoPriority } from '$lib/services/todoService';
   import { onDestroy } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
 
-  // Import Edit Form component
-  import TodoEditForm from './TodoEditForm.svelte'; // For editing the full To-Do item
+  // Import Edit Drawer component
+  import TodoEditDrawer from './TodoEditDrawer.svelte'; // For editing the full To-Do item
 
   // No default export needed for Svelte 5 components
 
@@ -24,10 +23,7 @@
 
   // UI state variables
   let showDetails = false; // To toggle visibility of description and other details
-  let isEditModalOpen = false; // State to control edit modal visibility
-
-  // Reference to the TodoEditForm component instance (if needed for direct method calls from modal footer)
-  let todoEditFormComponent: TodoEditForm;
+  let isEditDrawerOpen = false; // State to control edit drawer visibility
 
   // Subscribe to relevant parts of todoStore for focus limit logic
   let currentMaxFocus: number;
@@ -113,13 +109,13 @@
     }
   }
 
-  // Functions to control the visibility of the edit modal
-  function openEditModal() {
-    isEditModalOpen = true;
+  // Functions to control the visibility of the edit drawer
+  function openEditDrawer() {
+    isEditDrawerOpen = true;
   }
 
-  function closeEditModal() {
-    isEditModalOpen = false;
+  function closeEditDrawer() {
+    isEditDrawerOpen = false;
   }
 
   /**
@@ -253,7 +249,7 @@
       {/if}
       <button
         class="p-2 rounded-full bg-transparent border-none text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-info-500 dark:hover:text-info-400 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
-        on:click|stopPropagation={openEditModal}
+        on:click|stopPropagation={openEditDrawer}
         title="Edit To-Do"
         aria-label="Edit To-Do item: {todo.title}"
         disabled={isLoadingToggleStatus || isLoadingDelete || isLoadingToggleFocus}
@@ -283,73 +279,9 @@
   {/if}
 </div>
 
-{#if isEditModalOpen}
-  <div class="fixed inset-0 bg-black/60 flex justify-center items-center p-4 z-modal"
-    on:click={(e) => {
-      if (e.target === e.currentTarget) {
-        closeEditModal();
-      }
-    }}
-    on:keydown={(e) => {
-      if (e.key === 'Escape') {
-        closeEditModal();
-      }
-    }}
-    transition:fade={{ duration: 200 }}
-    role="dialog"
-    tabindex="-1"
-    aria-modal="true"
-    aria-labelledby="modal-title"
-  >
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col w-full max-h-[90vh] overflow-hidden max-w-xl"
-      role="document"
-      tabindex="-1"
-      transition:fly={{ y: -30, duration: 300 }}
-    >
-      <header class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <h2 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white m-0">Edit To-Do: {todo.title}</h2>
-        <button
-          class="bg-transparent border-none text-3xl font-light text-gray-500 dark:text-gray-400 cursor-pointer p-1 leading-none opacity-70 hover:opacity-100 transition-opacity"
-          on:click={closeEditModal}
-          aria-label="Close modal"
-        >
-          &times;
-        </button>
-      </header>
-
-      <main class="p-6 overflow-y-auto flex-grow">
-        <div>
-          <TodoEditForm
-            bind:this={todoEditFormComponent}
-            todo={todo}
-            onSaveSuccess={closeEditModal}
-            onCloseModalRequest={closeEditModal}
-          />
-        </div>
-      </main>
-
-      <footer class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/80 flex-shrink-0">
-        <div class="flex justify-end gap-3">
-          <button
-            type="button"
-            class="btn btn-outline"
-            on:click={() => todoEditFormComponent?.handleCancel()}
-            disabled={false}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            on:click={() => todoEditFormComponent?.handleSubmit()}
-            disabled={false}
-            form="todo-edit-form-{todo.id}"
-          >
-            Save Changes
-          </button>
-        </div>
-      </footer>
-    </div>
-  </div>
-{/if}
+<TodoEditDrawer
+  todo={todo}
+  isOpen={isEditDrawerOpen}
+  onSaveSuccess={closeEditDrawer}
+  onCloseRequest={closeEditDrawer}
+/>

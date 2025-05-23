@@ -21,6 +21,7 @@ export interface TodoStoreState {
   isLoading: boolean;
   error: string | null;
   maxFocusItems: number;
+  updateCounter?: number;
 }
 
 // Interface for the main store object's methods (excluding derived stores)
@@ -42,6 +43,13 @@ const initialState: TodoStoreState = {
 
 // This is the core writable store holding the primary state
 const mainTodoWritable: Writable<TodoStoreState> = writable<TodoStoreState>(initialState);
+
+// Force update counter to trigger reactivity
+let updateCounter = 0;
+const forceUpdate = () => {
+  updateCounter++;
+  mainTodoWritable.update(state => ({ ...state, updateCounter }));
+};
 
 // --- Store Methods ---
 async function loadAllTodos(): Promise<void> {
@@ -85,15 +93,28 @@ async function addTodo(payload: CreateTodoPayload): Promise<TodoItem | null> {
   mainTodoWritable.update(state => ({ ...state, isLoading: true, error: null }));
   try {
     const newTodo = await todoService.createTodo(payload);
-    mainTodoWritable.update(state => ({
-      ...state,
-      todos: [newTodo, ...state.todos].sort((a,b) => {
+
+    // Force a complete state update to ensure reactivity
+    mainTodoWritable.update(state => {
+      const newTodos = [newTodo, ...state.todos].sort((a,b) => {
           if (a.is_current_focus && !b.is_current_focus) return -1;
           if (!a.is_current_focus && b.is_current_focus) return 1;
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }),
-      isLoading: false,
-    }));
+      });
+      return {
+        ...state,
+        todos: newTodos,
+        isLoading: false,
+        error: null,
+      };
+    });
+
+    // Force update to ensure reactivity
+    forceUpdate();
+
+    // Reload data to ensure consistency
+    await loadAllTodos();
+
     return newTodo;
   } catch (err) {
     const error = err as ApiError;
@@ -107,11 +128,24 @@ async function editTodo(todoId: number, payload: UpdateTodoPayload): Promise<Tod
   mainTodoWritable.update(state => ({ ...state, isLoading: true, error: null }));
   try {
     const updatedTodo = await todoService.updateTodo(todoId, payload);
-    mainTodoWritable.update(state => ({
-      ...state,
-      todos: state.todos.map(todo => (todo.id === todoId ? updatedTodo : todo)),
-      isLoading: false,
-    }));
+
+    // Force a complete state update to ensure reactivity
+    mainTodoWritable.update(state => {
+      const newTodos = state.todos.map(todo => (todo && todo.id === todoId ? updatedTodo : todo));
+      return {
+        ...state,
+        todos: newTodos,
+        isLoading: false,
+        error: null,
+      };
+    });
+
+    // Force update to ensure reactivity
+    forceUpdate();
+
+    // Reload data to ensure consistency
+    await loadAllTodos();
+
     return updatedTodo;
   } catch (err) {
     const error = err as ApiError;
@@ -123,7 +157,14 @@ async function editTodo(todoId: number, payload: UpdateTodoPayload): Promise<Tod
 
 async function toggleCurrentFocus(todoId: number): Promise<TodoItem | null> {
   const currentState = get(mainTodoWritable);
-  const targetTodo = currentState.todos.find(t => t.id === todoId);
+
+  // Simple null check
+  if (!currentState || !currentState.todos) {
+    console.error('TodoStore: Invalid state or todos array not found');
+    return null;
+  }
+
+  const targetTodo = currentState.todos.find(t => t && t.id === todoId);
 
   if (!targetTodo) {
     console.error(`TodoStore: Todo item with ID ${todoId} not found for toggling focus.`);
@@ -131,7 +172,7 @@ async function toggleCurrentFocus(todoId: number): Promise<TodoItem | null> {
     return null;
   }
 
-  const currentlyFocusedItems = currentState.todos.filter(t => t.is_current_focus && t.id !== todoId && t.status !== 'completed');
+  const currentlyFocusedItems = currentState.todos.filter(t => t && t.is_current_focus && t.id !== todoId && t.status !== 'completed');
   const newFocusState = !targetTodo.is_current_focus;
 
   if (newFocusState && currentlyFocusedItems.length >= currentState.maxFocusItems) {
@@ -144,12 +185,24 @@ async function toggleCurrentFocus(todoId: number): Promise<TodoItem | null> {
   mainTodoWritable.update(state => ({ ...state, isLoading: true, error: null }));
   try {
     const updatedTodo = await todoService.updateTodo(todoId, { is_current_focus: newFocusState });
-    mainTodoWritable.update(state => ({
-      ...state,
-      todos: state.todos.map(todo => (todo.id === todoId ? updatedTodo : todo)),
-      isLoading: false,
-      error: null,
-    }));
+
+    // Force a complete state update to ensure reactivity
+    mainTodoWritable.update(state => {
+      const newTodos = state.todos.map(todo => (todo && todo.id === todoId ? updatedTodo : todo));
+      return {
+        ...state,
+        todos: newTodos,
+        isLoading: false,
+        error: null,
+      };
+    });
+
+    // Force update to ensure reactivity
+    forceUpdate();
+
+    // Reload data to ensure consistency
+    await loadAllTodos();
+
     return updatedTodo;
   } catch (err) {
     const error = err as ApiError;
@@ -163,11 +216,23 @@ async function removeTodo(todoId: number): Promise<void> {
   mainTodoWritable.update(state => ({ ...state, isLoading: true, error: null }));
   try {
     await todoService.deleteTodo(todoId);
-    mainTodoWritable.update(state => ({
-      ...state,
-      todos: state.todos.filter(todo => todo.id !== todoId),
-      isLoading: false,
-    }));
+
+    // Force a complete state update to ensure reactivity
+    mainTodoWritable.update(state => {
+      const newTodos = state.todos.filter(todo => todo && todo.id !== todoId);
+      return {
+        ...state,
+        todos: newTodos,
+        isLoading: false,
+        error: null,
+      };
+    });
+
+    // Force update to ensure reactivity
+    forceUpdate();
+
+    // Reload data to ensure consistency
+    await loadAllTodos();
   } catch (err) {
     const error = err as ApiError;
     console.error('TodoStore: Error removing todo', error);
@@ -179,9 +244,12 @@ async function toggleCompleteStatus(todoId: number, currentItemStatus: TodoItem[
   const newStatus: TodoItem['status'] = currentItemStatus === 'completed' ? 'pending' : 'completed';
   const payload: UpdateTodoPayload = { status: newStatus };
 
-  const currentItem = get(mainTodoWritable).todos.find(t => t.id === todoId);
-  if (newStatus === 'completed' && currentItem?.is_current_focus) {
-      payload.is_current_focus = false;
+  const currentState = get(mainTodoWritable);
+  if (currentState && currentState.todos) {
+    const currentItem = currentState.todos.find(t => t && t.id === todoId);
+    if (newStatus === 'completed' && currentItem?.is_current_focus) {
+        payload.is_current_focus = false;
+    }
   }
   return editTodo(todoId, payload);
 }
@@ -189,24 +257,48 @@ async function toggleCompleteStatus(todoId: number, currentItemStatus: TodoItem[
 // --- Derived Stores (Exported Separately) ---
 export const currentFocusTodos: Readable<TodoItem[]> = derived(
   mainTodoWritable,
-  $mainTodoState => $mainTodoState.todos.filter(todo => todo.is_current_focus && todo.status !== 'completed')
-                        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+  $mainTodoState => {
+    if (!$mainTodoState || !$mainTodoState.todos) {
+      return [];
+    }
+    // Create a new array to ensure reactivity
+    const filtered = $mainTodoState.todos
+      .filter(todo => todo && todo.is_current_focus && todo.status !== 'completed')
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    return [...filtered]; // Force new array reference
+  }
 );
 
 export const otherActiveTodos: Readable<TodoItem[]> = derived(
   mainTodoWritable,
-  $mainTodoState => $mainTodoState.todos.filter(todo => !todo.is_current_focus && todo.status !== 'completed')
-                        .sort((a: TodoItem, b: TodoItem) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  $mainTodoState => {
+    if (!$mainTodoState || !$mainTodoState.todos) {
+      return [];
+    }
+    // Create a new array to ensure reactivity
+    const filtered = $mainTodoState.todos
+      .filter(todo => todo && !todo.is_current_focus && todo.status !== 'completed')
+      .sort((a: TodoItem, b: TodoItem) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return [...filtered]; // Force new array reference
+  }
 );
 
 export const completedTodos: Readable<TodoItem[]> = derived(
   mainTodoWritable,
-  $mainTodoState => $mainTodoState.todos.filter(todo => todo.status === 'completed')
-                        .sort((a: TodoItem, b: TodoItem) => {
-                            const dateA = a.completed_at ? new Date(a.completed_at).getTime() : 0;
-                            const dateB = b.completed_at ? new Date(b.completed_at).getTime() : 0;
-                            return dateB - dateA;
-                        })
+  $mainTodoState => {
+    if (!$mainTodoState || !$mainTodoState.todos) {
+      return [];
+    }
+    // Create a new array to ensure reactivity
+    const filtered = $mainTodoState.todos
+      .filter(todo => todo && todo.status === 'completed')
+      .sort((a: TodoItem, b: TodoItem) => {
+          const dateA = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+          const dateB = b.completed_at ? new Date(b.completed_at).getTime() : 0;
+          return dateB - dateA;
+      });
+    return [...filtered]; // Force new array reference
+  }
 );
 
 // Export the main store object containing methods and the core writable store's capabilities

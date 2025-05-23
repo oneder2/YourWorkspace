@@ -2,57 +2,88 @@
   import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore'; // Store for loading state and errors
   import type { TodoItem } from '$lib/services/todoService';
-  import { slide } from 'svelte/transition';
-  import TodoForm from './TodoForm.svelte';
-  import TodoEditForm from './TodoEditForm.svelte';
 
-  // State for showing/hiding the add form
-  let showAddForm = $state(false);
-  let showAddFormSidebar = $state(false);
+  import TodoAddModal from './TodoAddModal.svelte';
+  import TodoEditModal from './TodoEditModal.svelte';
+
+  // State for showing/hiding the add modal
+  let isAddModalOpen = $state(false);
 
   // State for editing
   let editingTodo: TodoItem | null = $state(null);
-  let isEditFormVisible = $state(false);
+  let isEditModalOpen = $state(false);
 
   // Functions to handle todo actions
-  function handleToggleStatus(todo: TodoItem) {
-    todoStore.toggleCompleteStatus(todo.id, todo.status);
+  async function handleToggleStatus(todo: TodoItem) {
+    try {
+      await todoStore.toggleCompleteStatus(todo.id, todo.status);
+    } catch (error) {
+      console.error('Failed to toggle todo status:', error);
+    }
   }
 
   function handleEdit(todo: TodoItem) {
     editingTodo = { ...todo };
-    isEditFormVisible = true;
+    isEditModalOpen = true;
   }
 
   function handleEditSave(_updatedTodo: TodoItem) {
     // This will be called when the edit is successful
-    isEditFormVisible = false;
+    isEditModalOpen = false;
     editingTodo = null;
   }
 
   function handleEditCancel() {
-    isEditFormVisible = false;
+    isEditModalOpen = false;
     editingTodo = null;
   }
 
-  function handleDelete(todo: TodoItem) {
+  async function handleDelete(todo: TodoItem) {
     if (confirm(`Are you sure you want to delete "${todo.title}"?`)) {
-      todoStore.removeTodo(todo.id);
+      try {
+        await todoStore.removeTodo(todo.id);
+      } catch (error) {
+        console.error('Failed to delete todo:', error);
+      }
     }
   }
 
   function toggleAddForm() {
-    showAddForm = !showAddForm;
-    showAddFormSidebar = !showAddFormSidebar;
+    isAddModalOpen = true;
   }
 
-  function handleSetAsFocus(todo: TodoItem) {
+  function handleAddSuccess() {
+    isAddModalOpen = false;
+  }
+
+  function handleAddCancel() {
+    isAddModalOpen = false;
+  }
+
+  // State for loading operations
+  let loadingFocusToggle = $state<Set<number>>(new Set());
+
+  async function handleSetAsFocus(todo: TodoItem) {
     if (todo.is_current_focus) {
       if (confirm(`Remove "${todo.title}" from Main Focus?`)) {
-        todoStore.toggleCurrentFocus(todo.id);
+        loadingFocusToggle.add(todo.id);
+        loadingFocusToggle = new Set(loadingFocusToggle);
+        try {
+          await todoStore.toggleCurrentFocus(todo.id);
+        } finally {
+          loadingFocusToggle.delete(todo.id);
+          loadingFocusToggle = new Set(loadingFocusToggle);
+        }
       }
     } else {
-      todoStore.toggleCurrentFocus(todo.id);
+      loadingFocusToggle.add(todo.id);
+      loadingFocusToggle = new Set(loadingFocusToggle);
+      try {
+        await todoStore.toggleCurrentFocus(todo.id);
+      } finally {
+        loadingFocusToggle.delete(todo.id);
+        loadingFocusToggle = new Set(loadingFocusToggle);
+      }
     }
   }
 
@@ -67,65 +98,41 @@
     addButtonId?: string;
   }>();
 
+  // Expose the toggleAddForm function to parent components
+  export function triggerAddForm() {
+    toggleAddForm();
+  }
+
   onMount(() => {
-    // Add event listener to the add button
-    const addButton = document.getElementById(addButtonId);
-    if (addButton) {
-      addButton.addEventListener('click', toggleAddForm);
+    // Set up a global function that can be called by parent components
+    // This is a more reliable way than DOM event listeners
+    if (typeof window !== 'undefined') {
+      (window as any)[`toggleAddForm_${addButtonId}`] = toggleAddForm;
     }
 
     return () => {
-      // Clean up event listener
-      if (addButton) {
-        addButton.removeEventListener('click', toggleAddForm);
+      // Clean up global function
+      if (typeof window !== 'undefined') {
+        delete (window as any)[`toggleAddForm_${addButtonId}`];
       }
     };
   });
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm py-2">
-  {#if showAddFormSidebar}
-    <div transition:slide={{ duration: 300 }} class="border-b border-blue-200 dark:border-blue-700 mb-4">
-      <div class="p-4">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="text-lg font-semibold text-blue-700 dark:text-blue-300">Add New Todo</h3>
-          <button
-            class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            onclick={toggleAddForm}
-            aria-label="Close form"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-        <TodoForm />
-      </div>
-    </div>
-  {/if}
+  <TodoAddModal
+    isOpen={isAddModalOpen}
+    onAddSuccess={handleAddSuccess}
+    onCloseRequest={handleAddCancel}
+  />
 
-  {#if isEditFormVisible && editingTodo}
-    <div transition:slide={{ duration: 300 }} class="mb-4">
-      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-4 border border-blue-200 dark:border-blue-700">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="text-lg font-semibold text-blue-700 dark:text-blue-300">Edit Todo</h3>
-          <button
-            class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            onclick={handleEditCancel}
-            aria-label="Close form"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-        <TodoEditForm
-          todo={editingTodo}
-          onSaveSuccess={handleEditSave}
-          onCloseModalRequest={handleEditCancel}
-        />
-      </div>
-    </div>
+  {#if editingTodo}
+    <TodoEditModal
+      todo={editingTodo}
+      isOpen={isEditModalOpen}
+      onSaveSuccess={handleEditSave}
+      onCloseRequest={handleEditCancel}
+    />
   {/if}
 
   {#if $todoStore.isLoading && todos.length === 0 && $todoStore.todos.length === 0}
@@ -175,14 +182,19 @@
             </div>
             <div class="flex space-x-1">
               <button
-                class="p-1 {todo.is_current_focus ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'} transition-colors"
+                class="p-1 {todo.is_current_focus ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'} transition-colors {loadingFocusToggle.has(todo.id) ? 'opacity-50 cursor-not-allowed' : ''}"
                 title={todo.is_current_focus ? "Remove from Main Focus" : "Set as Main Focus"}
                 aria-label={todo.is_current_focus ? "Remove from Main Focus" : "Set as Main Focus"}
                 onclick={() => handleSetAsFocus(todo)}
+                disabled={loadingFocusToggle.has(todo.id)}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+                {#if loadingFocusToggle.has(todo.id)}
+                  <div class="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                {:else}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                {/if}
               </button>
               <button
                 class="p-1 text-gray-400 hover:text-blue-500 transition-colors"

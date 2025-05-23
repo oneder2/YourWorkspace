@@ -235,14 +235,15 @@
         <!-- Main content - Achievement details -->
         <div class={combineClasses(columnSpans.threeFourths, "h-full flex flex-col")}>
           <div class={combineClasses(cardBase, pageStyle.border, "h-full flex flex-col")}>
-            <div class="p-6 flex-grow overflow-auto">
+            <div class="flex-grow overflow-hidden">
+              <div class="h-full overflow-y-auto p-6">
               {#if selectedAchievement && isViewMode}
                 <!-- Detailed view of the selected achievement -->
                 <div>
                   <div class="flex justify-between items-center mb-6">
-                    <h2 class={combineClasses(headings.h2, pageStyle.text)}>
+                    <h1 class={combineClasses(headings.h1, pageStyle.text)}>
                       {selectedAchievement.title}
-                    </h2>
+                    </h1>
                     <div class="flex space-x-2">
                       <button
                         onclick={() => selectedAchievement && openEditModal(selectedAchievement)}
@@ -352,6 +353,7 @@
                   </p>
                 </div>
               {/if}
+              </div>
             </div>
           </div>
         </div>

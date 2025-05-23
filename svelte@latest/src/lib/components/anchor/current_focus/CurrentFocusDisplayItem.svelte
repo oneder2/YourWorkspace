@@ -4,10 +4,9 @@
 
   import { todoStore } from '$lib/store/todoStore';
   import type { TodoItem, TodoStatus, TodoPriority } from '$lib/services/todoService';
-  import { onDestroy } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
 
-  import TodoEditForm from '$lib/components/todo/TodoEditForm.svelte'; // Reusing the main edit form
+
+  import TodoEditDrawer from '$lib/components/todo/TodoEditDrawer.svelte'; // Reusing the main edit drawer
 
   export let item: TodoItem; // Prop: The To-Do item to display (assumed to be is_current_focus: true)
 
@@ -21,9 +20,7 @@
   let isLoadingToggleFocus = false; // Specifically for the "Remove from Focus" action
 
   let showDetails = false;
-  let isEditModalOpen = false;
-
-  let todoEditFormComponent: TodoEditForm;
+  let isEditDrawerOpen = false;
 
   // Handler for toggling completion status (inherited from TodoItem logic)
   async function handleToggleCompleteStatus() {
@@ -76,12 +73,12 @@
     }
   }
 
-  // Edit modal functions
-  function openEditModal() {
-    isEditModalOpen = true;
+  // Edit drawer functions
+  function openEditDrawer() {
+    isEditDrawerOpen = true;
   }
-  function closeEditModal() {
-    isEditModalOpen = false;
+  function closeEditDrawer() {
+    isEditDrawerOpen = false;
   }
 
   function formatDate(dateString?: string | null): string {
@@ -160,7 +157,7 @@
       {/if}
       <button
         class="action-button edit-button"
-        onclick={(e) => { e.stopPropagation(); openEditModal(); }}
+        onclick={(e) => { e.stopPropagation(); openEditDrawer(); }}
         title="Edit Focused Item"
         aria-label="Edit focused item: {item.title}"
         disabled={isLoadingToggleStatus || isLoadingDelete || isLoadingToggleFocus}
@@ -190,76 +187,12 @@
   {/if}
 </div>
 
-{#if isEditModalOpen}
-  <div class="fixed inset-0 bg-black/60 flex justify-center items-center p-4 z-modal"
-    onclick={(e) => {
-      if (e.target === e.currentTarget) {
-        closeEditModal();
-      }
-    }}
-    onkeydown={(e) => {
-      if (e.key === 'Escape') {
-        closeEditModal();
-      }
-    }}
-    transition:fade={{ duration: 200 }}
-    role="dialog"
-    tabindex="0"
-    aria-modal="true"
-    aria-labelledby="modal-title"
-  >
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col w-full max-h-[90vh] overflow-hidden max-w-xl"
-      role="document"
-      tabindex="-1"
-      transition:fly={{ y: -30, duration: 300 }}
-    >
-      <header class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <h2 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white m-0">Edit Focus Item: {item.title}</h2>
-        <button
-          class="bg-transparent border-none text-3xl font-light text-gray-500 dark:text-gray-400 cursor-pointer p-1 leading-none opacity-70 hover:opacity-100 transition-opacity"
-          onclick={closeEditModal}
-          aria-label="Close modal"
-        >
-          &times;
-        </button>
-      </header>
-
-      <main class="p-6 overflow-y-auto flex-grow">
-        <div>
-          <TodoEditForm
-            bind:this={todoEditFormComponent}
-            todo={item}
-            onSaveSuccess={closeEditModal}
-            onCloseModalRequest={closeEditModal}
-          />
-        </div>
-      </main>
-
-      <footer class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/80 flex-shrink-0">
-        <div class="flex justify-end gap-3">
-          <button
-            type="button"
-            class="btn btn-outline"
-            onclick={() => todoEditFormComponent.handleCancel()}
-            disabled={false}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            onclick={() => todoEditFormComponent.handleSubmit()}
-            disabled={false}
-            form="todo-edit-form-{item.id}"
-          >
-            Save Changes
-          </button>
-        </div>
-      </footer>
-    </div>
-  </div>
-{/if}
+<TodoEditDrawer
+  todo={item}
+  isOpen={isEditDrawerOpen}
+  onSaveSuccess={closeEditDrawer}
+  onCloseRequest={closeEditDrawer}
+/>
 
 <style>
   .focus-display-item-card {
