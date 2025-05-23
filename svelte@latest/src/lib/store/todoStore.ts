@@ -157,6 +157,10 @@ async function toggleCurrentFocus(todoId: number): Promise<TodoItem | null> {
       isLoading: false,
       error: null,
     }));
+
+    // Force a refresh to ensure UI updates immediately
+    await loadAllTodos();
+
     return updatedTodo;
   } catch (err) {
     const error = err as ApiError;
