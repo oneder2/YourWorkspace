@@ -52,13 +52,30 @@
     isAddModalOpen = false;
   }
 
-  function handleSetAsFocus(todo: TodoItem) {
+  // State for loading operations
+  let loadingFocusToggle = $state<Set<number>>(new Set());
+
+  async function handleSetAsFocus(todo: TodoItem) {
     if (todo.is_current_focus) {
       if (confirm(`Remove "${todo.title}" from Main Focus?`)) {
-        todoStore.toggleCurrentFocus(todo.id);
+        loadingFocusToggle.add(todo.id);
+        loadingFocusToggle = new Set(loadingFocusToggle);
+        try {
+          await todoStore.toggleCurrentFocus(todo.id);
+        } finally {
+          loadingFocusToggle.delete(todo.id);
+          loadingFocusToggle = new Set(loadingFocusToggle);
+        }
       }
     } else {
-      todoStore.toggleCurrentFocus(todo.id);
+      loadingFocusToggle.add(todo.id);
+      loadingFocusToggle = new Set(loadingFocusToggle);
+      try {
+        await todoStore.toggleCurrentFocus(todo.id);
+      } finally {
+        loadingFocusToggle.delete(todo.id);
+        loadingFocusToggle = new Set(loadingFocusToggle);
+      }
     }
   }
 
