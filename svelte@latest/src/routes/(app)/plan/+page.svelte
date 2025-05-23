@@ -38,23 +38,12 @@
 
     /**
      * Opens the modal in 'edit' mode for an existing future plan.
-     * This function is kept for potential future use with modal editing.
      * @param {FuturePlan} plan - The future plan to edit.
      */
-    // function openEditModal(plan: FuturePlan) {
-    //   currentEditingFuturePlan = plan;
-    //   isModalOpen = true;
-    //   isViewMode = false;
-    // }
-
-    /**
-     * Opens the edit form in the main content area for an existing future plan.
-     * @param {FuturePlan} plan - The future plan to edit.
-     */
-    function openEditInline(plan: FuturePlan) {
+    function openEditModal(plan: FuturePlan) {
       currentEditingFuturePlan = plan;
+      isModalOpen = true;
       isViewMode = false;
-      isModalOpen = false; // Ensure modal is closed
     }
 
     /**
@@ -85,6 +74,12 @@
       // If we were editing the currently selected plan, update the selected plan
       if (selectedPlan && selectedPlan.id === plan.id) {
         selectedPlan = plan;
+      }
+
+      // If this was a new plan, select it for viewing
+      if (!currentEditingFuturePlan) {
+        selectedPlan = plan;
+        isViewMode = true;
       }
     }
 
@@ -232,7 +227,7 @@
               <div class={combineClasses("pl-3", "absolute inset-0 overflow-y-auto pr-2")}>
                 <FuturePlanList
                   onAddNewFuturePlan={openCreateModal}
-                  onEditFuturePlan={(plan: FuturePlan) => openEditInline(plan)}
+                  onEditFuturePlan={(plan: FuturePlan) => openEditModal(plan)}
                   onSelectPlan={(plan: FuturePlan) => selectPlan(plan)}
                 />
               </div>
@@ -245,24 +240,7 @@
           <div class={combineClasses(cardBase, pageStyle.border, "h-full flex flex-col")}>
             <div class="flex-grow overflow-hidden">
               <div class="h-full overflow-y-auto p-6">
-              {#if currentEditingFuturePlan}
-                <!-- Edit form for the selected plan -->
-                <div>
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class={combineClasses(headings.h2, pageStyle.text)}>
-                      {currentEditingFuturePlan ? 'Edit Plan' : 'Add New Plan'}
-                    </h2>
-                  </div>
-
-                  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-                    <FuturePlanForm
-                      futurePlan={currentEditingFuturePlan}
-                      onSave={handleFormSave}
-                      onCancel={handleFormCancel}
-                    />
-                  </div>
-                </div>
-              {:else if selectedPlan && isViewMode}
+              {#if selectedPlan && isViewMode}
                 <!-- Detailed view of the selected plan -->
                 <div>
                   <div class="flex justify-between items-center mb-6">
@@ -271,7 +249,7 @@
                     </h1>
                     <div class="flex space-x-2">
                       <button
-                        onclick={() => selectedPlan && openEditInline(selectedPlan)}
+                        onclick={() => selectedPlan && openEditModal(selectedPlan)}
                         class={combineClasses("p-2 rounded-md focus:outline-none focus:ring-2", pageStyle.text, pageStyle.hover)}
                         aria-label="Edit plan"
                       >
