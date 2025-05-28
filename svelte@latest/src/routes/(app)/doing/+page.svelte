@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { authStore } from '$lib/store/authStore';
   // Import main store and specific derived stores
-  import { todoStore, otherActiveTodos, completedTodos, currentFocusTodos } from '$lib/store/todoStore';
+  import { todoStore, otherActiveTodos, completedTodos } from '$lib/store/todoStore';
   import TodoListSidebar from '$lib/components/todo/TodoListSidebar.svelte';
   import CurrentFocusDisplay from '$lib/components/anchor/current_focus/CurrentFocusDisplay.svelte';
   import {
@@ -25,9 +25,19 @@
   // State to toggle between active and completed tasks
   let showCompletedTasks = $state(false);
 
+  // Reference to TodoListSidebar component
+  let todoListSidebarRef = $state<TodoListSidebar | undefined>(undefined);
+
   // Force reactivity by creating reactive variables that depend on store state
   let activeTodos = $derived($otherActiveTodos);
   let completedTodosLocal = $derived($completedTodos);
+
+  // Function to handle add button click
+  function handleAddTodo() {
+    if (todoListSidebarRef) {
+      todoListSidebarRef.triggerAddForm();
+    }
+  }
 
   onMount(async () => {
     // Subscribe to auth store to keep track of authentication state
@@ -79,6 +89,7 @@
                 id="add-todo-button"
                 class={combineClasses("p-1 text-sm rounded-md focus:outline-none focus:ring-2", pageStyle.text, pageStyle.hover)}
                 aria-label="Add new todo"
+                onclick={handleAddTodo}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -95,9 +106,9 @@
             <!-- Scrollable content with fixed height and internal scrolling -->
             <div class={combineClasses("pl-3", "absolute inset-0 overflow-y-auto pr-2")}>
               {#if !showCompletedTasks}
-                <TodoListSidebar todos={activeTodos} addButtonId="add-todo-button" />
+                <TodoListSidebar bind:this={todoListSidebarRef} todos={activeTodos} addButtonId="add-todo-button" />
               {:else}
-                <TodoListSidebar todos={completedTodosLocal} addButtonId="add-todo-button" />
+                <TodoListSidebar bind:this={todoListSidebarRef} todos={completedTodosLocal} addButtonId="add-todo-button" />
               {/if}
             </div>
           </div>
