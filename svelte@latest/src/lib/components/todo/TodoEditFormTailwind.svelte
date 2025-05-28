@@ -25,7 +25,6 @@
   let dueDate = $state('');
   let status = $state<TodoStatus>('pending');
   let priority = $state<TodoPriority>('medium');
-  let isCurrentFocus = $state(false); // 新增：用于编辑当前焦点状态
 
   // 表单反馈的本地状态
   let errorMessage = $state('');
@@ -52,7 +51,6 @@
       dueDate = todo.due_date || '';
       status = todo.status;
       priority = todo.priority;
-      isCurrentFocus = todo.is_current_focus; // 更新 isCurrentFocus
       errorMessage = ''; // 清除之前的错误
       successMessage = '';
       formId = `todo-edit-form-${todo.id}`;
@@ -67,17 +65,6 @@
       return;
     }
 
-    // 检查是否会超出最大焦点数限制 (仅当从非焦点设为焦点时)
-    if (isCurrentFocus && !todo.is_current_focus) {
-        const storeState = $todoStore; // 获取当前 store 状态
-        const currentFocusedCount = storeState.todos.filter(t => t.is_current_focus && t.id !== todo.id && t.status !== 'completed').length;
-        if (currentFocusedCount >= storeState.maxFocusItems) {
-            errorMessage = `最多只能将 ${storeState.maxFocusItems} 个项目设为当前焦点。请先取消其他项目的焦点状态。`;
-            successMessage = '';
-            return;
-        }
-    }
-
     isLoading = true;
     errorMessage = '';
     successMessage = '';
@@ -88,7 +75,6 @@
       due_date: dueDate || null,
       status,
       priority,
-      is_current_focus: isCurrentFocus, // 包含 is_current_focus 状态
     };
 
     try {
@@ -170,7 +156,7 @@
     ></textarea>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
     <div class="form-group">
       <label for="edit-todo-due-date-{todo.id}" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
         <span class="label-text">截止日期</span>
@@ -200,9 +186,7 @@
         <option value="high">高</option>
       </select>
     </div>
-  </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
     <div class="form-group">
       <label for="edit-todo-status-{todo.id}" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
         <span class="label-text">状态</span>
@@ -219,20 +203,5 @@
         <option value="deferred">已延期</option>
       </select>
     </div>
-  </div>
-
-  <div class="form-group mb-6">
-    <label class="flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        bind:checked={isCurrentFocus}
-        disabled={isLoading || (status === 'completed' && isCurrentFocus)}
-        class="form-checkbox h-5 w-5 text-primary-500 rounded border-gray-300 dark:border-gray-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:bg-gray-700 disabled:opacity-70 disabled:cursor-not-allowed"
-      />
-      <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">设为当前焦点</span>
-      {#if status === 'completed' && todo.is_current_focus}
-        <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">(已完成的任务不能是当前焦点)</span>
-      {/if}
-    </label>
   </div>
 </form>
