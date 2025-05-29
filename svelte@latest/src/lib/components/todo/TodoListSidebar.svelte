@@ -27,8 +27,9 @@
     isEditModalOpen = true;
   }
 
-  function handleEditSave(_updatedTodo: TodoItem) {
+  function handleEditSave(updatedTodo: TodoItem) {
     // This will be called when the edit is successful
+    console.log('Edit successful for todo:', updatedTodo.title);
     isEditModalOpen = false;
     editingTodo = null;
   }

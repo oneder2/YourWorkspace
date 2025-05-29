@@ -112,8 +112,13 @@ async function addTodo(payload: CreateTodoPayload): Promise<TodoItem | null> {
     // Force update to ensure reactivity
     forceUpdate();
 
-    // Reload data to ensure consistency
-    await loadAllTodos();
+    // Reload data to ensure consistency, but don't let reload errors affect the add result
+    try {
+      await loadAllTodos();
+    } catch (reloadError) {
+      console.warn('TodoStore: Failed to reload todos after add, but add was successful:', reloadError);
+      // Don't set error state here since the add itself was successful
+    }
 
     return newTodo;
   } catch (err) {
@@ -143,8 +148,13 @@ async function editTodo(todoId: number, payload: UpdateTodoPayload): Promise<Tod
     // Force update to ensure reactivity
     forceUpdate();
 
-    // Reload data to ensure consistency
-    await loadAllTodos();
+    // Reload data to ensure consistency, but don't let reload errors affect the edit result
+    try {
+      await loadAllTodos();
+    } catch (reloadError) {
+      console.warn('TodoStore: Failed to reload todos after edit, but edit was successful:', reloadError);
+      // Don't set error state here since the edit itself was successful
+    }
 
     return updatedTodo;
   } catch (err) {
@@ -200,8 +210,13 @@ async function toggleCurrentFocus(todoId: number): Promise<TodoItem | null> {
     // Force update to ensure reactivity
     forceUpdate();
 
-    // Reload data to ensure consistency
-    await loadAllTodos();
+    // Reload data to ensure consistency, but don't let reload errors affect the toggle result
+    try {
+      await loadAllTodos();
+    } catch (reloadError) {
+      console.warn('TodoStore: Failed to reload todos after toggle focus, but toggle was successful:', reloadError);
+      // Don't set error state here since the toggle itself was successful
+    }
 
     return updatedTodo;
   } catch (err) {
@@ -231,8 +246,13 @@ async function removeTodo(todoId: number): Promise<void> {
     // Force update to ensure reactivity
     forceUpdate();
 
-    // Reload data to ensure consistency
-    await loadAllTodos();
+    // Reload data to ensure consistency, but don't let reload errors affect the remove result
+    try {
+      await loadAllTodos();
+    } catch (reloadError) {
+      console.warn('TodoStore: Failed to reload todos after remove, but remove was successful:', reloadError);
+      // Don't set error state here since the remove itself was successful
+    }
   } catch (err) {
     const error = err as ApiError;
     console.error('TodoStore: Error removing todo', error);

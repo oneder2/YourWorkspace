@@ -23,13 +23,16 @@
   let isLoading = $state(externalIsLoading);
 
   // 表单引用
-  let formComponent = $state<{ handleSubmit: () => Promise<void>, handleCancel: () => void } | null>(null);
+  let formComponent = $state<{ handleSubmit: () => Promise<boolean>, handleCancel: () => void } | null>(null);
 
   // 处理表单提交
   async function handleSubmit() {
     if (formComponent) {
-      await formComponent.handleSubmit();
+      const success = await formComponent.handleSubmit();
+      // 注意：不在这里关闭窗口，让 onSaveSuccess 回调来处理
+      return success;
     }
+    return false;
   }
 
   // 处理取消

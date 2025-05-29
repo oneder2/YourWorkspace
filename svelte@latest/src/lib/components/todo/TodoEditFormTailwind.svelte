@@ -58,11 +58,11 @@
   }
 
   // 导出 handleSubmit 以便模态框的页脚按钮可以调用
-  export async function handleSubmit() {
+  export async function handleSubmit(): Promise<boolean> {
     if (!title.trim()) {
       errorMessage = '标题为必填项。';
       successMessage = '';
-      return;
+      return false;
     }
 
     isLoading = true;
@@ -82,14 +82,21 @@
       const updatedTodo = await todoStore.editTodo(todo.id, payload);
       if (updatedTodo) {
         successMessage = `待办事项 "${updatedTodo.title}" 更新成功！`;
-        onSaveSuccess(updatedTodo);
+        // 延迟调用 onSaveSuccess 以确保用户能看到成功消息
+        setTimeout(() => {
+          onSaveSuccess(updatedTodo);
+        }, 500);
+        return true;
       } else {
-        errorMessage = $todoStore.error || '更新待办事项失败，请重试。';
+        // editTodo 返回 null 表示失败，不依赖 store 的 error 状态
+        errorMessage = '更新待办事项失败，请重试。';
+        return false;
       }
     } catch (error: any) {
       const apiError = error as ApiError;
       errorMessage = apiError?.message || '更新时发生意外错误。';
       console.error('TodoEditForm handleSubmit error:', error);
+      return false;
     } finally {
       isLoading = false;
     }
