@@ -118,8 +118,8 @@ async function getTodoById(todoId: number): Promise<TodoItem | null> {
  */
 async function updateTodo(todoId: number, payload: UpdateTodoPayload): Promise<TodoItem> {
   try {
-    const response = await api.put<{data: TodoItem}>(`/todo/todos/${todoId}`, payload);
-    return response.data;
+    const response = await api.put<TodoItem>(`/todo/todos/${todoId}`, payload);
+    return response;
   } catch (error) {
     console.error(`TodoService: Failed to update todo with ID ${todoId}`, error);
     throw error;
