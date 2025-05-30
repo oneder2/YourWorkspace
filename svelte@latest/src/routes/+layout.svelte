@@ -6,6 +6,7 @@
   import { isAuthenticated } from '$lib/store/authStore';
   import { initializeApp } from '$lib/utils/appInitializer';
   import { browser } from '$app/environment';
+  import NotificationContainer from '$lib/components/common/NotificationContainer.svelte';
 
   // 初始化应用程序
   onMount(() => {
@@ -45,6 +46,13 @@
       }
     }
   }
+
+
 </script>
 
 <slot></slot>
+
+
+
+<!-- 全局通知容器 -->
+<NotificationContainer />

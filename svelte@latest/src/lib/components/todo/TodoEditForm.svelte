@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore';
+  import { notificationStore } from '$lib/store/notificationStore';
   import type { TodoItem, UpdateTodoPayload, TodoStatus, TodoPriority } from '$lib/services/todoService';
   import type { ApiError } from '$lib/services/api';
 
@@ -29,7 +30,6 @@
 
   // 表单反馈的本地状态
   let errorMessage = $state('');
-  let successMessage = $state('');
 
   // We're using isLoading for both internal and external state
 
@@ -56,7 +56,6 @@
       priority = todo.priority;
       isCurrentFocus = todo.is_current_focus; // 更新 isCurrentFocus
       errorMessage = ''; // 清除之前的错误
-      successMessage = '';
       formId = `todo-edit-form-${todo.id}`;
     }
   }
@@ -65,7 +64,6 @@
   export async function handleSubmit(): Promise<boolean> {
     if (!title.trim()) {
       errorMessage = '标题为必填项。';
-      successMessage = '';
       return false;
     }
 
@@ -75,14 +73,12 @@
         const currentFocusedCount = storeState.todos.filter(t => t.is_current_focus && t.id !== todo.id && t.status !== 'completed').length;
         if (currentFocusedCount >= storeState.maxFocusItems) {
             errorMessage = `最多只能将 ${storeState.maxFocusItems} 个项目设为当前焦点。请先取消其他项目的焦点状态。`;
-            successMessage = '';
             return false;
         }
     }
 
     isLoading = true;
     errorMessage = '';
-    successMessage = '';
 
     const payload: UpdateTodoPayload = {
       title: title.trim(),
@@ -97,11 +93,15 @@
       // 注意：editTodo 现在也负责处理 is_current_focus 的切换
       const updatedTodo = await todoStore.editTodo(todo.id, payload);
       if (updatedTodo) {
-        successMessage = `待办事项 "${updatedTodo.title}" 更新成功！`;
-        // 延迟调用 onSaveSuccess 以确保用户能看到成功消息
-        setTimeout(() => {
-          onSaveSuccess(updatedTodo);
-        }, 500);
+        // 使用全局通知系统显示成功消息
+        try {
+          notificationStore.success(`待办事项 "${updatedTodo.title}" 更新成功！`);
+        } catch (notificationError) {
+          console.error('显示成功通知时发生错误:', notificationError);
+          // 即使通知失败，也不影响主要功能
+        }
+        // 立即调用 onSaveSuccess，不需要延迟
+        onSaveSuccess(updatedTodo);
         return true;
       } else {
         // editTodo 返回 null 表示失败，不依赖 store 的 error 状态
@@ -232,11 +232,7 @@
       </div>
     {/if}
 
-    {#if successMessage && !errorMessage}
-      <div class="message success-message" aria-live="polite">
-        <p>{successMessage}</p>
-      </div>
-    {/if}
+
   </form>
 </div>
 
@@ -372,9 +368,5 @@
     border: 1px solid rgba(220, 53, 69, 0.2);
   }
 
-  .success-message {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: var(--success-color, #28a745);
-    border: 1px solid rgba(40, 167, 69, 0.2);
-  }
+
 </style>

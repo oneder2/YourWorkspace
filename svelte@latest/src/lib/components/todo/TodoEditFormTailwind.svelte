@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { todoStore } from '$lib/store/todoStore';
+  import { notificationStore } from '$lib/store/notificationStore';
   import type { TodoItem, UpdateTodoPayload, TodoStatus, TodoPriority } from '$lib/services/todoService';
   import type { ApiError } from '$lib/services/api';
 
@@ -28,7 +29,6 @@
 
   // 表单反馈的本地状态
   let errorMessage = $state('');
-  let successMessage = $state('');
 
   // 用于表单的唯一ID
   let formId = $state(`todo-edit-form-${todo?.id || Math.random().toString(36).substring(2)}`);
@@ -52,7 +52,6 @@
       status = todo.status;
       priority = todo.priority;
       errorMessage = ''; // 清除之前的错误
-      successMessage = '';
       formId = `todo-edit-form-${todo.id}`;
     }
   }
@@ -61,13 +60,11 @@
   export async function handleSubmit(): Promise<boolean> {
     if (!title.trim()) {
       errorMessage = '标题为必填项。';
-      successMessage = '';
       return false;
     }
 
     isLoading = true;
     errorMessage = '';
-    successMessage = '';
 
     const payload: UpdateTodoPayload = {
       title: title.trim(),
@@ -81,11 +78,15 @@
       // 注意：editTodo 现在也负责处理 is_current_focus 的切换
       const updatedTodo = await todoStore.editTodo(todo.id, payload);
       if (updatedTodo) {
-        successMessage = `待办事项 "${updatedTodo.title}" 更新成功！`;
-        // 延迟调用 onSaveSuccess 以确保用户能看到成功消息
-        setTimeout(() => {
-          onSaveSuccess(updatedTodo);
-        }, 500);
+        // 使用全局通知系统显示成功消息
+        try {
+          notificationStore.success(`待办事项 "${updatedTodo.title}" 更新成功！`);
+        } catch (notificationError) {
+          console.error('显示成功通知时发生错误:', notificationError);
+          // 即使通知失败，也不影响主要功能
+        }
+        // 立即调用 onSaveSuccess，不需要延迟
+        onSaveSuccess(updatedTodo);
         return true;
       } else {
         // editTodo 返回 null 表示失败，不依赖 store 的 error 状态
@@ -126,12 +127,7 @@
     </div>
   {/if}
 
-  <!-- 成功消息显示 -->
-  {#if successMessage}
-    <div class="mb-4 p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 rounded-md">
-      {successMessage}
-    </div>
-  {/if}
+
 
   <div class="form-group mb-4">
     <label for="edit-todo-title-{todo.id}" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
