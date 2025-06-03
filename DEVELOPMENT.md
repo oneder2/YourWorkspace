@@ -1,4 +1,4 @@
-# YourWorkplace 开发须知
+# YourWorkspace 开发须知
 
 ## ⚠️ 重要声明
 
@@ -75,7 +75,7 @@
 ```bash
 # 1. 克隆项目
 git clone <repository-url>
-cd YourWorkplace
+cd YourWorkspace
 
 # 2. 设置后端环境
 cd backend

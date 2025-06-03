@@ -1,6 +1,6 @@
 # Docker 部署指南
 
-本文档提供了使用Docker部署YourWorkplace应用的详细说明。
+本文档提供了使用Docker部署YourWorkspace应用的详细说明。
 
 ## 先决条件
 
@@ -13,7 +13,7 @@
 1. 克隆仓库:
    ```bash
    git clone <repository-url>
-   cd YourWorkplace
+   cd YourWorkspace
    ```
 
 2. 使用部署脚本启动应用:

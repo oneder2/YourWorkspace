@@ -1,11 +1,11 @@
-# YourWorkplace README系统说明
+# YourWorkspace README系统说明
 
 ## 📚 文档结构概览
 
 本项目采用分层式README系统，为不同用户群体和使用场景提供针对性的文档：
 
 ```
-YourWorkplace/
+YourWorkspace/
 ├── README.md                    # 🏠 项目主页 - GitHub展示页面
 ├── DEVELOPMENT.md               # 🔧 开发须知 - AI主导项目特别说明
 ├── DOCKER.md                    # 🐳 Docker部署指南

@@ -3,7 +3,7 @@ version: '3.8'
 services:
   backend:
     build: ./backend
-    container_name: yourworkplace-backend
+    container_name: yourworkspace-backend
     restart: unless-stopped
     volumes:
       - ./backend/instance:/app/instance
@@ -22,7 +22,7 @@ services:
 
   frontend:
     build: ./svelte@latest
-    container_name: yourworkplace-frontend
+    container_name: yourworkspace-frontend
     restart: unless-stopped
     ports:
       - "80:80"

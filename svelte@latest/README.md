@@ -1,4 +1,4 @@
-# YourWorkplace 前端应用
+# space 前端应用
 
 基于Svelte 5和SvelteKit构建的现代化单页应用，提供直观的用户界面用于任务管理、成就跟踪和计划制定。
 

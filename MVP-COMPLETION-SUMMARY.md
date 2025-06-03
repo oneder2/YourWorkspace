@@ -1,4 +1,4 @@
-# YourWorkplace MVP 完成总结
+# YourWorkspace MVP 完成总结
 
 ## 项目状态
 
@@ -81,7 +81,7 @@ http://localhost
 ## 项目结构
 
 ```
-YourWorkplace/
+YourWorkspace/
 ├── backend/                 # Flask后端
 │   ├── app/                # 应用代码
 │   ├── migrations/         # 数据库迁移
@@ -137,6 +137,6 @@ YourWorkplace/
 
 ## 结论
 
-YourWorkplace项目的MVP开发已经完成，所有核心功能都已实现并经过测试。项目已经完全准备好进行Docker容器化部署，具备了生产环境所需的所有配置和优化。
+YourWorkspace项目的MVP开发已经完成，所有核心功能都已实现并经过测试。项目已经完全准备好进行Docker容器化部署，具备了生产环境所需的所有配置和优化。
 
 项目遵循了现代Web开发的最佳实践，具有良好的可扩展性和可维护性，为未来的功能扩展奠定了坚实的基础。
