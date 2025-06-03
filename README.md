@@ -1,11 +1,11 @@
-# YourWorkplace
+# YourWorkspace
 
 个人工作间与职业锚点项目 - 一个基于Flask和Svelte的个人工作空间应用
 
 ## 项目概述
 #### 个人工作间与职业锚点 (Personal Workspace & Career Anchor)
 
-YourWorkplace旨在为用户提供一个私人的、动态的在线空间，作为其个人的“职业锚点”。它不仅用于对外专业展示，更核心的是帮助用户清晰认知 **“我做过什么，做得怎么样 (What I've done & how well I did it)”，“我正在做什么 (What I'm doing currently)”，以及“我打算做什么 (What I plan to do in the future)”**。通过结构化反思、职业发展追踪和目标管理，助力用户保持前进的动力。
+YourWorkspace旨在为用户提供一个私人的、动态的在线空间，作为其个人的“职业锚点”。它不仅用于对外专业展示，更核心的是帮助用户清晰认知 **“我做过什么，做得怎么样 (What I've done & how well I did it)”，“我正在做什么 (What I'm doing currently)”，以及“我打算做什么 (What I plan to do in the future)”**。通过结构化反思、职业发展追踪和目标管理，助力用户保持前进的动力。
 
 #### 🚀 主要功能模块
 
@@ -106,7 +106,7 @@ YourWorkplace旨在为用户提供一个私人的、动态的在线空间，作�
 1. 克隆仓库:
    ```bash
    git clone <repository-url>
-   cd YourWorkplace
+   cd YourWorkspace
    ```
 
 2. 在根目录创建`.env`文件:
