@@ -1,37 +1,29 @@
-import adapter from '@sveltejs/adapter-auto'; // Or your specific adapter (e.g., adapter-node, adapter-static)
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'; // Commonly used with Vite-based SvelteKit
-// import sveltePreprocess from 'svelte-preprocess'; // Alternative, more explicit preprocessor
+// 1. 将 adapter-auto 更改为 adapter-static
+import adapter from '@sveltejs/adapter-static'; 
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'; // 您原有的功能，保持不变
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   // Consult https://kit.svelte.dev/docs/integrations#preprocessors
   // for more information about preprocessors.
   
-  // Option 1: Using vitePreprocess (often the default and simpler)
-  // vitePreprocess will automatically pick up your PostCSS configuration (postcss.config.js)
-  // and apply Tailwind CSS transformations.
+  // 您的 vitePreprocess 配置保持原样，所有功能不受影响
   preprocess: vitePreprocess(),
 
-  // Option 2: Using svelte-preprocess (more explicit control)
-  // If you use svelte-preprocess, you need to ensure its postcss option is enabled.
-  // preprocess: sveltePreprocess({
-  //   postcss: true, // This tells svelte-preprocess to use PostCSS
-  //   // You can also configure other preprocessors here if needed:
-  //   // scss: {
-  //   //   prependData: '@use "src/variables.scss" as *;',
-  //   // },
-  //   // typescript: {
-  //   //  tsconfigFile: './tsconfig.json',
-  //   // },
-  // }),
-
   kit: {
-    adapter: adapter(),
-    // You can add aliases here if needed, e.g., for $lib
+    // 2. 配置 adapter-static 以生成用于单页应用（SPA）的静态文件
+    adapter: adapter({
+      pages: 'build',
+      assets: 'build',
+      fallback: 'index.html', // 这一行对于单页应用至关重要
+      precompress: false,
+      strict: true
+    }),
+    
+    // 您原有的其他配置（如下面的注释）都保留
     // alias: {
     //   $lib: 'src/lib',
     // }
-    // Other SvelteKit specific configurations
   }
 };
 
