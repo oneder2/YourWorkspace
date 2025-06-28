@@ -1,67 +1,79 @@
 # /your_project_root/app/__init__.py
-# Updated application factory using extensions from app/extensions.py
+# 经过修改，用于同时服务后端 API 和 Svelte 前端静态文件
 
-from flask import Flask
-from flask_cors import CORS # CORS is often initialized directly in create_app
+from flask import Flask, send_from_directory
+from flask_cors import CORS
 import os
 
-# Import configuration and initialized extensions
+# 导入配置和所有扩展，这些都保持原样
 from .config import config
-from .extensions import db, migrate, bcrypt, jwt # Import extension instances
+from .extensions import db, migrate, bcrypt, jwt
 
 def create_app(config_name='development'):
     """
-    Application factory function.
-    Configures and returns the Flask application instance.
+    应用工厂函数。
     """
-    app = Flask(__name__, instance_relative_config=True)
+    # --- 主要改动 1: 修改 Flask 实例的创建 ---
+    # 我们添加了 static_folder 和 static_url_path 参数。
+    # static_folder='../static' 告诉 Flask 静态文件存放在上级目录的 'static' 文件夹中。
+    # static_url_path=None 禁用Flask的自动静态文件路由，我们将手动处理。
+    app = Flask(__name__,
+                instance_relative_config=True,
+                static_folder='../static',
+                static_url_path=None)
 
-    # --- Load Configuration ---
+    # --- 加载配置 (原封不动) ---
     app.config.from_object(config[config_name])
-    config[config_name].init_app(app) # Optional: Allow config class to perform init tasks
-    # Load sensitive config from instance/config.py if it exists
-    # Example: app.config.from_pyfile('config.py', silent=True)
+    config[config_name].init_app(app)
 
-    # --- Initialize Extensions with App Context ---
+    # --- 初始化所有扩展 (原封不动) ---
     db.init_app(app)
-    migrate.init_app(app, db) # Flask-Migrate needs both app and db
+    migrate.init_app(app, db)
     bcrypt.init_app(app)
-    jwt.init_app(app) # Initialize JWTManager
+    jwt.init_app(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    # Initialize CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}}) # Adjust origins for production
-
-    # --- Register Blueprints ---
+    # --- 注册所有 API 蓝图 (原封不动) ---
+    # 因为您的所有API路由都有 /api/v1 前缀，所以它们不会和前端路由冲突。
     from .api.auth_bp import auth_bp
     from .api.anchor_bp import anchor_bp
-    from .api.todo_bp import todo_bp # Import the new todo_bp
+    from .api.todo_bp import todo_bp
     from .api.achievements_bp import achievements_bp
     from .api.plans_bp import plans_bp
+    from .api.blog_bp import blog_bp
+    from .api.ai_bp import ai_bp
 
-    from .api.blog_bp import blog_bp # Assuming this exists or will be added
-    from .api.ai_bp import ai_bp   # Assuming this exists or will be added
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(blog_bp, url_prefix='/blog')
+    app.register_blueprint(todo_bp, url_prefix='/todo')
+    app.register_blueprint(ai_bp, url_prefix='/ai')
+    app.register_blueprint(anchor_bp, url_prefix='/anchor')
+    app.register_blueprint(achievements_bp, url_prefix='/achievements')
+    app.register_blueprint(plans_bp, url_prefix='/plans')
 
-    app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
-    app.register_blueprint(blog_bp, url_prefix='/api/v1/blog')
-    app.register_blueprint(todo_bp, url_prefix='/api/v1/todo') # Register todo_bp
-    app.register_blueprint(ai_bp, url_prefix='/api/v1/ai')
-    app.register_blueprint(anchor_bp, url_prefix='/api/v1/anchor')
-    app.register_blueprint(achievements_bp, url_prefix='/api/v1/achievements')
-    app.register_blueprint(plans_bp, url_prefix='/api/v1/plans')
-
-
-
-    # --- Database Creation (within Application Context) ---
-    # This section is typically handled by Flask-Migrate.
-    # If you want to ensure tables are created on app start, you might uncomment db.create_all().
+    # --- 数据库创建部分 (原封不动) ---
     # with app.app_context():
-    #     # Import models here to avoid circular imports earlier
-    #     from . import models # Or explicitly import needed models
+    #     from . import models
     #     db.create_all()
 
-    # --- Simple Root Route ---
-    @app.route('/')
-    def index():
-        return "Flask API Backend is running!"
+    # --- 主要改动 2: 添加服务前端的路由 ---
+    # 我们用下面的路由逻辑替换了原来简单的 @app.route('/')
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve(path):
+        """
+        这个路由是核心。它负责两件事：
+        1. 如果请求的路径是一个存在于 static 文件夹中的真实文件 (例如 /favicon.png, /_app/...),
+           Flask 的静态文件处理会自动提供它。
+        2. 如果请求的路径不是一个真实的文件 (例如 /login, /doing, /done, /plan, 这是 Svelte 的前端路由),
+           我们就返回前端的主入口 index.html。浏览器加载 index.html 后，Svelte Router 就会接管，
+           并根据 URL 显示正确的页面。
+        """
+        # 检查是否是静态文件
+        if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        else:
+            # 对于所有其他路径（包括前端路由），返回 index.html
+            return send_from_directory(app.static_folder, 'index.html')
 
     return app
