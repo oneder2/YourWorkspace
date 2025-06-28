@@ -31,10 +31,3 @@ requests>=2.25 # Standard library for making HTTP requests (e.g., to AI APIs)
 
 # --- Production Deployment (Example: Gunicorn) ---
 gunicorn>=20.1 # WSGI HTTP Server for UNIX-like systems
-
-# --- Development/Testing ---
-# Add any linters, formatters, or testing tools here if desired
-# Example:
-pytest>=7.0
-# flake8
-# black
