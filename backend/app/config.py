@@ -6,9 +6,12 @@ from dotenv import load_dotenv
 from datetime import timedelta # Import timedelta for token expiration
 
 # Calculate the base directory of the project (i.e., 'your_project_root')
+# 这部分保持原样
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+instance_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../instance')
 
 # Load environment variables from the .env file located at the project root
+# 这部分保持原样
 dotenv_path = os.path.join(basedir, '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
@@ -18,6 +21,7 @@ else:
 
 class Config:
     """Base configuration class. Contains default settings."""
+    # 整个 Config 基类保持原样
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'a-default-fallback-secret-key'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False # Usually False, can be True in DevelopmentConfig for debugging SQL
@@ -43,10 +47,12 @@ class DevelopmentConfig(Config):
     """Development-specific configuration."""
     DEBUG = True
     SQLALCHEMY_ECHO = True # Echo SQL statements for debugging
-    # 使用绝对路径
-    db_path = os.path.abspath(os.path.join(basedir, 'instance', 'dev.sqlite'))
+    
+    # --- 这里是第一个修改点 ---
+    # 原来的 "使用绝对路径" 方式被替换。
+    # 新的方式使用相对路径，Flask 会自动在 instance 文件夹中寻找 dev.sqlite。
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        f'sqlite:///{db_path}'
+        'sqlite:///dev.sqlite'
 
 
 class TestingConfig(Config):
@@ -56,10 +62,12 @@ class TestingConfig(Config):
     SECRET_KEY = 'test-secret-key' # Predictable key for testing
     JWT_SECRET_KEY = 'test-jwt-secret-key' # Use a predictable key for tests
     SQLALCHEMY_ECHO = False # Usually disable SQL echo during tests unless debugging specific SQL
-    # 使用绝对路径
-    db_path = os.path.abspath(os.path.join(basedir, 'instance', 'test.sqlite'))
+
+    # --- 这里是第二个修改点 ---
+    # 同样将文件数据库的路径改为相对路径，以保持一致性。
+    # init_app 中的逻辑会优先使用内存数据库，这部分功能不受影响。
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        f'sqlite:///{db_path}'
+        'sqlite:///test.sqlite'
 
     # Increased token expiry times for testing
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=30)  # Increased from 5
@@ -67,6 +75,7 @@ class TestingConfig(Config):
 
     @classmethod
     def init_app(cls, app):
+        # 这个方法保持原样
         Config.init_app(app)
 
         # Determine if TEST_DATABASE_URL is set, otherwise fallback to SQLite in-memory
@@ -84,13 +93,15 @@ class ProductionConfig(Config):
     """Production-specific configuration."""
     DEBUG = False
     TESTING = False
-    # 使用绝对路径
-    db_path = os.path.abspath(os.path.join(basedir, 'instance', 'prod.sqlite'))
+
+    # --- 这里是第三个修改点 ---
+    # 将生产环境的数据库路径也改为相对路径。
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        f'sqlite:///{db_path}'
+        'sqlite:///prod.sqlite'
 
     @classmethod
     def init_app(cls, app):
+        # 这个方法保持原样
         Config.init_app(app)
 
         # 在初始化应用时检查必要的环境变量
