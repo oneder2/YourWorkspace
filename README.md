@@ -2,6 +2,11 @@
 
 个人工作间与职业锚点项目 - 一个基于Flask和Svelte的个人工作空间应用
 
+## 线上地址 (Live Demo)
+
+🎉 **应用已成功部署，您可以通过以下地址访问：**
+[https://oneder2.pythonanywhere.com/](https://oneder2.pythonanywhere.com/)
+
 ## 项目概述
 #### 个人工作间与职业锚点 (Personal Workspace & Career Anchor)
 
@@ -25,6 +30,7 @@ YourWorkspace旨在为用户提供一个私人的、动态的在线空间，作�
 4.  **打算做 (Future Plans):**
     * **未来规划 (Future Plans):** 用户设定中长期目标、展望未来发展方向的空间。
     * 强调计划的“可见性”和“重要性”，鼓励将长远规划分解为可行动的步骤，但避免日常待办的紧迫感。
+
 ## 🎯 功能特性
 
 ### 已实现功能
@@ -54,7 +60,7 @@ YourWorkspace旨在为用户提供一个私人的、动态的在线空间，作�
 
 ## 📈 项目状态：MVP开发中
 * Phase 1 阶段已完成
-* 正在尝试基本部署
+* ✅ **已成功部署至PythonAnywhere**
 * 正在开展Phase 2阶段开发
 * 更多项目规划详见 `项目开发基本方针.txt`
 
@@ -71,7 +77,7 @@ YourWorkspace旨在为用户提供一个私人的、动态的在线空间，作�
 * **后端 (Backend):**
     * 框架: Flask (Python)
     * API: RESTful API
-    * 用户认证: JWT / OAuth (待定)
+    * 用户认证: JWT
 * **数据库 (Database):**
     * SQLite
 * **未来集成 (Future Integration):**
@@ -85,68 +91,25 @@ YourWorkspace旨在为用户提供一个私人的、动态的在线空间，作�
 * **平衡规划与行动 (Balancing Vision & Action):** 特别是在“打算做”模块，致力于在远期规划的激励性和可行动性之间找到平衡。
 * **专业且激励人心 (Professional & Inspiring):** 视觉和交互设计旨在营造专业、可信赖且能激发用户积极性的氛围。
 
-## 先决条件
+## 🚀 快速开始 (本地开发)
 
-- Docker和Docker Compose
+### 先决条件
 - Git
-
-## 📚 文档导航
-
-本项目提供了详细的文档系统，请根据您的需求选择相应的文档：
-
-- **[后端服务操作指南](backend/README.md)** - Flask后端API的详细使用说明
-- **[前端应用开发指南](svelte@latest/README.md)** - Svelte前端应用的开发和构建说明
-- **[开发须知](DEVELOPMENT.md)** - 详细的开发规范和注意事项（⚠️ AI主导项目）
-- **[Docker部署指南](DOCKER.md)** - 容器化部署的完整说明（正在开发）
-
-## 🚀 快速开始
-
-### 使用Docker Compose（推荐用于生产）
-
-1. 克隆仓库:
-   ```bash
-   git clone <repository-url>
-   cd YourWorkspace
-   ```
-
-2. 在根目录创建`.env`文件:
-   ```bash
-   cp .env.example .env
-   # 编辑.env文件设置您的密钥
-   ```
-
-3. 启动应用:
-   ```bash
-   chmod +x deploy.sh
-   ./deploy.sh start
-   ```
-
-4. 访问应用: http://localhost
+- Node.js & npm
 
 ### 手动部署（推荐用于开发）
 
 #### 后端服务
-
 详细说明请参考 **[后端README](backend/README.md)**
 
-初次启动：
 ```bash
 cd backend
-poetry install
-poetry run python init_db.py
-poetry run python run.py
+pip install -r requirements.txt
+source venv/bin/activate
+python run.py
 ```
-
-后续开发：
-```bash
-cd backend
-eval $(poetry env activate)
-flask run
-```
-
 
 #### 前端应用
-
 详细说明请参考 **[前端README](svelte@latest/README.md)**
 
 ```bash
@@ -154,6 +117,53 @@ cd svelte@latest
 npm install
 npm run dev
 ```
+
+## 部署 (Deployment)
+
+本项目支持多种部署方式。对于线上生产环境，推荐使用 PaaS 平台或 Docker。
+
+### PythonAnywhere 部署指南 (PaaS - 已验证)
+
+本项目已成功部署在 PythonAnywhere 上。这是一个高性价比且对 Flask/Python 项目非常友好的平台。以下是部署步骤：
+
+**阶段一：一次性SSH密钥设置**
+
+1.  在 PythonAnywhere 的 Bash 控制台生成 SSH 密钥 (`ssh-keygen -t ed25519`)。
+2.  将公钥 (`~/.ssh/id_ed25519.pub`) 添加到您的 GitHub 账户的 "SSH and GPG keys" 设置中。
+
+**阶段二：部署流程**
+
+1.  **克隆仓库**: 在 PythonAnywhere Bash 控制台使用 SSH 地址克隆您的项目。
+    ```bash
+    git clone git@github.com:YourUserName/YourWorkspace.git
+    ```
+2.  **进入后端目录**: 所有后续操作都在 `backend` 目录内进行。
+    ```bash
+    cd ~/YourWorkspace/backend
+    ```
+3.  **上传 `.env` 文件**: 通过 PythonAnywhere 的 "Files" 页面，将您本地的 `.env` 文件上传到当前的 `backend` 目录中。
+4.  **创建虚拟环境**:
+    ```bash
+    python3.10 -m venv venv  # (请使用您希望的Python版本)
+    ```
+5.  **安装依赖**:
+    ```bash
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
+6.  **创建数据库**: 首先创建 `instance` 目录，然后运行数据库迁移。
+    ```bash
+    mkdir instance
+    flask db upgrade head
+    ```
+7.  **配置Web应用**: 前往 PythonAnywhere 的 "Web" 标签页进行设置：
+    * **Source code**: `/home/YourUserName/YourWorkspace/backend`
+    * **Virtualenv**: `/home/YourUserName/YourWorkspace/backend/venv`
+    * **WSGI file**: 点击并编辑，确保其中的 `project_path` 变量正确指向您的 `backend` 目录。
+    * **Static files**: 添加一条映射：
+        * URL: `/`
+        * Directory: `/home/YourUserName/YourWorkspace/backend/static`
+8.  **重新加载**: 点击绿色的 **"Reload"** 按钮。您的应用现已上线！
 
 ## ⚠️ 重要提醒
 
@@ -165,7 +175,6 @@ npm run dev
 ```bash
 cd backend
 poetry run pytest
-poetry run python test_api.py  # API集成测试
 ```
 
 ### 前端测试
@@ -177,18 +186,20 @@ npm run build      # 构建测试
 
 ## 📦 部署选项
 
-| 部署方式 | 适用场景 | 文档链接 |
-|---------|---------|---------|
-| Docker Compose | 生产环境 | [Docker部署指南](DOCKER.md) |
-| 手动部署 | 开发环境 | [后端README](backend/README.md) + [前端README](svelte@latest/README.md) |
+| 部署方式 | 适用场景 | 状态 | 文档链接 |
+|---|---|---|---|
+| 手动部署 | 本地开发 | ✅ 已验证 | [快速开始](#-快速开始-本地开发) |
+| PythonAnywhere (PaaS) | 线上生产/爱好项目 | ✅ 已验证 | [PythonAnywhere 部署指南](#pythonanywhere-部署指南-paas---已验证) |
+| Docker Compose | 生产环境 | 🚧 开发中 | [Docker部署指南](DOCKER.md) |
+
 
 ## 🤝 贡献指南
 
-1. **阅读文档** - 首先阅读 [开发须知](DEVELOPMENT.md)
-2. **理解架构** - 本项目为AI主导开发，请保持架构一致性
-3. **遵循规范** - 参考各模块README中的代码规范
-4. **测试验证** - 确保修改不破坏现有功能
-5. **更新文档** - 及时更新相关文档
+1.  **阅读文档** - 首先阅读 [开发须知](DEVELOPMENT.md)
+2.  **理解架构** - 本项目为AI主导开发，请保持架构一致性
+3.  **遵循规范** - 参考各模块README中的代码规范
+4.  **测试验证** - 确保修改不破坏现有功能
+5.  **更新文档** - 及时更新相关文档
 
 ## 📄 许可证
 
@@ -197,9 +208,8 @@ MIT License
 ## 📞 支持
 
 如需帮助，请参考：
-- [开发须知](DEVELOPMENT.md) - 详细的开发指南
-- [Docker部署指南](DOCKER.md) - 容器化部署说明
+- [开发须知](DEVELOP.md) - 详细的开发指南
 - [后端README](backend/README.md) - 后端服务文档
 - [前端README](svelte@latest/README.md) - 前端应用文档
-
-
+- [Docker部署指南](DOCKER.md) - 容器化部署说明
+- [PythonAnywhere 部署指南](#pythonanywhere-部署指南-paas---已验证) - 线上部署说明
